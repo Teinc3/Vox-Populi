@@ -10,9 +10,9 @@
 - **Undocumented members**: They function as regular citizens without political rights. However, they can apply for citizenship and can appeal moderation decisions to the court.
 
 However, the two systems differ in the following ways:
-- In a presidential system, the President is the nominal head of the server, while in a parliamentry system, the Prime Minister is the nominal head of the server.
-- In a presidential system, the President is directly elected by the citizens, while in a parliamentry system, the Prime Minister is appointed by the Senate. Instead, senators are elected by the citizens.
-- In a presidential system, the President appoints judges to the court, while in a parliamentry system, the Prime Minister nominates judges to the court, who are then affirmed by the Senate.
+- In a presidential system, the President is the nominal head of the server, while in a parliamentary system, the Prime Minister is the nominal head of the server.
+- In a presidential system, the President is directly elected by the citizens, while in a parliamentary system, the Prime Minister is appointed by the Senate. Instead, senators are elected by the citizens.
+- In a presidential system, the President appoints judges to the court, while in a parliamentary system, the Prime Minister nominates judges to the court, who are then affirmed by the Senate.
 
 ## Special Features
 - In the presidential system, citizens may override court interpretation of the constitution through a referendum.

@@ -8,9 +8,9 @@ class GuildSchema {
     prefix!: string;
 
     @prop()
-    politicalSystem?: PoliticalSystem;
+    politicalSystem?: IPoliticalSystem;
 
-    // Voting logs etc.
+    // Channel configurations
 }
 
 const GuildModel = getModelForClass(GuildSchema);

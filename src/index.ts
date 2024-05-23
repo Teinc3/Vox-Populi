@@ -1,13 +1,21 @@
-import { Client, GatewayIntentBits } from 'discord.js';
 import { config } from 'dotenv';
 config();
 
-const intents = GatewayIntentBits.MessageContent | GatewayIntentBits.GuildMembers;
-const client = new Client({ intents });
+import DiscordManager from "./discord/DiscordManager.ts";
+import DBManager from "./db/DBManager.ts";
 
-client.on('ready', () => {
-    if (!client.user) return;
-    console.log(`Logged in as ${client.user.tag}`);
-});
+const token = process.env.DISCORD_TOKEN;
+if (!token) {
+    console.error('Token not provided');
+    process.exit(1);
+}
 
-client.login(process.env.TOKEN);
+const dbManager = new DBManager();
+const discordManager = new DiscordManager(dbManager, process.env.TOKEN!);
+
+function startConnections() {
+    dbManager.connect().then();
+    discordManager.login().then();
+}
+
+startConnections();

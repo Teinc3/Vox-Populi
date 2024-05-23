@@ -5,7 +5,7 @@ A democracy-simulating Discord bot in a server.
 When creating a new server, two political systems can be chosen: Presidential and Parliamentry.
 These systems are similar with the exeption of the election process.
 
-See [Political Structure](docs/political-structure.md) for more detailed information.
+See [Political Structure](docs/politicalStructure) for more detailed information.
 
 *Note: Only parliamentary system is implemented at the moment.*
 
@@ -17,3 +17,5 @@ So we will have to think of a way to work around this.
 ## Technologies
 - Discord.js
 - MongoDB
+- Typegoose
+- Bun
