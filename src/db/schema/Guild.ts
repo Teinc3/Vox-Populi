@@ -1,4 +1,5 @@
 import { prop, getModelForClass } from '@typegoose/typegoose';
+import type { IPoliticalSystem } from "../../types/types.d.ts";
 
 class GuildSchema {
     @prop({ required: true })

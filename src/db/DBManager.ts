@@ -13,7 +13,7 @@ class DBManager {
 
     public async connect() {
         try {
-            await mongoose.connect(constants.mongoURI);
+            await mongoose.connect(constants.mongo.uri);
             console.log('Connected to MongoDB!');
         } catch (err) {
             console.error(err);

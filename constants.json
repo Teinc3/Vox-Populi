@@ -1,3 +1,9 @@
 {
-  "mongoURI": "mongodb://localhost:27017/vox-populi"
+  "mongo": {
+    "uri": "mongodb://localhost:27017/vox-populi"
+  },
+  "discord": {
+    "clientID": "1242871324918022205",
+    "devGuildID": "1242871324918022205"
+  }
 }
