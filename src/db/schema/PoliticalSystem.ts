@@ -1,30 +1,29 @@
-import { prop } from '@typegoose/typegoose';
-import type { Ref } from '@typegoose/typegoose';
+import { prop, getModelForClass, type Ref } from '@typegoose/typegoose';
 
-import { President, PrimeMinister } from "./PoliticalRole.js";
-import { Senate } from "./Legislature.js";
-import { IPoliticalSystem } from "../../types/types";
+import PoliticalRole, { President, PrimeMinister } from "./PoliticalRole.js";
+import Legislature from "./Legislature.js";
 
 // Maybe can remove
-class PoliticalSystem {}
-
-class Presidential extends PoliticalSystem implements IPoliticalSystem {
+class PoliticalSystem<H extends PoliticalRole> {
     @prop({ required: true })
-    id: number = 0
+    id!: number;
 
-    @prop({ required: true, ref: () => President })
-    headOfState!: Ref<President>;
+    @prop({ required: true })
+    headOfState!: Ref<H>;
+
+    @prop({ required: true })
+    legislature!: Ref<Legislature<H>>;
 }
 
-class Parliamentary extends PoliticalSystem implements IPoliticalSystem {
-    @prop({ required: true })
-    id: number = 1
-
-    @prop({ required: true, ref: () => PrimeMinister })
-    headOfState!: Ref<PrimeMinister>;
-
-    @prop({ required: true, ref: () => Senate })
-    legislature!: Ref<Senate>;
+class Presidential extends PoliticalSystem<President> {
+    id = 0
 }
 
-export { Presidential, Parliamentary }
+class Parliamentary extends PoliticalSystem<PrimeMinister> {
+    id = 1
+}
+
+const PoliticalSystemModel = getModelForClass(PoliticalSystem);
+
+export default PoliticalSystem;
+export { Presidential, Parliamentary, PoliticalSystemModel };

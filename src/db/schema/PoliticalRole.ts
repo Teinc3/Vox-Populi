@@ -1,7 +1,7 @@
-import { prop } from '@typegoose/typegoose';
+import { prop, getModelForClass } from '@typegoose/typegoose';
 
 class PoliticalRole {
-    @prop({ required: true })
+    @prop()
     roleID!: number;
 
     @prop({ required: true })
@@ -31,4 +31,15 @@ class Moderator extends PoliticalRole {
     name = "Moderator"
 }
 
-export { President, PrimeMinister, Senator, Judge, Moderator }
+class Citizen extends PoliticalRole {
+    name = "Citizen"
+}
+
+class Undocumented extends PoliticalRole {
+    name = "Undocumented"
+}
+
+const PoliticalRoleModel = getModelForClass(PoliticalRole);
+
+export default PoliticalRole;
+export { President, PrimeMinister, Senator, Judge, Moderator, Citizen, Undocumented, PoliticalRoleModel }

@@ -1,15 +1,17 @@
-import { prop, getModelForClass } from '@typegoose/typegoose';
-import type { IPoliticalSystem } from "../../types/types.d.ts";
+import { prop, Ref, getModelForClass } from '@typegoose/typegoose';
+
+import PoliticalSystem from './PoliticalSystem';
+import PoliticalRole from './PoliticalRole.js';
 
 class GuildSchema {
     @prop({ required: true })
-    guildID!: number;
+    guildID!: string;
 
     @prop({ required: true })
     prefix!: string;
 
     @prop()
-    politicalSystem?: IPoliticalSystem;
+    politicalSystem?: Ref<PoliticalSystem<PoliticalRole>>;
 
     // Channel configurations
 }
@@ -17,3 +19,4 @@ class GuildSchema {
 const GuildModel = getModelForClass(GuildSchema);
 
 export default GuildModel;
+export { GuildSchema }

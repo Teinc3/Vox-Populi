@@ -1,20 +1,36 @@
-import { prop } from '@typegoose/typegoose';
+import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
 
-import { Senator } from "./PoliticalRole.js";
+import PoliticalRole, { Senator, Citizen } from "./PoliticalRole.js";
 
-class Legislature {
+class Legislature<T extends PoliticalRole> {
+    @prop()
+    role!: Ref<T>;
+
     @prop({ required: true })
-    memberCount!: number;
+    threshold: number = 0.5;
+
+    @prop({ required: true })
+    amendmentThreshold: number = 2/3;
 
     // Or put channels under "Category subclass"
     /*@prop({ required: true })
     channelID!: number;*/
 }
 
-class Senate extends Legislature {
-    @prop({ default: [] })
-    members!: Senator[];
+class Senate extends Legislature<Senator> {
+    @prop({ required: true })
+    termLength!: number;
+
+    @prop({ required: true })
+    termLimit!: number;
+
+    @prop({ required: true })
+    seats!: number;
 }
 
+class Referendum extends Legislature<Citizen> {}
+
+const LegislatureModel = getModelForClass(Legislature);
+
 export default Legislature;
-export { Senate };
+export { Senate, Referendum, LegislatureModel };

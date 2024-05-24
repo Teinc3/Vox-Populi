@@ -5,7 +5,7 @@
   "scripts": {
     "start": "tsc && node ./build/index.js",
     "build": "tsc",
-    "deploy-commands": "tsc && node ./build/discord/deploy-commands.js"
+    "deploy-commands": "tsc && node ./build/discord/deployCommands.js"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"

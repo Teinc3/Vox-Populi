@@ -1,9 +1,6 @@
 import { type ClientOptions, type CommandInteraction } from "discord.js";
-
-declare interface IPoliticalSystem {
-    id: number;
-}
+import type DBManager from "../db/DBManager";
 
 declare interface CustomCommand extends ClientOptions {
-    execute: (interaction: CommandInteraction) => Promise<void>;
+    execute: <T>(interaction: CommandInteraction, dbManager?: DBManager) => Promise<T>;
 }

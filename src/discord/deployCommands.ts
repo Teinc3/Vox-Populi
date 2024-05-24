@@ -29,8 +29,7 @@ await postCommands(token, clientID, devGuildID, commands);
 
 async function loadCommands(pCommands: string[]) {
     const commandDir = path.join(__dirname, 'commands');
-    const commandFiles = fs.readdirSync(commandDir).filter(file => file.endsWith('.ts'));
-
+    const commandFiles = fs.readdirSync(commandDir).filter(file => file.endsWith('.js'));
     for (const commandFile of commandFiles) {
         const commandPath = path.join(commandDir, commandFile);
         try {

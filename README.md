@@ -19,3 +19,7 @@ So we will have to think of a way to work around this.
 - MongoDB
 - Typegoose
 - Bun
+
+## Current Bugs
+- Cannot validate creation of some objects in dbmanager, as some fields are not being set during creation.
+- Deploy commands gives negative response even if deployment was successful.

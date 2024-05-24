@@ -2,7 +2,7 @@ import { GatewayIntentBits, Events } from 'discord.js';
 
 import ExtendedClient from "./ExtendedClient.js";
 
-import type DBManager from "../db/DBManager.ts";
+import type DBManager from "../db/DBManager.js";
 
 class DiscordManager {
     private dbManager: DBManager;
@@ -39,7 +39,7 @@ class DiscordManager {
             }
 
             try {
-                await command.execute(interaction);
+                await command.execute(interaction, this.dbManager);
             } catch (error) {
                 console.error(error);
                 if (interaction.replied || interaction.deferred) {
