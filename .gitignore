@@ -6,3 +6,7 @@ node_modules
 .idea/
 
 .env
+
+# Build files
+build/
+tsconfig.tsbuildinfo

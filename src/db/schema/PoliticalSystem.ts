@@ -1,8 +1,9 @@
 import { prop } from '@typegoose/typegoose';
 import type { Ref } from '@typegoose/typegoose';
 
-import { President, PrimeMinister } from "./PoliticalRole.ts";
-import { Senate } from "./Legislature.ts";
+import { President, PrimeMinister } from "./PoliticalRole.js";
+import { Senate } from "./Legislature.js";
+import { IPoliticalSystem } from "../../types/types";
 
 // Maybe can remove
 class PoliticalSystem {}

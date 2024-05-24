@@ -1,9 +1,14 @@
 import fs from "fs";
-import path from "path";
+import path, { dirname } from "path";
+import { fileURLToPath, pathToFileURL } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 import { REST, Routes } from "discord.js";
 import { config } from "dotenv";
 
-import constants from "../../constants.json";
+import constants from "../data/constants.json" assert { type: 'json' };
 const devGuildID = constants.discord.devGuildID;
 
 config();
@@ -15,9 +20,7 @@ if (!process.env.DISCORD_TOKEN) {
 
 const token = process.env.DISCORD_TOKEN!;
 
-import { discord } from "../../constants.json";
-
-const clientID: string = discord.clientID;
+const clientID: string = constants.discord.clientID;
 
 const commands: string[] = [];
 
@@ -31,7 +34,7 @@ async function loadCommands(pCommands: string[]) {
     for (const commandFile of commandFiles) {
         const commandPath = path.join(commandDir, commandFile);
         try {
-            const command = await import(commandPath)
+            const command = await import(pathToFileURL(commandPath).toString());
 
             if ('data' in command && 'execute' in command) {
                 pCommands.push(command.data.toJSON());

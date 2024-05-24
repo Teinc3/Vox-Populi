@@ -1,8 +1,8 @@
 import { config } from 'dotenv';
 config();
 
-import DiscordManager from "./discord/DiscordManager.ts";
-import DBManager from "./db/DBManager.ts";
+import DiscordManager from "./discord/DiscordManager.js";
+import DBManager from "./db/DBManager.js";
 
 const token = process.env.DISCORD_TOKEN;
 if (!token) {

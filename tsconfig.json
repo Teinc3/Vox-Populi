@@ -5,21 +5,20 @@
     "target": "esnext",
     "moduleResolution": "bundler",
     "moduleDetection": "force",
-    "allowImportingTsExtensions": true,
-    "noEmit": true,
+    "noEmit": false,
+    "outDir": "./build",
+    "rootDir": "./src",
+    "sourceMap": true,
     "composite": true,
     "strict": true,
     "downlevelIteration": true,
     "skipLibCheck": true,
-    "jsx": "react-jsx",
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "allowJs": true,
-    "types": [
-      "bun-types" // add Bun global
-    ],
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
+    "resolveJsonModule": true,
   },
-  "include": ["src/**/*.ts", "constants.json"]
+  "include": ["src/**/*.ts", "src/**/*.json"],
 }

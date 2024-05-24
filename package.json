@@ -3,11 +3,9 @@
   "module": "src/index.ts",
   "type": "module",
   "scripts": {
-    "start": "bun run ./src/index.ts",
-    "deploy-commands": "bun run ./src/discord/deployCommands.ts"
-  },
-  "devDependencies": {
-    "bun-types": "latest"
+    "start": "tsc && node ./build/index.js",
+    "build": "tsc",
+    "deploy-commands": "tsc && node ./build/discord/deploy-commands.js"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"

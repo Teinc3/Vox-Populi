@@ -1,8 +1,12 @@
 import fs from "fs";
-import path from "path";
+import path, { dirname } from "path";
+import { fileURLToPath, pathToFileURL } from 'url';
 
 import { Client, type ClientOptions, Collection } from "discord.js";
 import type { CustomCommand } from "../types/types";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 class ExtendedClient extends Client {
     commands: Collection<string, CustomCommand>;
@@ -14,12 +18,12 @@ class ExtendedClient extends Client {
 
     public async setupCommands() {
         const commandDir = path.join(__dirname, 'commands');
-        const commandFiles = fs.readdirSync(commandDir).filter(file => file.endsWith('.ts'));
+        const commandFiles = fs.readdirSync(commandDir).filter(file => file.endsWith('.js'));
 
         for (const commandFile of commandFiles) {
             const commandPath = path.join(commandDir, commandFile);
             try {
-                const command = await import(commandPath);
+                const command = await import(pathToFileURL(commandPath).toString());
                 if (command?.data && command?.execute) {
                     this.commands.set(command.data.name, command);
                 } else {

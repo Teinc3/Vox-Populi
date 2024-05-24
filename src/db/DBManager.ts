@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
 
-import GuildModel from './schema/Guild.ts';
+import GuildModel from './schema/Guild.js';
 
-import constants from '../../constants.json';
+import constants from '../data/constants.json' assert { type: 'json' };
 
 class DBManager {
     UserModel: typeof GuildModel;

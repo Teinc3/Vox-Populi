@@ -1,6 +1,6 @@
 import { GatewayIntentBits, Events } from 'discord.js';
 
-import ExtendedClient from "./ExtendedClient.ts";
+import ExtendedClient from "./ExtendedClient.js";
 
 import type DBManager from "../db/DBManager.ts";
 

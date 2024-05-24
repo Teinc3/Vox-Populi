@@ -1,6 +1,6 @@
 import { prop } from '@typegoose/typegoose';
 
-import { Senator } from "./PoliticalRole.ts";
+import { Senator } from "./PoliticalRole.js";
 
 class Legislature {
     @prop({ required: true })
