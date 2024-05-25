@@ -23,3 +23,17 @@ So we will have to think of a way to work around this.
 ## Current Bugs
 - Cannot validate creation of some objects in dbmanager, as some fields are not being set during creation.
 - Deploy commands gives negative response even if deployment was successful.
+
+## TODO
+- Refactor Legislature to not depend on PoliticalRole
+- Add all PoliticalRoles directly to PoliticalSystem
+
+Possible Inheritance Model:
+
+Guild
+|- PoliticalSystem
+    |- Legislature
+    |- Moderation
+    |- Court
+    |- PoliticalRole[] // Array/Set of roles
+        |- PoliticalPermissions

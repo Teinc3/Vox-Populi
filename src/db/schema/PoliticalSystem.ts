@@ -1,12 +1,13 @@
 import { prop, getModelForClass, type Ref } from '@typegoose/typegoose';
 
-import PoliticalRole, { President, PrimeMinister } from "./PoliticalRole.js";
+import PoliticalRole, { President, PrimeMinister, Governor } from "./PoliticalRole.js";
 import Legislature from "./Legislature.js";
+import { PoliticalSystemsType } from '../../types/types.js';
 
 // Maybe can remove
 class PoliticalSystem<H extends PoliticalRole> {
     @prop({ required: true })
-    id!: number;
+    id!: PoliticalSystemsType;
 
     @prop({ required: true })
     headOfState!: Ref<H>;
@@ -16,14 +17,30 @@ class PoliticalSystem<H extends PoliticalRole> {
 }
 
 class Presidential extends PoliticalSystem<President> {
-    id = 0
+    id = PoliticalSystemsType.Presidential;
 }
 
 class Parliamentary extends PoliticalSystem<PrimeMinister> {
-    id = 1
+    id = PoliticalSystemsType.Parliamentary;
+}
+
+class DirectDemocracy extends PoliticalSystem<Governor> {
+    id = PoliticalSystemsType.DirectDemocracy;
+}
+
+function politicalSystemCreationTriage(politicalSystemType: PoliticalSystemsType): PoliticalSystem<PoliticalRole> {
+    switch (politicalSystemType) {
+        case PoliticalSystemsType.Presidential:
+            return new Presidential();
+        case PoliticalSystemsType.Parliamentary:
+            return new Parliamentary();
+        case PoliticalSystemsType.DirectDemocracy:
+            return new DirectDemocracy();
+    }
 }
 
 const PoliticalSystemModel = getModelForClass(PoliticalSystem);
 
 export default PoliticalSystem;
-export { Presidential, Parliamentary, PoliticalSystemModel };
+export { Presidential, Parliamentary, DirectDemocracy, PoliticalSystemModel };
+export { politicalSystemCreationTriage };

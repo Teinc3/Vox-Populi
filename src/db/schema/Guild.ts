@@ -10,10 +10,11 @@ class GuildSchema {
     @prop({ required: true })
     prefix!: string;
 
+    @prop({ required: true })
+    isBotOwner!: boolean;
+
     @prop()
     politicalSystem?: Ref<PoliticalSystem<PoliticalRole>>;
-
-    // Channel configurations
 }
 
 const GuildModel = getModelForClass(GuildSchema);

@@ -1,6 +1,7 @@
 import { SlashCommandBuilder, type CommandInteraction } from "discord.js";
 
 import type DBManager from "../../db/DBManager.js";
+import { PoliticalSystemsType } from "../../types/types.js";
 
 const data = new SlashCommandBuilder();
 data.setName('config');
@@ -8,18 +9,19 @@ data.setDescription("Configures the Server.");
 
 data.addStringOption((option) => {
     option.setName('system');
-    option.setDescription('Select the desired political system.');
+    option.setDescription('Select the desired political system for the server.');
     option.setRequired(true);
     option.addChoices(
         { name: 'Presidential', value: 'presidential' },
-        { name: 'Parliamentary', value: 'parliamentary' }
+        { name: 'Parliamentary', value: 'parliamentary' },
+        { name: 'Direct Democracy', value: 'directdemocracy'}
     );
     return option;
 });
 
 data.addStringOption((option) => {
     option.setName('prefix');
-    option.setDescription('Set the prefix for the bot. Defaults to >');
+    option.setDescription('Set the prefix for the bot. Default is ">"');
     option.setRequired(false);
     return option;
 });
@@ -40,13 +42,24 @@ async function execute(interaction: CommandInteraction, dbManager: DBManager) {
     const system = interaction.options.get('system')?.value as string || '';
     const prefix = interaction.options.get('prefix')?.value as string || '>';
 
-    if (system !== 'presidential' && system !== 'parliamentary') {
-        return interaction.reply({ content: 'Invalid political system.', ephemeral: true });
+    let politicalSystemType: PoliticalSystemsType;
+    switch (system) {
+        case 'presidential':
+            politicalSystemType = PoliticalSystemsType.Presidential;
+            break;
+        case 'parliamentary':
+            politicalSystemType = PoliticalSystemsType.Parliamentary;
+            break;
+        case 'directdemocracy':
+            politicalSystemType = PoliticalSystemsType.DirectDemocracy;
+            break;
+        default:
+            return interaction.reply({ content: 'Invalid political system.', ephemeral: true });
     }
  
     //const votingChannelName = interaction.options.get('voting_channel')?.value as string || '';
 
-    if (!system/*  || !votingChannelName */) {
+    if (!politicalSystemType/*  || !votingChannelName */) {
         return interaction.reply({ content: 'Missing required options.', ephemeral: true });
     }
 
@@ -59,12 +72,15 @@ async function execute(interaction: CommandInteraction, dbManager: DBManager) {
             throw new Error();
         } */
 
-        const result = dbManager.createGuildDocument(guild.id, prefix, system);
+        const isBotOwner = guild.ownerId === interaction.client.user.id;
+
+        const result = dbManager.createGuildDocument(guild.id, prefix, politicalSystemType, isBotOwner);
         if (!result) {
             throw new Error();
+        } else {
+            interaction.editReply({ content: 'Server has been configured successfully.' });
         }
-        interaction.editReply({ content: 'Server has been configured successfully.' });
-
+        
     } catch (error) {
         return interaction.editReply({ content: 'There was an error while configuring the server.'});
     }

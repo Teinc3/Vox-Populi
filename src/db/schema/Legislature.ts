@@ -1,5 +1,6 @@
 import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
 
+import { PoliticalSystemsType } from '../../types/types';
 import PoliticalRole, { Senator, Citizen } from "./PoliticalRole.js";
 
 class Legislature<T extends PoliticalRole> {
@@ -30,7 +31,16 @@ class Senate extends Legislature<Senator> {
 
 class Referendum extends Legislature<Citizen> {}
 
+function legislatureCreationTriage(politicalSystemType: PoliticalSystemsType): Legislature<PoliticalRole> {
+    if (politicalSystemType === PoliticalSystemsType.DirectDemocracy) {
+        return new Referendum();
+    } else {
+        return new Senate();
+    }
+}
+
 const LegislatureModel = getModelForClass(Legislature);
 
 export default Legislature;
 export { Senate, Referendum, LegislatureModel };
+export { legislatureCreationTriage };
