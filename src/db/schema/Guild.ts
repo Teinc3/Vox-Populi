@@ -1,6 +1,6 @@
 import { prop, Ref, getModelForClass } from '@typegoose/typegoose';
 
-import PoliticalSystem from './PoliticalSystem';
+import PoliticalSystem from './PoliticalSystem.js';
 import PoliticalRole from './PoliticalRole.js';
 
 class GuildSchema {
@@ -8,13 +8,15 @@ class GuildSchema {
     guildID!: string;
 
     @prop({ required: true })
-    prefix!: string;
-
-    @prop({ required: true })
     isBotOwner!: boolean;
 
     @prop()
     politicalSystem?: Ref<PoliticalSystem<PoliticalRole>>;
+    
+    /* Guild structure, contains all the channel ID and role ID information
+    @prop()
+    guildStructure?: Ref<GuildStructure>;
+    */
 }
 
 const GuildModel = getModelForClass(GuildSchema);

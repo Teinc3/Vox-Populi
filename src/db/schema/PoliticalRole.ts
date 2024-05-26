@@ -1,6 +1,6 @@
-import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
-import PoliticalPermissions from './PoliticalPermissions';
-import { PoliticalSystemsType } from '../../types/types';
+import { prop, getModelForClass } from '@typegoose/typegoose';
+
+import { PoliticalSystemsType } from '../../types/static.js';
 
 class PoliticalRole {
     @prop()
@@ -12,8 +12,10 @@ class PoliticalRole {
     @prop({ required: true })
     hierarchy!: number;
 
+    /*
     @prop()
     permissions!: Ref<PoliticalPermissions>
+    */
 }
 
 class President extends PoliticalRole {

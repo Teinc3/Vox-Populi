@@ -1,7 +1,8 @@
 import { SlashCommandBuilder, type CommandInteraction } from "discord.js";
 
 import type DBManager from "../../db/DBManager.js";
-import { PoliticalSystemsType } from "../../types/types.js";
+
+import { PoliticalSystemsType } from "../../types/static.js";
 
 const data = new SlashCommandBuilder();
 data.setName('config');
@@ -19,28 +20,22 @@ data.addStringOption((option) => {
     return option;
 });
 
-data.addStringOption((option) => {
-    option.setName('prefix');
-    option.setDescription('Set the prefix for the bot. Default is ">"');
+data.addBooleanOption((option) => {
+    option.setName('config_admin');
+    option.setDescription('Give you admin permissions to configure the server.');
     option.setRequired(false);
     return option;
 });
 
-/* data.addStringOption((option) => {
-    option.setName('voting_channel');
-    option.setDescription('Name of the voting chamber');
-    option.setRequired(true);
-    return option;
-}); */
-
 async function execute(interaction: CommandInteraction, dbManager: DBManager) {
-    const guild = interaction.guild;
-    if (!guild || guild.id === '') {
+    let { guild } = interaction;
+    if (guild === null) {
         return interaction.reply({ content: 'This command must be run in a server.', ephemeral: true });
     }
 
+    guild = await guild.fetch();
+
     const system = interaction.options.get('system')?.value as string || '';
-    const prefix = interaction.options.get('prefix')?.value as string || '>';
 
     let politicalSystemType: PoliticalSystemsType;
     switch (system) {
@@ -57,32 +52,18 @@ async function execute(interaction: CommandInteraction, dbManager: DBManager) {
             return interaction.reply({ content: 'Invalid political system.', ephemeral: true });
     }
  
-    //const votingChannelName = interaction.options.get('voting_channel')?.value as string || '';
-
-    if (!politicalSystemType/*  || !votingChannelName */) {
-        return interaction.reply({ content: 'Missing required options.', ephemeral: true });
-    }
-
-    await interaction.reply({ content: 'Configuring the server...', ephemeral: true });
     try {
-        // Create a new message channel with the name provided by the user
-        /* const channel = await guild.channels.create({ name: votingChannelName as string });
-        if (!channel) {
-            // Throw an error to be caught by the catch block
-            throw new Error();
-        } */
-
         const isBotOwner = guild.ownerId === interaction.client.user.id;
 
-        const result = dbManager.createGuildDocument(guild.id, prefix, politicalSystemType, isBotOwner);
+        const result = await dbManager.createGuildDocument(guild.id, politicalSystemType, isBotOwner);
         if (!result) {
             throw new Error();
         } else {
-            interaction.editReply({ content: 'Server has been configured successfully.' });
+            interaction.reply({ content: 'Server has been configured successfully.' , ephemeral: true });
         }
-        
+
     } catch (error) {
-        return interaction.editReply({ content: 'There was an error while configuring the server.'});
+        return interaction.reply({ content: 'There was an error while configuring the server.', ephemeral: true});
     }
 }
 

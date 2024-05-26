@@ -2,17 +2,18 @@ import { prop, getModelForClass, type Ref } from '@typegoose/typegoose';
 
 import PoliticalRole, { President, PrimeMinister, Governor } from "./PoliticalRole.js";
 import Legislature from "./Legislature.js";
-import { PoliticalSystemsType } from '../../types/types.js';
+
+import { PoliticalSystemsType } from '../../types/static.js';
 
 // Maybe can remove
 class PoliticalSystem<H extends PoliticalRole> {
     @prop({ required: true })
     id!: PoliticalSystemsType;
 
-    @prop({ required: true })
+    @prop()
     headOfState!: Ref<H>;
 
-    @prop({ required: true })
+    @prop()
     legislature!: Ref<Legislature<H>>;
 }
 

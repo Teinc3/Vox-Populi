@@ -3,7 +3,8 @@ import path, { dirname } from "path";
 import { fileURLToPath, pathToFileURL } from 'url';
 
 import { Client, type ClientOptions, Collection } from "discord.js";
-import type { CustomCommand } from "../types/types";
+
+import type { CustomCommand } from "../types/types.d";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

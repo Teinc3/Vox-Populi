@@ -7,7 +7,7 @@ import Legislature, { LegislatureModel, legislatureCreationTriage } from './sche
 import PoliticalRole, { PoliticalRoleModel, politicalSystemRoleCreationTriage } from './schema/PoliticalRole.js';
 
 import constants from '../data/constants.json' assert { type: 'json' };
-import { PoliticalSystemsType } from '../types/types.js';
+import { PoliticalSystemsType } from '../types/static.js';
 
 class DBManager {
     model: typeof GuildModel;
@@ -25,16 +25,15 @@ class DBManager {
         }
     }
 
-    public async createGuildDocument(guildID: string, prefix: string, system: PoliticalSystemsType, isBotOwner: boolean): Promise<boolean> {
+    public async createGuildDocument(guildID: string, system: PoliticalSystemsType, isBotOwner: boolean): Promise<boolean> {
         const guildData = {
             guildID,
-            prefix,
             isBotOwner
         } as GuildSchema;
 
         try {
-            const existingGuild = this.getGuildObject(guildID);
-            if (existingGuild === null) {
+            const existingGuild = await this.getGuildObject(guildID);
+            if (existingGuild !== null) {
                 return false;
             }
 

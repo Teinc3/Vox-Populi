@@ -1,16 +1,13 @@
 import fs from "fs";
 import path, { dirname } from "path";
 import { fileURLToPath, pathToFileURL } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
 import { REST, Routes } from "discord.js";
 import { config } from "dotenv";
 
-import constants from "../data/constants.json" assert { type: 'json' };
-const devGuildID = constants.discord.devGuildID;
+import { discord } from "../data/constants.json" assert { type: 'json' };
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 config();
 
 if (!process.env.DISCORD_TOKEN) {
@@ -20,12 +17,12 @@ if (!process.env.DISCORD_TOKEN) {
 
 const token = process.env.DISCORD_TOKEN!;
 
-const clientID: string = constants.discord.clientID;
+const clientID: string = discord.clientID;
 
 const commands: string[] = [];
 
 await loadCommands(commands);
-await postCommands(token, clientID, devGuildID, commands);
+await postCommands(token, clientID, commands);
 
 async function loadCommands(pCommands: string[]) {
     const commandDir = path.join(__dirname, 'commands');
@@ -46,7 +43,7 @@ async function loadCommands(pCommands: string[]) {
     }
 }
 
-async function postCommands(pToken: string, pClientID: string, pGuildID: string, pCommands: string[]) {
+async function postCommands(pToken: string, pClientID: string, pCommands: string[]) {
     // Construct and prepare an instance of the REST module
     const rest = new REST().setToken(pToken);
 
@@ -54,7 +51,6 @@ async function postCommands(pToken: string, pClientID: string, pGuildID: string,
     try {
         // The put method is used to fully refresh all commands in the guild with the current set
         await rest.put(Routes.applicationCommands(pClientID), { body: pCommands });
-        await rest.put(Routes.applicationGuildCommands(pClientID, pGuildID), { body: pCommands });
         console.log('Successfully reloaded application (/) commands.')
     } catch (error) {
         // And of course, make sure you catch and log any errors!

@@ -1,7 +1,8 @@
 import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
 
-import { PoliticalSystemsType } from '../../types/types';
 import PoliticalRole, { Senator, Citizen } from "./PoliticalRole.js";
+
+import { PoliticalSystemsType } from '../../types/static.js';
 
 class Legislature<T extends PoliticalRole> {
     @prop()
@@ -13,9 +14,10 @@ class Legislature<T extends PoliticalRole> {
     @prop({ required: true })
     amendmentThreshold: number = 2/3;
 
-    // Or put channels under "Category subclass"
-    /*@prop({ required: true })
-    channelID!: number;*/
+    /* Link it to a channel Object
+    @prop({ required: true })
+    channelID!: Ref<ChannelObject>;
+    */
 }
 
 class Senate extends Legislature<Senator> {
