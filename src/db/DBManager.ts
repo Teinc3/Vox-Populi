@@ -58,9 +58,10 @@ class DBManager {
             savedSystem.legislature = savedLegislature._id;
             guildData.politicalSystem = savedSystem._id;
 
+            await savedSystem.save();
             await this.model.create(guildData);
-            return true;
 
+            return true;
         } catch (err) {
             // Handle error
             console.error(err);
