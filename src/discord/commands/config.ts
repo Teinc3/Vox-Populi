@@ -6,7 +6,7 @@ import {
 
 import type DBManager from "../../db/DBManager.js";
 
-import { PoliticalSystemsType } from "../../types/static.js";
+import { PoliticalSystemsType, PoliticalSystemDescriptions } from "../../types/static.js";
 import constants from "../../data/constants.json" assert { type: 'json' };
 
 const data = new SlashCommandBuilder()
@@ -105,7 +105,7 @@ async function selectPoliticalSystem(interaction: CommandInteraction): Promise<P
         .addFields(politicalSystemOptions.map((system, index) => {
             return {
                 name: `${index + 1}. ${system}`,
-                value: `Description of ${system} goes here.`,
+                value: PoliticalSystemDescriptions[index as PoliticalSystemsType],
                 inline: false
                 };
             }
@@ -119,7 +119,6 @@ async function selectPoliticalSystem(interaction: CommandInteraction): Promise<P
             return new StringSelectMenuOptionBuilder()
                 .setLabel(system)
                 .setValue(system.toLowerCase())
-                .setDescription(`Description of ${system} goes here.`)
         }));
     const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select);
 
