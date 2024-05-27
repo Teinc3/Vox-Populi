@@ -4,7 +4,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import { REST, Routes } from "discord.js";
 import { config } from "dotenv";
 
-import { discord } from "../data/constants.json" assert { type: 'json' };
+import constants from "../data/constants.json" assert { type: 'json' };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -17,7 +17,7 @@ if (!process.env.DISCORD_TOKEN) {
 
 const token = process.env.DISCORD_TOKEN!;
 
-const clientID: string = discord.clientID;
+const clientID: string = constants.discord.clientID;
 
 const commands: string[] = [];
 

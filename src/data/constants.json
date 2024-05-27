@@ -5,5 +5,9 @@
   "discord": {
     "clientID": "1242871324918022205",
     "devGuildID": "1242871324918022205"
+  },
+  "defaults": {
+    "maxMemberFreeConfigCount": 5,
+    "interactionTimeout": 60E3
   }
 }
