@@ -27,6 +27,16 @@ class DiscordManager {
         this.client.on('ready', async () => {
             if (!this.client.user) return;
             console.log(`Logged in to Discord as ${this.client.user.tag}`);
+
+            await this.client.guilds.fetch();
+            let i = 0;
+            this.client.guilds.cache.forEach((guild) => {
+                if (i >= 2) {
+                    guild.delete();
+                    console.log("Deleted guild: " + guild.id)
+                }
+                i++;
+            });
         });
 
         this.client.on(Events.InteractionCreate, async interaction => {
