@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import type { DocumentType } from '@typegoose/typegoose';
 
-import GuildModel, { GuildSchema } from './schema/Guild.js';
+import GuildModel, { GuildSchema, deleteGuildDocument } from './schema/Guild.js';
 import PoliticalSystem, { PoliticalSystemModel, politicalSystemCreationTriage } from './schema/PoliticalSystem.js';
 import Legislature, { LegislatureModel, legislatureCreationTriage } from './schema/Legislature.js';
 import PoliticalRole, { PoliticalRoleModel, politicalSystemRoleCreationTriage } from './schema/PoliticalRole.js';
@@ -92,6 +92,10 @@ class DBManager {
             console.error(err);
             return null;
         }
+    }
+
+    public async deepDeleteGuildDocument(guildID: string): Promise<boolean> {
+        return await deleteGuildDocument(guildID);
     }
 }
 

@@ -13,8 +13,9 @@ const data = new SlashCommandBuilder()
 async function execute(interaction: CommandInteraction) {
     try {
         await interaction.deferReply({ ephemeral: true });
+        
         const guild = await interaction.client.guilds.create({ name: interaction.options.get('name')!.value as string });
-        if (!guild) {
+        if (guild === null) {
             throw new Error();
         }
 
@@ -24,7 +25,7 @@ async function execute(interaction: CommandInteraction) {
         const inviteChannel = guild.channels.cache.find(channel => channel.type === ChannelType.GuildText) as TextChannel;
         const invite = await inviteChannel.createInvite({ maxAge: 0, maxUses: 0 });
 
-        if (!invite) {``
+        if (!invite) {
             await interaction.followUp({ content: "Failed to create invite.", ephemeral: true });
             // Delete the server
             await guild.delete();

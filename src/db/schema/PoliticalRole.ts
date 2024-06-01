@@ -1,4 +1,4 @@
-import { prop, getModelForClass } from '@typegoose/typegoose';
+import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
 
 import { PoliticalSystemsType } from '../../types/static.js';
 
@@ -71,6 +71,12 @@ function politicalSystemRoleCreationTriage(politicalSystemType: PoliticalSystems
     }
 }
 
+async function deletePoliticalSystemRoleDocument(_id: Ref<PoliticalRole>) {
+    // Search permissions and delete them
+    
+    await PoliticalRoleModel.deleteOne({ _id });
+}
+
 export default PoliticalRole;
 export { President, PrimeMinister, Senator, Judge, Governor, Moderator, Citizen, Undocumented, PoliticalRoleModel }
-export { politicalSystemRoleCreationTriage }
+export { politicalSystemRoleCreationTriage, deletePoliticalSystemRoleDocument }

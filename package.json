@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "start": "tsc && node ./build/index.js",
+    "cleanBuild": "rm -rf build && tsc",
     "build": "tsc",
     "deployCommands": "tsc && node ./build/discord/deployCommands.js"
   },

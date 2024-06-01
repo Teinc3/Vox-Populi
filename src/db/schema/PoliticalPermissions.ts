@@ -79,5 +79,12 @@ class JudicialPermissions extends PoliticalPermissions {
 
 const PoliticalPermissionsModel = getModelForClass(PoliticalPermissions);
 
+// function defaultPoliticalPermissionCreationTriage(...)
+
+function deletePoliticalPermissionsDocument(_id: string) {
+    PoliticalPermissionsModel.deleteOne({ _id });
+}
+
 export default PoliticalPermissions;
-export { PoliticalPermissionsModel, LegislativePermissions, ExecutivePermissions, JudicialPermissions }
+export { PoliticalPermissionsModel, LegislativePermissions, ExecutivePermissions, JudicialPermissions };
+export { deletePoliticalPermissionsDocument };

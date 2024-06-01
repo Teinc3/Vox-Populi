@@ -1,10 +1,11 @@
-import { prop, Ref, getModelForClass } from '@typegoose/typegoose';
+import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
 
-import PoliticalSystem from './PoliticalSystem.js';
-import PoliticalRole from './PoliticalRole.js';
+import GuildCategory, { deleteGuildCategoryDocument } from './GuildCategory.js';
+import PoliticalSystem, { deletePoliticalSystemDocument } from './PoliticalSystem.js';
+import PoliticalRole, { deletePoliticalSystemRoleDocument } from './PoliticalRole.js';
 
 class GuildSchema {
-    @prop({ required: true })
+    @prop({ required: true, unique: true })
     guildID!: string;
 
     @prop({ required: true })
@@ -13,13 +14,43 @@ class GuildSchema {
     @prop()
     politicalSystem?: Ref<PoliticalSystem<PoliticalRole>>;
     
-    /* Guild structure, contains all the channel ID and role ID information
     @prop()
-    guildStructure?: Ref<GuildStructure>;
-    */
+    categories?: Ref<GuildCategory>[];
+
+    @prop()
+    roles?: Ref<PoliticalRole>[];
 }
 
 const GuildModel = getModelForClass(GuildSchema);
 
+async function deleteGuildDocument(guildID: string): Promise<boolean> {
+    // Find the guild document
+    const guild = await GuildModel.findOne({ guildID });
+    if (!guild) {
+        return true;
+    }
+    
+    // Obtain all Refs
+    const categories = guild.categories;
+    const roles = guild.roles;
+    const politicalSystem = guild.politicalSystem;
+    
+    // Delete all categories, roles, and the political system
+    for (const category of categories ?? []) {
+        await deleteGuildCategoryDocument(category);
+    }
+    for (const role of roles ?? []) {
+        await deletePoliticalSystemRoleDocument(role);
+    }
+    if (politicalSystem) {
+        await deletePoliticalSystemDocument(politicalSystem);
+    }
+
+    // Finally delete the guild document and get the result
+    const result = await GuildModel.deleteOne({ guildID });
+    return result.deletedCount === 1;
+}
+
 export default GuildModel;
-export { GuildSchema }
+export { GuildSchema };
+export { deleteGuildDocument };

@@ -1,7 +1,7 @@
-import { prop, getModelForClass, type Ref } from '@typegoose/typegoose';
+import { prop, type Ref, getModelForClass} from '@typegoose/typegoose';
 
-import PoliticalRole, { President, PrimeMinister, Governor } from "./PoliticalRole.js";
-import Legislature from "./Legislature.js";
+import PoliticalRole, { President, PrimeMinister, Governor, deletePoliticalSystemRoleDocument } from "./PoliticalRole.js";
+import Legislature, { deleteLegislatureDocument } from "./Legislature.js";
 
 import { PoliticalSystemsType } from '../../types/static.js';
 
@@ -29,6 +29,8 @@ class DirectDemocracy extends PoliticalSystem<Governor> {
     id = PoliticalSystemsType.DirectDemocracy;
 }
 
+const PoliticalSystemModel = getModelForClass(PoliticalSystem);
+
 function politicalSystemCreationTriage(politicalSystemType: PoliticalSystemsType): PoliticalSystem<PoliticalRole> {
     switch (politicalSystemType) {
         case PoliticalSystemsType.Presidential:
@@ -40,8 +42,28 @@ function politicalSystemCreationTriage(politicalSystemType: PoliticalSystemsType
     }
 }
 
-const PoliticalSystemModel = getModelForClass(PoliticalSystem);
+async function deletePoliticalSystemDocument(_id: Ref<PoliticalSystem<PoliticalRole>>) {
+    // Find the political system document
+    const politicalSystem = await PoliticalSystemModel.findOne({ _id });
+    if (!politicalSystem) {
+        return;
+    }
+
+    // Find the head of state and legislature documents
+    const headOfStateDocument = politicalSystem.headOfState;
+    const legislatureDocument = politicalSystem.legislature;
+
+    // Delete hos and legislature
+    if (headOfStateDocument) {
+        await deletePoliticalSystemRoleDocument(headOfStateDocument);
+    }
+    if (legislatureDocument) {
+        await deleteLegislatureDocument(legislatureDocument);
+    }
+
+    await PoliticalSystemModel.deleteOne({ _id });
+} 
 
 export default PoliticalSystem;
 export { Presidential, Parliamentary, DirectDemocracy, PoliticalSystemModel };
-export { politicalSystemCreationTriage };
+export { politicalSystemCreationTriage, deletePoliticalSystemDocument };

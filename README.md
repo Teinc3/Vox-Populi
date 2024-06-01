@@ -28,11 +28,10 @@ None, as of now.
 Possible Inheritance Model:
 
 Guild
-|- GuildStructure
-    |- Category[]
-        |- Channel[]
-    |- PoliticalRole[]
-        |- PoliticalPermissions
+|- GuildCategory[]
+    |- PoliticalChannel[]
+|- PoliticalRole[]
+    |- PoliticalPermissions
 |- PoliticalSystem
     |- Legislature
     |- Moderation

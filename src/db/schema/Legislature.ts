@@ -1,6 +1,7 @@
 import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
 
-import PoliticalRole, { Senator, Citizen } from "./PoliticalRole.js";
+import PoliticalRole, { Senator, Citizen, deletePoliticalSystemRoleDocument } from "./PoliticalRole.js";
+import PoliticalChannel, { deletePoliticalChannelDocument } from './PoliticalChannel.js';
 
 import { PoliticalSystemsType } from '../../types/static.js';
 
@@ -14,10 +15,8 @@ class Legislature<T extends PoliticalRole> {
     @prop({ required: true })
     amendmentThreshold: number = 2/3;
 
-    /* Link it to a channel Object
-    @prop({ required: true })
-    channelID!: Ref<ChannelObject>;
-    */
+    @prop()
+    channelID?: Ref<PoliticalChannel>;
 }
 
 class Senate extends Legislature<Senator> {
@@ -33,6 +32,9 @@ class Senate extends Legislature<Senator> {
 
 class Referendum extends Legislature<Citizen> {}
 
+const LegislatureModel = getModelForClass(Legislature);
+
+
 function legislatureCreationTriage(politicalSystemType: PoliticalSystemsType): Legislature<PoliticalRole> {
     if (politicalSystemType === PoliticalSystemsType.DirectDemocracy) {
         return new Referendum();
@@ -41,8 +43,29 @@ function legislatureCreationTriage(politicalSystemType: PoliticalSystemsType): L
     }
 }
 
-const LegislatureModel = getModelForClass(Legislature);
+async function deleteLegislatureDocument(_id: Ref<Legislature<PoliticalRole>>) {
+    // Find the legislature document
+    const legislature = await LegislatureModel.findOne({ _id });
+    if (!legislature) {
+        return;
+    }
+
+    // Find the role and channel documents
+    const roleDocument = legislature.role;
+    const channelDocument = legislature.channelID;
+
+    // Delete them
+    if (roleDocument) {
+        await deletePoliticalSystemRoleDocument(roleDocument);
+    }
+    if (channelDocument) {
+        await deletePoliticalChannelDocument(channelDocument);
+    }
+
+    // Delete the legislature document
+    await LegislatureModel.deleteOne({ _id });
+}
 
 export default Legislature;
 export { Senate, Referendum, LegislatureModel };
-export { legislatureCreationTriage };
+export { legislatureCreationTriage, deleteLegislatureDocument };

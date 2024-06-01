@@ -24,7 +24,6 @@ const data = new SlashCommandBuilder()
 */
 async function execute(interaction: CommandInteraction, dbManager: DBManager) {
     let { guild } = interaction;
-
     if (guild === null) {
         return await interaction.reply({ content: 'This command must be run in a server.', ephemeral: false });
     }
@@ -44,15 +43,19 @@ async function execute(interaction: CommandInteraction, dbManager: DBManager) {
 
     // Proceed with configuration
     try {
+        // Step 1: Select Political System
         const politicalSystem = await selectPoliticalSystem(interaction);
         if (politicalSystem === false) {
             return;
         }
+        // Step 2: Create Server Structure
+        // Step 3: Create Roles
+
         // Update database with new guild object
         const result = await dbManager.createGuildDocument(guild.id, politicalSystem, guild.ownerId === interaction.client.user.id);
 
         if (result) {
-            await interaction.followUp({ content: 'Server has been successfully configured.', ephemeral: true });
+            await interaction.followUp({ content: `Server has been successfully configured.`, ephemeral: false });
         } else {
             throw new Error('Failed to create guild document.');
         }
@@ -69,7 +72,7 @@ async function execute(interaction: CommandInteraction, dbManager: DBManager) {
 
 async function checkPermissions(interaction: CommandInteraction, dbManager: DBManager, guild: Guild): Promise<boolean> {
     if (await dbManager.getGuildObject(guild.id) !== null) {
-        await interaction.reply({ content: 'This server has already been configured.', ephemeral: true });
+        await interaction.reply({ content: 'This server has already been configured.', ephemeral: false });
         return false;
     }
 
@@ -77,7 +80,7 @@ async function checkPermissions(interaction: CommandInteraction, dbManager: DBMa
     const isAdmin = (interaction.member as GuildMember | null)?.permissions.has(PermissionsBitField.Flags.Administrator) ?? false;
     const memberCount = guild.memberCount;
 
-    if (!isServerOwner && !isAdmin && memberCount >= constants.defaults.maxMemberFreeConfigCount) {
+    if (!isServerOwner && !isAdmin && memberCount >= constants.discord.maxMemberFreeConfigCount) {
         await interaction.reply({ content: 'You do not have the necessary permissions to configure this server.', ephemeral: true });
         return false;
     }
@@ -87,7 +90,7 @@ async function checkPermissions(interaction: CommandInteraction, dbManager: DBMa
     const isBotAdmin = isBotOwner || (interaction.guild?.members.me?.permissions.has(PermissionsBitField.Flags.Administrator) ?? false);
 
     if (!isBotAdmin) {
-        await interaction.reply({ content: 'I do not have the necessary permissions to configure this server.', ephemeral: true });
+        await interaction.reply({ content: 'I do not have the necessary permissions to configure this server.', ephemeral: false });
         return false;
     }
 
@@ -123,23 +126,44 @@ async function selectPoliticalSystem(interaction: CommandInteraction): Promise<P
     const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select);
 
     // Send message
-    const response = await interaction.reply({ embeds: [embed], components: [row] });
+    const response = await interaction.reply({ embeds: [embed], components: [row], ephemeral: false });
 
     // Wait for user to select political system
-    const collector = response.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: constants.defaults.interactionTimeout });
+    const collector = response.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: constants.discord.interactionTimeout });
 
     return new Promise((resolve, _) => {
         collector.on('collect', async (selectInteraction) => {
             const selectedSystem = selectInteraction.values[0];
             const index = politicalSystemOptions.findIndex(system => system.toLowerCase() === selectedSystem);
-            await selectInteraction.deferUpdate();
             collector.stop('selected');
+            
+            // Create a new set of options where the selected option is marked as default
+            const newOptions = politicalSystemOptions.map(system => {
+                return {
+                    label: system,
+                    value: system.toLowerCase(),
+                    default: system.toLowerCase() === selectedSystem
+                };
+            });
+
+            // Set the new options and disable the dropdown menu
+            select.setOptions(newOptions);
+            select.setDisabled(true);
+            row.setComponents([select]);
+            await selectInteraction.update({ components: [row] });
+
             resolve(index as PoliticalSystemsType);
         });
 
         collector.on('end', async (_, reason) => {
-            if (reason === 'time') {
-                await interaction.followUp({ content: 'You did not select a political system in time.', ephemeral: true });
+            if (reason === 'time') {        
+                // Disable the dropdown menu
+                select.setDisabled(true);
+                row.setComponents([select]);
+
+                await interaction.editReply({ components: [row] });
+                await interaction.followUp({ content: 'Timed out.', ephemeral: true });
+
                 resolve(false);
             }
         });
