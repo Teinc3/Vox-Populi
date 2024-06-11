@@ -1,8 +1,12 @@
 import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
 
 import GuildCategory, { deleteGuildCategoryDocument } from './GuildCategory.js';
-import PoliticalSystem, { deletePoliticalSystemDocument } from './PoliticalSystem.js';
-import PoliticalRole, { deletePoliticalSystemRoleDocument } from './PoliticalRole.js';
+import PoliticalSystem, { createPoliticalSystemDocument, deletePoliticalSystemDocument } from './PoliticalSystem.js';
+import { createPoliticalRoleDocuments } from './PoliticalRole.js';
+import PoliticalRoleHolder, { createPoliticalRoleHolderDocument, deletePoliticalRoleHolderDocument } from './PoliticalRolesHolder.js';
+
+import { PoliticalSystemsType } from '../../types/static.js';
+import constants from '../../data/constants.json' assert { type: "json" };
 
 class GuildSchema {
     @prop({ required: true, unique: true })
@@ -12,20 +16,53 @@ class GuildSchema {
     isBotOwner!: boolean;
 
     @prop()
-    politicalSystem?: Ref<PoliticalSystem<PoliticalRole>>;
+    politicalSystem?: Ref<PoliticalSystem>;
     
     @prop()
     categories?: Ref<GuildCategory>[];
 
     @prop()
-    roles?: Ref<PoliticalRole>[];
+    roles?: Ref<PoliticalRoleHolder>;
+
+    /*
+    logs?: Ref<LogSchema>[];
+    */
 }
 
 const GuildModel = getModelForClass(GuildSchema);
 
+async function createGuildDocument(
+    guildID: string,
+    isBotOwner: boolean,
+    politicalystemType: PoliticalSystemsType
+): Promise<boolean> {
+
+    const existingGuild = await GuildModel.findOne({ guildID });
+    if (existingGuild !== null) {
+        return false;
+    }
+
+    const guildData = new GuildSchema();
+    guildData.guildID = guildID;
+    guildData.isBotOwner = isBotOwner;
+
+    const isCombinedCourt = constants.mechanics.court.isCombinedCourt
+
+    // Create all political roles then link them to the guild document, and generate the role document refs
+    const roleHolder = await createPoliticalRoleDocuments(politicalystemType, isCombinedCourt);
+    guildData.roles = await createPoliticalRoleHolderDocument(roleHolder);
+
+    // Create Political System then link them to the guild document
+    const politicalSystem = await createPoliticalSystemDocument(politicalystemType, isCombinedCourt, roleHolder);
+    guildData.politicalSystem = politicalSystem;
+
+    // Finally, create the guild document with the proper linkages
+    await GuildModel.create(guildData);
+    return true
+}
+
 async function deleteGuildDocument(guildID: string): Promise<boolean> {
-    // Find the guild document
-    const guild = await GuildModel.findOne({ guildID });
+    const guild = await findGuildDocument(guildID);
     if (!guild) {
         return true;
     }
@@ -39,8 +76,8 @@ async function deleteGuildDocument(guildID: string): Promise<boolean> {
     for (const category of categories ?? []) {
         await deleteGuildCategoryDocument(category);
     }
-    for (const role of roles ?? []) {
-        await deletePoliticalSystemRoleDocument(role);
+    if (roles) {
+        await deletePoliticalRoleHolderDocument(roles);
     }
     if (politicalSystem) {
         await deletePoliticalSystemDocument(politicalSystem);
@@ -48,9 +85,13 @@ async function deleteGuildDocument(guildID: string): Promise<boolean> {
 
     // Finally delete the guild document and get the result
     const result = await GuildModel.deleteOne({ guildID });
-    return result.deletedCount === 1;
+    return result.deletedCount >= 1;
+}
+
+async function findGuildDocument(guildID: string): Promise<GuildSchema | null> {
+    return await GuildModel.findOne({ guildID });
 }
 
 export default GuildModel;
 export { GuildSchema };
-export { deleteGuildDocument };
+export { createGuildDocument, deleteGuildDocument, findGuildDocument };

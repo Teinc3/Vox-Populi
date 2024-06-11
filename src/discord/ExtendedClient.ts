@@ -2,9 +2,11 @@ import fs from "fs";
 import path, { dirname } from "path";
 import { fileURLToPath, pathToFileURL } from 'url';
 
-import { Client, type ClientOptions, Collection } from "discord.js";
+import { Client, Collection, type ClientOptions, type ChatInputCommandInteraction } from "discord.js";
 
-import type { CustomCommand } from "../types/types.d";
+interface CustomCommand extends ClientOptions {
+    execute: <T>(interaction: ChatInputCommandInteraction) => Promise<T>;
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

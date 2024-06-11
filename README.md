@@ -16,23 +16,15 @@ So we will have to think of a way to work around this.
 - Typescript
 - Discord.js
 - MongoDB
-- Typegoose (Mongoose)
+- Typegoose
 
 ## Current Bugs
-None, as of now.
+Not checked for latest commit.
 
 ## TODO
+### Active
 - Refactor Legislature to not depend on PoliticalRole
-- Add all PoliticalRoles directly to PoliticalSystem
+- Move schemas to its own subdirectory under `src`
 
-Possible Inheritance Model:
-
-Guild
-|- GuildCategory[]
-    |- PoliticalChannel[]
-|- PoliticalRole[]
-    |- PoliticalPermissions
-|- PoliticalSystem
-    |- Legislature
-    |- Moderation
-    |- Court
+### Future
+- Add logging and command to view logs

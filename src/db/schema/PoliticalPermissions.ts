@@ -1,14 +1,14 @@
 import { prop, getModelForClass } from '@typegoose/typegoose';
 
-import { PoliticalPermissionsType } from '../../types/static.js';
+import { PoliticalBranchType } from '../../types/static.js';
 
 class PoliticalPermissions {
     @prop({ required: true })
-    type!: PoliticalPermissionsType; // an Enum
+    type!: PoliticalBranchType; // an Enum
 }
 
 class LegislativePermissions extends PoliticalPermissions {
-    type = PoliticalPermissionsType.Legislative;
+    type = PoliticalBranchType.Legislative;
 
     // Bills
     @prop({ required: true })
@@ -40,7 +40,11 @@ class LegislativePermissions extends PoliticalPermissions {
 }
 
 class ExecutivePermissions extends PoliticalPermissions {
-    type = PoliticalPermissionsType.Executive;
+    type = PoliticalBranchType.Executive;
+
+    // Emergency Powers
+    @prop({ required: true })
+    canInvokeEmergency: boolean = false;
 
     // Moderation
     @prop({ required: true })
@@ -57,7 +61,7 @@ class ExecutivePermissions extends PoliticalPermissions {
 }
 
 class JudicialPermissions extends PoliticalPermissions {
-    type = PoliticalPermissionsType.Judicial;
+    type = PoliticalBranchType.Judicial;
 
     // Within Court
     @prop({ required: true })

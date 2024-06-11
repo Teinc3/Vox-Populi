@@ -1,40 +1,13 @@
-import { 
-    SlashCommandBuilder, type CommandInteraction,
-    ActionRowBuilder, ButtonBuilder, ButtonStyle,
-    type MessageComponentInteraction
+import {  
+    Guild, ActionRowBuilder, ButtonBuilder, ButtonStyle,
+    type ChatInputCommandInteraction, type MessageComponentInteraction
 } from "discord.js";
 
-import type DBManager from "../../db/DBManager";
+import { deleteGuildDocument } from "../../../db/schema/Guild";
 
-import constants from "../../data/constants.json" assert { type: "json" };
+import constants from "../../../data/constants.json" assert { type: "json" };
 
-const data = new SlashCommandBuilder()
-    .setName('delete')
-    .setDescription('Deletes the server configuration.');
-
-// Cannot be reset unless Bot Owner OR server owner OR < maxMemberFreeConfigCount members.
-async function execute(interaction: CommandInteraction, dbManager: DBManager) {
-    let { guild } = interaction;
-    if (guild === null) {
-        return await interaction.reply({ content: 'This command must be run in a server.', ephemeral: false });
-    }
-
-    const isUserBotOwner = interaction.user.id === constants.discord.botOwnerID;
-    if (!isUserBotOwner) {
-        await guild.fetch();
-
-        const memberCount = guild.memberCount;
-
-        if (interaction.member === null) {
-            await guild.members.fetch(interaction.user.id);
-        }
-        const isServerOwner = guild.ownerId === interaction.user.id;
-        
-        if (!isServerOwner && memberCount > constants.discord.maxMemberFreeConfigCount) {
-            return await interaction.reply({ content: 'You do not have the necessary permissions to delete the server configuration.', ephemeral: true });
-        }
-    }
-
+export default async function execute_delete(interaction: ChatInputCommandInteraction, guild: Guild): Promise<boolean> {
     // Add a confirmation step
     const confirm = new ButtonBuilder()
         .setCustomId('delete_confirm')
@@ -65,18 +38,19 @@ async function execute(interaction: CommandInteraction, dbManager: DBManager) {
 
         if (collected.customId === 'delete_confirm') {
             // Proceed with deletion
-            const result = await dbManager.deepDeleteGuildDocument(guild.id);
+            const result = await deleteGuildDocument(guild.id);
             if (result) {
                 await interaction.followUp({ content: 'Server configuration has been successfully deleted.', ephemeral: false });
             } else {
-                await interaction.followUp({ content: 'Failed to delete server configuration.', ephemeral: true });
+                return false;
             }
         } else {
             await interaction.followUp({ content: 'Server configuration deletion has been cancelled.', ephemeral: false });
         }
+        return true;
+
     } catch (err) {
         await interaction.followUp({ content: 'Server configuration deletion has timed out.', ephemeral: true });
+        return false;
     }
 }
-
-export { data, execute };

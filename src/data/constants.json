@@ -8,5 +8,20 @@
     "botOwnerID": "420725289908174859",
     "maxMemberFreeConfigCount": 5,
     "interactionTimeout": 60E3
+  },
+  "mechanics": {
+    "legislature": {
+      "_": "Term duration is 60 days with no term limit",
+      "termDuration": 5184E3,
+      "termLimit": 0
+    },
+    "court": {
+      "_": "Court is not combined with the legislature",
+      "isCombinedCourt": false
+    },
+    "directDemocracy": {
+      "_": "Members can vote in moderators for the server",
+      "appointModerators": false
+    }
   }
 }

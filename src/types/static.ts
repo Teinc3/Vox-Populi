@@ -10,8 +10,9 @@ export const PoliticalSystemDescriptions = {
     [PoliticalSystemsType.DirectDemocracy]: 'A form of democracy in which people decide on policy initiatives directly.'
 };
 
-export enum PoliticalPermissionsType {
-    Legislative = 0,
-    Executive = 1,
-    Judicial = 2
+export enum PoliticalBranchType {
+    None = 0,
+    Legislative = 1,
+    Executive = 2,
+    Judicial = 3,
 }

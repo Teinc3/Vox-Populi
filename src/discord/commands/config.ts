@@ -1,35 +1,46 @@
-import { 
-    SlashCommandBuilder, PermissionsBitField, EmbedBuilder, 
-    ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType,
-    type CommandInteraction, type Guild, type GuildMember,
-} from "discord.js";
+import { SlashCommandBuilder, PermissionsBitField, type ChatInputCommandInteraction, type Guild, type GuildMember } from "discord.js";
 
-import type DBManager from "../../db/DBManager.js";
+import { findGuildDocument } from "../../db/schema/Guild.js";
+import init from "./subcommands/init.js";
+import execute_delete from "./subcommands/delete.js";
 
-import { PoliticalSystemsType, PoliticalSystemDescriptions } from "../../types/static.js";
 import constants from "../../data/constants.json" assert { type: 'json' };
 
 const data = new SlashCommandBuilder()
     .setName('config')
-    .setDescription("Configures the Server.");
+    .setDescription("Configures the Server.")
+    .setDMPermission(false)
+    .addSubcommand((subcommand) => {
+        subcommand.setName('init');
+        subcommand.setDescription('Creates a new server configuration.');
+        subcommand.addStringOption((option) => {
+            option.setName('politicalsystem');
+            option.setDescription('Select the desired political system for the server.');
+            option.setRequired(true);
+            option.addChoices(
+                { name: 'Presidential', value: 'presidential' },
+                { name: 'Parliamentary', value: 'parliamentary' },
+                { name: 'Direct Democracy', value: 'directdemocracy'}
+            );
+            return option;
+        });
+        return subcommand;
+    })
+    .addSubcommand((subcommand) => {
+        subcommand.setName('delete');
+        subcommand.setDescription('Deletes the server configuration.');
+        return subcommand;
+    });
 
-/* Call-Checks
-1. Must not be in DM
-2. Guild must not be configured before
-3. User must have the necessary permissions
-    1: Server Owner
-    2: In server with ADMINISTRATOR permission
-    3: Less than 5 non-bots in server
-4. Bot must have the necessary ADMINISTRATOR permissions
-*/
-async function execute(interaction: CommandInteraction, dbManager: DBManager) {
-    let { guild } = interaction;
+async function execute(interaction: ChatInputCommandInteraction) {
+    const { guild } = interaction;
     if (guild === null) {
+        // Should not happen with DM permissions off, but just in case
         return await interaction.reply({ content: 'This command must be run in a server.', ephemeral: false });
     }
 
     // Fetch guild and member data
-    guild = await guild.fetch();
+    await guild.fetch();
     if (interaction.member === null) {
         await guild.members.fetch(interaction.user.id);
     }
@@ -37,31 +48,33 @@ async function execute(interaction: CommandInteraction, dbManager: DBManager) {
         await guild.members.fetch(interaction.client.user.id);
     }
 
-    if (!await checkPermissions(interaction, dbManager, guild)) {
+    if (!await checkPermissions(interaction, guild)) {
         return;
     }
 
     // Proceed with configuration
     try {
-        // Step 1: Select Political System
-        const politicalSystem = await selectPoliticalSystem(interaction);
-        if (politicalSystem === false) {
-            return;
+        // Handle subcommand
+        let result: boolean;
+        const subcommand = interaction.options.getSubcommand();
+
+        switch (subcommand) {
+            case "init":
+                result = await init(interaction, guild);
+                break;
+            case "delete":
+                result = await execute_delete(interaction, guild);
+                return;
+            default:
+                throw new Error('Invalid subcommand.');
         }
-        // Step 2: Create Server Structure
-        // Step 3: Create Roles
 
-        // Update database with new guild object
-        const result = await dbManager.createGuildDocument(guild.id, politicalSystem, guild.ownerId === interaction.client.user.id);
-
-        if (result) {
-            await interaction.followUp({ content: `Server has been successfully configured.`, ephemeral: false });
-        } else {
-            throw new Error('Failed to create guild document.');
+        if (!result) {
+            throw new Error('Configuration Error');
         }
     } catch (err) {
         console.error(err);
-        const errorMsgObject = { content: 'An error occurred while attempting to configure the server.', ephemeral: true }
+        const errorMsgObject = { content: 'An error occurred while attempting to update the server configuration.', ephemeral: true }
         if (interaction.replied) {
             await interaction.followUp(errorMsgObject);
         } else {
@@ -70,17 +83,32 @@ async function execute(interaction: CommandInteraction, dbManager: DBManager) {
     }
 }
 
-async function checkPermissions(interaction: CommandInteraction, dbManager: DBManager, guild: Guild): Promise<boolean> {
-    if (await dbManager.getGuildObject(guild.id) !== null) {
+/* Permissions Check for Config Command
+1. Must not be in DM
+2. Guild must not be configured before for subcommand "init", or must be configured otherwise.
+3. User must have the necessary permissions
+    1: Bot Owner
+    2: Server Owner
+    3: In server with ADMINISTRATOR permission
+    4: Less than 5 members in server (Does not include Bot)
+4. Bot must have the necessary ADMINISTRATOR permissions
+*/
+async function checkPermissions(interaction: ChatInputCommandInteraction, guild: Guild): Promise<boolean> {
+    const hasConfigedGuild = await findGuildDocument(guild.id) !== null;
+    if (interaction.options.getSubcommand() === "init" && hasConfigedGuild) {
         await interaction.reply({ content: 'This server has already been configured.', ephemeral: false });
+        return false;
+    } else if (interaction.options.getSubcommand() !== "init" && !hasConfigedGuild) {
+        await interaction.reply({ content: 'This server does not have a proper configuration.', ephemeral: false });
         return false;
     }
 
+    const isUserBotOwner = interaction.user.id === constants.discord.botOwnerID;
     const isServerOwner = guild.ownerId === interaction.user.id;
     const isAdmin = (interaction.member as GuildMember | null)?.permissions.has(PermissionsBitField.Flags.Administrator) ?? false;
     const memberCount = guild.memberCount;
 
-    if (!isServerOwner && !isAdmin && memberCount >= constants.discord.maxMemberFreeConfigCount) {
+    if (!isUserBotOwner && !isServerOwner && !isAdmin && memberCount > constants.discord.maxMemberFreeConfigCount) {
         await interaction.reply({ content: 'You do not have the necessary permissions to configure this server.', ephemeral: true });
         return false;
     }
@@ -95,79 +123,6 @@ async function checkPermissions(interaction: CommandInteraction, dbManager: DBMa
     }
 
     return true;
-}
-
-// Page 1
-async function selectPoliticalSystem(interaction: CommandInteraction): Promise<PoliticalSystemsType | false> {
-    const politicalSystemOptions = Object.keys(PoliticalSystemsType).filter(key => isNaN(Number(key)))
-
-    const embed = new EmbedBuilder()
-        .setTitle('Server Configuration')
-        .setDescription('Step 1. Select a political system for your server.')
-        .setFooter({ text: 'Page 1/3' })
-        .addFields(politicalSystemOptions.map((system, index) => {
-            return {
-                name: `${index + 1}. ${system}`,
-                value: PoliticalSystemDescriptions[index as PoliticalSystemsType],
-                inline: false
-                };
-            }
-        ));
-
-    // Attach dropdown menu for selecting political system
-    const select = new StringSelectMenuBuilder()
-        .setCustomId('select_political_system')
-        .setPlaceholder('Select a Political System')
-        .addOptions(politicalSystemOptions.map((system) => {
-            return new StringSelectMenuOptionBuilder()
-                .setLabel(system)
-                .setValue(system.toLowerCase())
-        }));
-    const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select);
-
-    // Send message
-    const response = await interaction.reply({ embeds: [embed], components: [row], ephemeral: false });
-
-    // Wait for user to select political system
-    const collector = response.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: constants.discord.interactionTimeout });
-
-    return new Promise((resolve, _) => {
-        collector.on('collect', async (selectInteraction) => {
-            const selectedSystem = selectInteraction.values[0];
-            const index = politicalSystemOptions.findIndex(system => system.toLowerCase() === selectedSystem);
-            collector.stop('selected');
-            
-            // Create a new set of options where the selected option is marked as default
-            const newOptions = politicalSystemOptions.map(system => {
-                return {
-                    label: system,
-                    value: system.toLowerCase(),
-                    default: system.toLowerCase() === selectedSystem
-                };
-            });
-
-            // Set the new options and disable the dropdown menu
-            select.setOptions(newOptions);
-            select.setDisabled(true);
-            row.setComponents([select]);
-            await selectInteraction.update({ components: [row] });
-
-            resolve(index as PoliticalSystemsType);
-        });
-
-        collector.on('end', async (_, reason) => {
-            if (reason === 'time') {        
-                // Disable the dropdown menu
-                select.setDisabled(true);
-                row.setComponents([select]);
-
-                await interaction.editReply({ components: [row] });
-                await interaction.followUp({ content: 'Timed out.', ephemeral: true });
-
-                resolve(false);
-            }
-        });
-    });
 }
 
 export { data, execute };

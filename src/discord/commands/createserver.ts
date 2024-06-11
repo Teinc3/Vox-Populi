@@ -1,8 +1,9 @@
-import { SlashCommandBuilder, type TextChannel, type CommandInteraction, ChannelType } from "discord.js";
+import { SlashCommandBuilder, type TextChannel, type ChatInputCommandInteraction, ChannelType } from "discord.js";
 
 const data = new SlashCommandBuilder()
     .setName('createserver')
     .setDescription('Creates a new server with the Bot as owner and gives you the invite link.')
+    .setDMPermission(true)
     .addStringOption((option) => {
         option.setName('name')
             .setDescription('The name of the server you want the bot to create.')
@@ -10,7 +11,7 @@ const data = new SlashCommandBuilder()
         return option;
     })
 
-async function execute(interaction: CommandInteraction) {
+async function execute(interaction: ChatInputCommandInteraction) {
     try {
         await interaction.deferReply({ ephemeral: true });
         
