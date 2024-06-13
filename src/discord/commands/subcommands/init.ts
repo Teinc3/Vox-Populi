@@ -21,7 +21,7 @@ export default async function init(interaction: ChatInputCommandInteraction, gui
     const result = await createGuildDocument(guild.id, guild.ownerId === interaction.client.user.id, politicalSystem);
     
     if (result) {
-        await interaction.followUp({ content: `Server has been successfully configured.`, ephemeral: false });
+        await interaction.reply({ content: `Server has been successfully configured.`, ephemeral: false });
     }
     return result
 }

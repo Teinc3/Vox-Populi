@@ -2,7 +2,7 @@ import { prop, type Ref, getModelForClass} from '@typegoose/typegoose';
 
 import PoliticalRole, { President, PrimeMinister, deletePoliticalRoleDocument } from "./PoliticalRole.js";
 import PoliticalRoleHolder from './PoliticalRolesHolder.js';
-import Chamber, { Legislature, Senate, Referendum, createChamberDocument, deleteChamberDocument } from "./Chamber.js";
+import Chamber, { Legislature, Senate, Referendum, Court, createChamberDocument, deleteChamberDocument } from "./Chamber.js";
 
 import { PoliticalSystemsType } from '../../types/static.js';
 import constants from '../../data/constants.json' assert { type: "json" };
@@ -12,35 +12,35 @@ class PoliticalSystem {
     @prop({ required: true })
     id!: PoliticalSystemsType;
 
-    @prop()
+    @prop({ ref: () => 'PoliticalRole' })
     headOfState?: Ref<PoliticalRole>;
 
-    @prop()
-    legislature?: Ref<Legislature>;
+    @prop({ required: true, ref: () => 'Legislature' })
+    legislature!: Ref<Legislature>;
 
     // If the court is the same as the legislature
-    @prop({ required: true })
+    @prop({ required: true, default: constants.mechanics.court.isCombinedCourt })
     isCombinedCourt: boolean = constants.mechanics.court.isCombinedCourt;
 
-    @prop()
-    court?: Ref<Chamber>;
+    @prop({ required: true, ref: () => 'Chamber' })
+    court!: Ref<Chamber>;
 }
 
 class Presidential extends PoliticalSystem {
     id = PoliticalSystemsType.Presidential;
     declare headOfState?: Ref<President>;
-    declare legislature?: Ref<Senate>;
+    declare legislature: Ref<Senate>;
 }
 
 class Parliamentary extends PoliticalSystem {
     id = PoliticalSystemsType.Parliamentary;
     declare headOfState?: Ref<PrimeMinister>;
-    declare legislature?: Ref<Senate>;
+    declare legislature: Ref<Senate>;
 }
 
 class DirectDemocracy extends PoliticalSystem {
     id = PoliticalSystemsType.DirectDemocracy;
-    declare legislature?: Ref<Referendum>;
+    declare legislature: Ref<Referendum>;
 
     // If people vote on moderation, or if the moderation is done by mods appointed by referendums
     @prop({ required: true })
@@ -86,10 +86,11 @@ async function createPoliticalSystemDocument(
     // Create Legislature document
     politicalSystem.legislature = await createChamberDocument(legislatureRole, politicalSystemType === PoliticalSystemsType.DirectDemocracy ? Referendum : Senate);
     if (isCombinedCourt) {
+        // Set court to current legislature
         politicalSystem.court = politicalSystem.legislature;
     } else {
-        // Create Court document
-        politicalSystem.court = await createChamberDocument(politicalRoleHolder.Judge!, Chamber);
+        // Create separate court
+        politicalSystem.court = await createChamberDocument(politicalRoleHolder.Judge!, Court);
     }
 
     // Save the political system document and return the reference
@@ -106,7 +107,7 @@ async function deletePoliticalSystemDocument(_id: Ref<PoliticalSystem>) {
     // Find documents: HoS, Legislature, Court (if not combined with legislature)
     const headOfStateDocument = politicalSystem.headOfState;
     const legislatureDocument = politicalSystem.legislature;
-    // const courtDocument = politicalSystem.court;
+    const courtDocument = politicalSystem.court;
 
     // Delete hos and legislature if still exist
     if (headOfStateDocument) {
@@ -115,7 +116,9 @@ async function deletePoliticalSystemDocument(_id: Ref<PoliticalSystem>) {
     if (legislatureDocument) {
         await deleteChamberDocument(legislatureDocument);
     }
-    // delete court
+    if (courtDocument && !politicalSystem.isCombinedCourt) {
+        await deleteChamberDocument(courtDocument);
+    }
 
     await PoliticalSystemModel.deleteOne({ _id });
 } 

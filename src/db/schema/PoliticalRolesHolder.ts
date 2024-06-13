@@ -3,28 +3,28 @@ import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
 import PoliticalRole, { President, PrimeMinister, HeadModerator, Senator, Judge, Moderator, Citizen, Undocumented, deletePoliticalRoleDocument, PoliticalRoleNames } from "./PoliticalRole.js";
 
 class PoliticalRoleHolder {
-    @prop()
+    @prop({ ref: () => 'President' })
     President?: Ref<President>;
 
-    @prop()
+    @prop({ ref: () => 'PrimeMinister' })
     PrimeMinister?: Ref<PrimeMinister>;
 
-    @prop()
+    @prop({ ref: () => 'HeadModerator' })
     HeadModerator?: Ref<HeadModerator>;
 
-    @prop()
+    @prop({ ref: () => 'Senator' })
     Senator?: Ref<Senator>;
 
-    @prop()
+    @prop({ ref: () => 'Judge' })
     Judge?: Ref<Judge>;
 
-    @prop()
+    @prop({ ref: () => 'Moderator' })
     Moderator?: Ref<Moderator>;
 
-    @prop()
+    @prop({ ref: () => 'Citizen' })
     Citizen?: Ref<Citizen>;
 
-    @prop()
+    @prop({ ref: () => 'Undocumented' })
     Undocumented?: Ref<Undocumented>;
 }
 
@@ -41,11 +41,14 @@ async function deletePoliticalRoleHolderDocument(_id: Ref<PoliticalRoleHolder>) 
     }
 
     for (const roleName of PoliticalRoleNames) {
-        const role = politicalRoleHolder[roleName as keyof PoliticalRoleHolder];
+        const role = politicalRoleHolder[roleName.replace(" ", "") as keyof PoliticalRoleHolder];
         if (role) {
+            console.log("Deleting role ", roleName)
             await deletePoliticalRoleDocument(role as Ref<PoliticalRole>);
         }
     }
+
+    await PoliticalRoleHolderModel.deleteOne({ _id });
 }
 
 export default PoliticalRoleHolder;

@@ -4,9 +4,9 @@
   "type": "module",
   "scripts": {
     "start": "tsc && node ./build/index.js",
-    "cleanBuild": "rm -rf build && tsc",
-    "build": "tsc",
-    "deployCommands": "tsc && node ./build/discord/deployCommands.js"
+    "cleanbuild": "rm -rf build && tsc",
+    "build": "tsc --build --verbose",
+    "deployCommands": "npm run build && node ./build/discord/deployCommands.js"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"

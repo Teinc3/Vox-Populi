@@ -1,10 +1,11 @@
-import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
+import { prop, type Ref, getModelForClass/* , modelOptions, Severity */ } from '@typegoose/typegoose';
 
 import PoliticalRole, { Senator, Citizen, deletePoliticalRoleDocument } from "./PoliticalRole.js";
 import PoliticalChannel, { deletePoliticalChannelDocument } from './PoliticalChannel.js';
 
 import { PoliticalBranchType } from '../../types/static.js';
 
+//@modelOptions({ schemaOptions: { collection: "chambers" }, options: { allowMixed: Severity.ALLOW } })
 class Chamber {
     @prop({ required: true })
     id!: PoliticalBranchType;
@@ -12,47 +13,51 @@ class Chamber {
     @prop({ required: true })
     name!: string;
 
-    @prop()
-    role?: Ref<PoliticalRole>;
+    @prop({ required: true, ref: () => 'PoliticalRole' })
+    role!: Ref<PoliticalRole>;
 
-    @prop({ required: true })
-    threshold: number = 0.5;
+    @prop({ ref: () => 'PoliticalChannel' })
+    channel?: Ref<PoliticalChannel>;
 
+    @prop({ required: true, default: 0.5 })
+    threshold!: number;
+    
+    // These are optional because they are not used by Referendum
     @prop()
     termLength?: number;
 
     @prop()
-    channelID?: Ref<PoliticalChannel>;
+    termLimit?: number;
 }
 
 class Legislature extends Chamber {
     id = PoliticalBranchType.Legislative;
 
-    @prop({ required: true })
-    amendmentThreshold: number = 2/3;
+    @prop({ required: true, default: 2/3 })
+    amendmentThreshold!: number;
 }
 
 class Senate extends Legislature {
     name = "Senate";
-    declare role?: Ref<Senator>;
+    declare role: Ref<Senator>;
 
-    @prop({ required: true })
-    termLength: number = 90 * 86400;
+    termLimit = 2;
+    termLength = 90 * 86400;
 
-    @prop({ required: true })
-    termLimit: number = 0;
-
-    @prop({ required: true })
-    seats: number = 10;
+    @prop({ required: true, default: 10 })
+    seats!: number;
 }
 
 class Referendum extends Legislature {
     name = "Referendum";
-    declare role?: Ref<Citizen>;
+    declare role: Ref<Citizen>;
 }
 
 class Court extends Chamber {
     id = PoliticalBranchType.Judicial;
+    name = "Court";
+
+    termLimit = 0;
     termLength = 180 * 86400;
 }
 
@@ -74,7 +79,7 @@ async function deleteChamberDocument(_id: Ref<Chamber>) {
 
     // Find the role and channel documents
     const roleDocument = chamber.role;
-    const channelDocument = chamber.channelID;
+    const channelDocument = chamber.channel;
 
     // Delete them
     if (roleDocument) {

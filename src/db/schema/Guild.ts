@@ -15,14 +15,14 @@ class GuildSchema {
     @prop({ required: true })
     isBotOwner!: boolean;
 
-    @prop()
-    politicalSystem?: Ref<PoliticalSystem>;
+    @prop({ required: true, ref: () => 'PoliticalSystem' })
+    politicalSystem!: Ref<PoliticalSystem>;
     
-    @prop()
+    @prop({ default: new Array(), ref: () => 'GuildCategory' })
     categories?: Ref<GuildCategory>[];
 
-    @prop()
-    roles?: Ref<PoliticalRoleHolder>;
+    @prop({ required: true, ref: () => 'PoliticalRoleHolder' })
+    roles!: Ref<PoliticalRoleHolder>;
 
     /*
     logs?: Ref<LogSchema>[];

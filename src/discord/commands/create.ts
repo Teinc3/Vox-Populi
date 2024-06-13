@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, type TextChannel, type ChatInputCommandInteraction, ChannelType } from "discord.js";
 
 const data = new SlashCommandBuilder()
-    .setName('createserver')
+    .setName('create')
     .setDescription('Creates a new server with the Bot as owner and gives you the invite link.')
     .setDMPermission(true)
     .addStringOption((option) => {

@@ -4,14 +4,14 @@ import { PoliticalSystemsType } from '../../types/static.js';
 import PoliticalRoleHolder from './PoliticalRolesHolder.js';
 
 class PoliticalRole {
-    @prop()
-    roleID!: number;
-
     @prop({ required: true })
     name!: string;
-
+    
     @prop({ required: true })
     hierarchy!: number;
+
+    @prop()
+    roleID?: number;
 }
 
 const PoliticalRoleNames = [
@@ -81,15 +81,17 @@ async function createPoliticalRoleDocuments(politicalSytemType: PoliticalSystems
     if (!isCombinedCourt) {
         roleHolder.Judge = await PoliticalRoleModel.create(new Judge());
     }
+    // If Direct Democracy and appointModerators is false, no Moderator role is created
     roleHolder.HeadModerator = await PoliticalRoleModel.create(new HeadModerator());
     roleHolder.Moderator = await PoliticalRoleModel.create(new Moderator());
+
     roleHolder.Citizen = await PoliticalRoleModel.create(new Citizen());
     roleHolder.Undocumented = await PoliticalRoleModel.create(new Undocumented());
 
     return roleHolder;
 }
 
-async function deletePoliticalRoleDocument(_id: Ref<PoliticalRole>) {    
+async function deletePoliticalRoleDocument(_id: Ref<PoliticalRole>) {  
     await PoliticalRoleModel.deleteOne({ _id });
 }
 

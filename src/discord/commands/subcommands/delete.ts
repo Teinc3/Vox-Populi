@@ -3,7 +3,7 @@ import {
     type ChatInputCommandInteraction, type MessageComponentInteraction
 } from "discord.js";
 
-import { deleteGuildDocument } from "../../../db/schema/Guild";
+import { deleteGuildDocument } from "../../../db/schema/Guild.js";
 
 import constants from "../../../data/constants.json" assert { type: "json" };
 
