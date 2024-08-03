@@ -2,6 +2,7 @@ import { SlashCommandBuilder, PermissionsBitField, type ChatInputCommandInteract
 
 import { findGuildDocument } from "../../db/schema/Guild.js";
 import init from "./subcommands/init.js";
+//import view from "./subcommands/view.js"
 import execute_delete from "./subcommands/delete.js";
 
 import constants from "../../data/constants.json" assert { type: 'json' };
@@ -25,6 +26,22 @@ const data = new SlashCommandBuilder()
             return option;
         });
         return subcommand;
+    })
+    .addSubcommandGroup((subcommandGroup) => {
+        subcommandGroup.setName('view')
+            .setDescription('Views the current server configuration.')
+            .addSubcommand((subcommand) => {
+                subcommand.setName('roles');
+                subcommand.setDescription('Views configuration for a specific role.');
+                subcommand.addRoleOption((option) => {
+                    option.setName('role');
+                    option.setDescription('The role to view the configuration for.');
+                    option.setRequired(true);
+                    return option;
+                });
+                return subcommand;
+            });
+        return subcommandGroup;
     })
     .addSubcommand((subcommand) => {
         subcommand.setName('delete');
@@ -60,7 +77,11 @@ async function execute(interaction: ChatInputCommandInteraction) {
 
         switch (subcommand) {
             case "init":
-                result = await init(interaction, guild);
+                result = await init(interaction);
+                break;
+            case "view":
+                // Not implemented yet
+                result = false;
                 break;
             case "delete":
                 result = await execute_delete(interaction, guild);

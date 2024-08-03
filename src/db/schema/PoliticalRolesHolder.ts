@@ -1,6 +1,7 @@
 import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
+import { type Guild } from 'discord.js';
 
-import PoliticalRole, { President, PrimeMinister, HeadModerator, Senator, Judge, Moderator, Citizen, Undocumented, deletePoliticalRoleDocument, PoliticalRoleNames } from "./PoliticalRole.js";
+import PoliticalRole, { President, PrimeMinister, HeadModerator, Senator, Judge, Moderator, Citizen, deletePoliticalRoleDocument, PoliticalRoleObjectList } from "./PoliticalRole.js";
 
 class PoliticalRoleHolder {
     @prop({ ref: () => 'President' })
@@ -23,9 +24,6 @@ class PoliticalRoleHolder {
 
     @prop({ ref: () => 'Citizen' })
     Citizen?: Ref<Citizen>;
-
-    @prop({ ref: () => 'Undocumented' })
-    Undocumented?: Ref<Undocumented>;
 }
 
 const PoliticalRoleHolderModel = getModelForClass(PoliticalRoleHolder);
@@ -34,17 +32,17 @@ async function createPoliticalRoleHolderDocument(politicalRoleHolder: PoliticalR
     return await PoliticalRoleHolderModel.create(politicalRoleHolder);
 }
 
-async function deletePoliticalRoleHolderDocument(_id: Ref<PoliticalRoleHolder>) {
+async function deletePoliticalRoleHolderDocument(guild: Guild, _id: Ref<PoliticalRoleHolder>) {
     const politicalRoleHolder = await PoliticalRoleHolderModel.findOne({ _id });
     if (!politicalRoleHolder) {
         return;
     }
 
-    for (const roleName of PoliticalRoleNames) {
+    for (const PoliticalRoleObject of PoliticalRoleObjectList) {
+        const roleName = PoliticalRoleObject.name;
         const role = politicalRoleHolder[roleName.replace(" ", "") as keyof PoliticalRoleHolder];
         if (role) {
-            console.log("Deleting role ", roleName)
-            await deletePoliticalRoleDocument(role as Ref<PoliticalRole>);
+            await deletePoliticalRoleDocument(guild, role as Ref<PoliticalRole>);
         }
     }
 

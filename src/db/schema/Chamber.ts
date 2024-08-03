@@ -1,4 +1,5 @@
 import { prop, type Ref, getModelForClass/* , modelOptions, Severity */ } from '@typegoose/typegoose';
+import { type Guild } from 'discord.js';
 
 import PoliticalRole, { Senator, Citizen, deletePoliticalRoleDocument } from "./PoliticalRole.js";
 import PoliticalChannel, { deletePoliticalChannelDocument } from './PoliticalChannel.js';
@@ -70,7 +71,7 @@ async function createChamberDocument<T extends Chamber>(role: Ref<PoliticalRole>
     return await ChamberModel.create(chamber) as Ref<T>;
 }
 
-async function deleteChamberDocument(_id: Ref<Chamber>) {
+async function deleteChamberDocument(guild: Guild, _id: Ref<Chamber>) {
     // Find the chamber document
     const chamber = await ChamberModel.findOne({ _id });
     if (!chamber) {
@@ -83,7 +84,7 @@ async function deleteChamberDocument(_id: Ref<Chamber>) {
 
     // Delete them
     if (roleDocument) {
-        await deletePoliticalRoleDocument(roleDocument);
+        await deletePoliticalRoleDocument(guild, roleDocument);
     }
     if (channelDocument) {
         await deletePoliticalChannelDocument(channelDocument);

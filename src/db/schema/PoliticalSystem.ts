@@ -1,4 +1,5 @@
 import { prop, type Ref, getModelForClass} from '@typegoose/typegoose';
+import type { Guild } from 'discord.js';
 
 import PoliticalRole, { President, PrimeMinister, deletePoliticalRoleDocument } from "./PoliticalRole.js";
 import PoliticalRoleHolder from './PoliticalRolesHolder.js';
@@ -97,7 +98,7 @@ async function createPoliticalSystemDocument(
     return await PoliticalSystemModel.create(politicalSystem);
 }
 
-async function deletePoliticalSystemDocument(_id: Ref<PoliticalSystem>) {
+async function deletePoliticalSystemDocument(guild: Guild, _id: Ref<PoliticalSystem>) {
     // Find the political system document
     const politicalSystem = await PoliticalSystemModel.findOne({ _id });
     if (!politicalSystem) {
@@ -111,13 +112,13 @@ async function deletePoliticalSystemDocument(_id: Ref<PoliticalSystem>) {
 
     // Delete hos and legislature if still exist
     if (headOfStateDocument) {
-        await deletePoliticalRoleDocument(headOfStateDocument);
+        await deletePoliticalRoleDocument(guild, headOfStateDocument);
     }
     if (legislatureDocument) {
-        await deleteChamberDocument(legislatureDocument);
+        await deleteChamberDocument(guild, legislatureDocument);
     }
     if (courtDocument && !politicalSystem.isCombinedCourt) {
-        await deleteChamberDocument(courtDocument);
+        await deleteChamberDocument(guild, courtDocument);
     }
 
     await PoliticalSystemModel.deleteOne({ _id });

@@ -1,4 +1,5 @@
 import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
+import type { Guild, ChatInputCommandInteraction } from 'discord.js';
 
 import GuildCategory, { deleteGuildCategoryDocument } from './GuildCategory.js';
 import PoliticalSystem, { createPoliticalSystemDocument, deletePoliticalSystemDocument } from './PoliticalSystem.js';
@@ -31,11 +32,11 @@ class GuildSchema {
 
 const GuildModel = getModelForClass(GuildSchema);
 
-async function createGuildDocument(
-    guildID: string,
-    isBotOwner: boolean,
-    politicalystemType: PoliticalSystemsType
-): Promise<boolean> {
+async function createGuildDocument(interaction: ChatInputCommandInteraction, politicalystemType: PoliticalSystemsType): Promise<boolean> {
+
+    const discordGuild = interaction.guild!;
+    const guildID = discordGuild.id;
+    const isBotOwner = discordGuild.ownerId === interaction.client.user.id;
 
     const existingGuild = await GuildModel.findOne({ guildID });
     if (existingGuild !== null) {
@@ -49,7 +50,7 @@ async function createGuildDocument(
     const isCombinedCourt = constants.mechanics.court.isCombinedCourt
 
     // Create all political roles then link them to the guild document, and generate the role document refs
-    const roleHolder = await createPoliticalRoleDocuments(politicalystemType, isCombinedCourt);
+    const roleHolder = await createPoliticalRoleDocuments(interaction, politicalystemType, isCombinedCourt);
     guildData.roles = await createPoliticalRoleHolderDocument(roleHolder);
 
     // Create Political System then link them to the guild document
@@ -61,26 +62,27 @@ async function createGuildDocument(
     return true
 }
 
-async function deleteGuildDocument(guildID: string): Promise<boolean> {
-    const guild = await findGuildDocument(guildID);
-    if (!guild) {
+async function deleteGuildDocument(guild: Guild): Promise<boolean> {
+    const guildID = guild.id;
+    const guildDocument = await findGuildDocument(guildID);
+    if (!guildDocument) {
         return true;
     }
     
     // Obtain all Refs
-    const categories = guild.categories;
-    const roles = guild.roles;
-    const politicalSystem = guild.politicalSystem;
+    const categories = guildDocument.categories;
+    const roles = guildDocument.roles;
+    const politicalSystem = guildDocument.politicalSystem;
     
     // Delete all categories, roles, and the political system
     for (const category of categories ?? []) {
         await deleteGuildCategoryDocument(category);
     }
     if (roles) {
-        await deletePoliticalRoleHolderDocument(roles);
+        await deletePoliticalRoleHolderDocument(guild, roles);
     }
     if (politicalSystem) {
-        await deletePoliticalSystemDocument(politicalSystem);
+        await deletePoliticalSystemDocument(guild, politicalSystem);
     }
 
     // Finally delete the guild document and get the result

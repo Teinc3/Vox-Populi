@@ -7,7 +7,8 @@
 - **Moderation Team**: The moderation team detects and punish unlawful behavior.
 - **Court**: It can counteract moderation decisions as well as interpret the constitution.
 - **Citizens**: Citizens are members of the server who can vote in elections and raise petitions.
-- **Undocumented members**: They function as regular citizens without political rights. However, they can apply for citizenship and can appeal moderation decisions to the court.
+
+Note: Members without any roles are Undocumented. They function as citizens without political rights. However, they can apply for citizenship and can appeal moderation decisions to the court. 
 
 However, the two systems differ in the following ways:
 - In a presidential system, the President is the nominal head of the server, while in a parliamentary system, the Prime Minister is the nominal head of the server.
