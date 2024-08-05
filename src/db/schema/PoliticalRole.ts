@@ -1,8 +1,10 @@
 import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
-import type { Guild, ChatInputCommandInteraction } from 'discord.js';
+import type { Guild } from 'discord.js';
 
 import { PoliticalSystemsType } from '../../types/static.js';
 import PoliticalRoleHolder from './PoliticalRolesHolder.js';
+
+import { type DDChamberOptions } from '../../types/static.js';
 
 class PoliticalRole {
     @prop({ required: true })
@@ -18,88 +20,99 @@ class PoliticalRole {
     roleColor!: number;
 }
 
+class VoxPopuli extends PoliticalRole {
+    name = "Vox Populi";
+    hierarchy = 0;
+    roleColor = 0xffffff; // White
+}
+
 class President extends PoliticalRole {
     name = "President";
-    hierarchy = 0;
+    hierarchy = 1;
     roleColor = 0xff0000; // Red
 }
 
 class PrimeMinister extends PoliticalRole {
     name = "Prime Minister";
-    hierarchy = 0;
+    hierarchy = 1;
     roleColor = 0xff0000; // Red
 }
 
 class HeadModerator extends PoliticalRole {
     name = "Head Moderator";
-    hierarchy = 1;
+    hierarchy = 2;
     roleColor = 0xff8000; // Orange
 }
 
 class Senator extends PoliticalRole {
     name = "Senator";
-    hierarchy = 2
+    hierarchy = 3
     roleColor = 0x0000ff; // Blue
 }
 
 class Judge extends PoliticalRole {
     name = "Judge";
-    hierarchy = 2;
+    hierarchy = 3;
     roleColor = 0xff00ff; // Purple
 }
 
 class Moderator extends PoliticalRole {
     name = "Moderator";
-    hierarchy = 3; 
+    hierarchy = 4; 
     roleColor = 0xffff00; // Orange
 }
 
 class Citizen extends PoliticalRole {
     name = "Citizen";
-    hierarchy = 4; 
+    hierarchy = 5; 
     roleColor = 0x00ff00; // Green
 }
 
-const PoliticalRoleObjectList: Array<new () => PoliticalRole> = [President, PrimeMinister, HeadModerator, Senator, Judge, Moderator, Citizen].sort((a, b) => a.prototype.hierarchy - b.prototype.hierarchy);
+const PoliticalRoleObjectList: Array<new () => PoliticalRole> = [VoxPopuli, President, PrimeMinister, HeadModerator, Senator, Judge, Moderator, Citizen].sort((a, b) => a.prototype.hierarchy - b.prototype.hierarchy);
 
 const PoliticalRoleModel = getModelForClass(PoliticalRole);
 
-async function createPoliticalRoleDocuments(interaction: ChatInputCommandInteraction, politicalSytemType: PoliticalSystemsType, isCombinedCourt: boolean): Promise<PoliticalRoleHolder> {
-    const guild = interaction.guild!;
-    
-    const roleHolder = new PoliticalRoleHolder();
-    if (politicalSytemType === PoliticalSystemsType.Presidential) {
-        roleHolder.President = await PoliticalRoleModel.create(await linkDiscordRole(guild, new President()));
-    } else if (politicalSytemType === PoliticalSystemsType.Parliamentary) {
-        roleHolder.PrimeMinister = await PoliticalRoleModel.create(await linkDiscordRole(guild, new PrimeMinister()));
-    }
-    if (politicalSytemType !== PoliticalSystemsType.DirectDemocracy) {
-        roleHolder.Senator = await PoliticalRoleModel.create(await linkDiscordRole(guild, new Senator()));
-    }
-    if (!isCombinedCourt) {
-        roleHolder.Judge = await PoliticalRoleModel.create(await linkDiscordRole(guild, new Judge()));
-    }
-    // If Direct Democracy and appointModerators is false, no Moderator role is created
-    roleHolder.HeadModerator = await PoliticalRoleModel.create(await linkDiscordRole(guild, new HeadModerator()));
-    roleHolder.Moderator = await PoliticalRoleModel.create(await linkDiscordRole(guild, new Moderator()));
+async function createPoliticalRoleDocuments(guild: Guild, politicalSytemType: PoliticalSystemsType, chamberOptions: DDChamberOptions, reason?: string): Promise<PoliticalRoleHolder> {
 
-    roleHolder.Citizen = await PoliticalRoleModel.create(await linkDiscordRole(guild, new Citizen()));
+    const roleHolder = new PoliticalRoleHolder();
+    roleHolder.VoxPopuli = await PoliticalRoleModel.create(await linkDiscordRole(guild, new VoxPopuli(), reason));
+
+    if (politicalSytemType === PoliticalSystemsType.Presidential) {
+        roleHolder.President = await PoliticalRoleModel.create(await linkDiscordRole(guild, new President(), reason));
+    } else if (politicalSytemType === PoliticalSystemsType.Parliamentary) {
+        roleHolder.PrimeMinister = await PoliticalRoleModel.create(await linkDiscordRole(guild, new PrimeMinister(), reason));
+    }
+
+    if (politicalSytemType !== PoliticalSystemsType.DirectDemocracy) {
+        roleHolder.Senator = await PoliticalRoleModel.create(await linkDiscordRole(guild, new Senator(), reason));
+    }
+
+    // For Direct Democracy, citizens can choose to appoint judges and moderators through referendums
+    if (!chamberOptions.isDD || chamberOptions.appointJudges) {
+        roleHolder.Judge = await PoliticalRoleModel.create(await linkDiscordRole(guild, new Judge(), reason));
+    }
+    if (!chamberOptions.isDD || chamberOptions.appointModerators) {
+        roleHolder.HeadModerator = await PoliticalRoleModel.create(await linkDiscordRole(guild, new HeadModerator(), reason));
+        roleHolder.Moderator = await PoliticalRoleModel.create(await linkDiscordRole(guild, new Moderator(), reason));
+    }
+
+    roleHolder.Citizen = await PoliticalRoleModel.create(await linkDiscordRole(guild, new Citizen(), reason));
 
     return roleHolder;
 }
 
-async function deletePoliticalRoleDocument<T extends PoliticalRole>(guild: Guild, _id: Ref<T>) {
+async function deletePoliticalRoleDocument<T extends PoliticalRole>(guild: Guild, _id: Ref<T>, reason?: string) {
     // Find role document
     const roleDocument = await PoliticalRoleModel.findOne({ _id });
     if (!roleDocument) {
         return;
     }
 
-    await unlinkDiscordRole(guild, roleDocument.roleID);
+    await unlinkDiscordRole(guild, roleDocument.roleID, reason);
     await PoliticalRoleModel.deleteOne({ _id });
 }
 
-async function linkDiscordRole<T extends PoliticalRole>(guild: Guild, role: T): Promise<T> {
+async function linkDiscordRole<T extends PoliticalRole>(guild: Guild, role: T, reason?: string): Promise<T> {
     if (guild.roles.cache.size === 0) {
         await guild.roles.fetch();
     }
@@ -108,8 +121,8 @@ async function linkDiscordRole<T extends PoliticalRole>(guild: Guild, role: T): 
         const existingRole = guild.roles.cache.find(r => r.name === name);
         if (existingRole) { //If it exists, delete it and create a new one.
             try {
-                await unlinkDiscordRole(guild, existingRole.id);
-                return await linkDiscordRole(guild, role);
+                await unlinkDiscordRole(guild, existingRole.id, reason);
+                return await linkDiscordRole(guild, role, reason);
             } catch (error) {
                 console.error(`Failed to relink role ${name} in server ${guild.name}`);
             }
@@ -119,7 +132,8 @@ async function linkDiscordRole<T extends PoliticalRole>(guild: Guild, role: T): 
                     name: name,
                     permissions: [],
                     hoist: true,
-                    reason: "Created Political Role"
+                    color: role.roleColor,
+                    reason
                 });
                 role.roleID = newRole.id;
             } catch (error) {
@@ -136,12 +150,12 @@ async function linkDiscordRole<T extends PoliticalRole>(guild: Guild, role: T): 
     return role;
 }
 
-async function unlinkDiscordRole(guild: Guild, roleID: string | undefined) {
+async function unlinkDiscordRole(guild: Guild, roleID: string | undefined, reason?: string) {
     if (roleID) {
-        await guild.roles.delete(roleID, "Deleted Political Role");
+        await guild.roles.delete(roleID, reason);
     }
 }
 
 export default PoliticalRole;
-export { President, PrimeMinister, Senator, Judge, HeadModerator, Moderator, Citizen, PoliticalRoleObjectList, PoliticalRoleModel }
+export { VoxPopuli, President, PrimeMinister, Senator, Judge, HeadModerator, Moderator, Citizen, PoliticalRoleObjectList, PoliticalRoleModel }
 export { createPoliticalRoleDocuments, deletePoliticalRoleDocument }

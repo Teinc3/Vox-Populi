@@ -23,8 +23,9 @@ Not checked for latest commit.
 
 ## TODO
 ### Active
-- Refactor Legislature to not depend on PoliticalRole
+- Refactor Legislature to not depend on PoliticalRole, and link to the channel instead
 - Move schemas to its own subdirectory under `src`
+- Complete function to process our own permission system into discord permissions
 
 ### Future
 - Add logging and command to view logs

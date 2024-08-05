@@ -19,10 +19,6 @@ class PoliticalSystem {
     @prop({ required: true, ref: () => 'Legislature' })
     legislature!: Ref<Legislature>;
 
-    // If the court is the same as the legislature
-    @prop({ required: true, default: constants.mechanics.court.isCombinedCourt })
-    isCombinedCourt: boolean = constants.mechanics.court.isCombinedCourt;
-
     @prop({ required: true, ref: () => 'Chamber' })
     court!: Ref<Chamber>;
 }
@@ -46,13 +42,16 @@ class DirectDemocracy extends PoliticalSystem {
     // If people vote on moderation, or if the moderation is done by mods appointed by referendums
     @prop({ required: true })
     appointModerators: boolean = constants.mechanics.directDemocracy.appointModerators;
+
+    // If people vote on judges, or if the judges are appointed by referendums
+    @prop({ required: true })
+    appointJudges: boolean = constants.mechanics.directDemocracy.appointJudges;
 }
 
 const PoliticalSystemModel = getModelForClass(PoliticalSystem);
 
 async function createPoliticalSystemDocument(
     politicalSystemType: PoliticalSystemsType,
-    isCombinedCourt: boolean,
     politicalRoleHolder: PoliticalRoleHolder
 ): Promise<Ref<PoliticalSystem>> {
 
@@ -77,8 +76,6 @@ async function createPoliticalSystemDocument(
             break;
     }
 
-    politicalSystem.isCombinedCourt = isCombinedCourt;
-
     // Add hos ref
     if (headOfStateRole) {
         politicalSystem.headOfState = headOfStateRole;
@@ -86,13 +83,7 @@ async function createPoliticalSystemDocument(
 
     // Create Legislature document
     politicalSystem.legislature = await createChamberDocument(legislatureRole, politicalSystemType === PoliticalSystemsType.DirectDemocracy ? Referendum : Senate);
-    if (isCombinedCourt) {
-        // Set court to current legislature
-        politicalSystem.court = politicalSystem.legislature;
-    } else {
-        // Create separate court
-        politicalSystem.court = await createChamberDocument(politicalRoleHolder.Judge!, Court);
-    }
+    politicalSystem.court = await createChamberDocument(politicalRoleHolder.Judge!, Court);
 
     // Save the political system document and return the reference
     return await PoliticalSystemModel.create(politicalSystem);
@@ -105,7 +96,7 @@ async function deletePoliticalSystemDocument(guild: Guild, _id: Ref<PoliticalSys
         return;
     }
 
-    // Find documents: HoS, Legislature, Court (if not combined with legislature)
+    // Find documents: HoS, Legislature, Court
     const headOfStateDocument = politicalSystem.headOfState;
     const legislatureDocument = politicalSystem.legislature;
     const courtDocument = politicalSystem.court;
@@ -117,7 +108,7 @@ async function deletePoliticalSystemDocument(guild: Guild, _id: Ref<PoliticalSys
     if (legislatureDocument) {
         await deleteChamberDocument(guild, legislatureDocument);
     }
-    if (courtDocument && !politicalSystem.isCombinedCourt) {
+    if (courtDocument) {
         await deleteChamberDocument(guild, courtDocument);
     }
 

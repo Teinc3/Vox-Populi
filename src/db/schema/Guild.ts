@@ -1,12 +1,12 @@
 import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
 import type { Guild, ChatInputCommandInteraction } from 'discord.js';
 
-import GuildCategory, { deleteGuildCategoryDocument } from './GuildCategory.js';
+import GuildCategory, { createGuildCategories, deleteGuildCategoryDocument } from './GuildCategory.js';
 import PoliticalSystem, { createPoliticalSystemDocument, deletePoliticalSystemDocument } from './PoliticalSystem.js';
 import { createPoliticalRoleDocuments } from './PoliticalRole.js';
 import PoliticalRoleHolder, { createPoliticalRoleHolderDocument, deletePoliticalRoleHolderDocument } from './PoliticalRolesHolder.js';
 
-import { PoliticalSystemsType } from '../../types/static.js';
+import { PoliticalSystemsType, type DDChamberOptions } from '../../types/static.js';
 import constants from '../../data/constants.json' assert { type: "json" };
 
 class GuildSchema {
@@ -32,7 +32,7 @@ class GuildSchema {
 
 const GuildModel = getModelForClass(GuildSchema);
 
-async function createGuildDocument(interaction: ChatInputCommandInteraction, politicalystemType: PoliticalSystemsType): Promise<boolean> {
+async function createGuildDocument(interaction: ChatInputCommandInteraction, politicalystemType: PoliticalSystemsType, reason?: string): Promise<boolean> {
 
     const discordGuild = interaction.guild!;
     const guildID = discordGuild.id;
@@ -47,14 +47,22 @@ async function createGuildDocument(interaction: ChatInputCommandInteraction, pol
     guildData.guildID = guildID;
     guildData.isBotOwner = isBotOwner;
 
-    const isCombinedCourt = constants.mechanics.court.isCombinedCourt
+    const defaultChamberOptions = {
+        isReferendum: politicalystemType === PoliticalSystemsType.DirectDemocracy,
+        appointModerators: constants.mechanics.directDemocracy.appointModerators,
+        appointJudges: constants.mechanics.directDemocracy.appointJudges
+    } as DDChamberOptions;
 
     // Create all political roles then link them to the guild document, and generate the role document refs
-    const roleHolder = await createPoliticalRoleDocuments(interaction, politicalystemType, isCombinedCourt);
+    const roleHolder = await createPoliticalRoleDocuments(discordGuild, politicalystemType, defaultChamberOptions, reason);
     guildData.roles = await createPoliticalRoleHolderDocument(roleHolder);
 
+    // Create special channel categories then link them to the guild document
+    const guildCategories = await createGuildCategories(discordGuild, roleHolder, defaultChamberOptions, reason);
+    guildData.categories = guildCategories;
+
     // Create Political System then link them to the guild document
-    const politicalSystem = await createPoliticalSystemDocument(politicalystemType, isCombinedCourt, roleHolder);
+    const politicalSystem = await createPoliticalSystemDocument(politicalystemType, roleHolder);
     guildData.politicalSystem = politicalSystem;
 
     // Finally, create the guild document with the proper linkages

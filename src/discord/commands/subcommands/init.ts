@@ -19,7 +19,7 @@ export default async function init(interaction: ChatInputCommandInteraction): Pr
     }
 
     // Update database with new guild object
-    const result = await createGuildDocument(interaction, politicalSystem);
+    const result = await createGuildDocument(interaction, politicalSystem, "Server Initialization");
     
     if (result) {
         await interaction.followUp({ content: `Server has been successfully configured.`, ephemeral: false });

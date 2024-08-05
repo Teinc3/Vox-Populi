@@ -16,3 +16,9 @@ export enum PoliticalBranchType {
     Executive = 2,
     Judicial = 3,
 }
+
+export interface DDChamberOptions {
+    isDD?: boolean; // If it is a Direct Democracy
+    appointModerators?: boolean; // If Citizens act as moderators
+    appointJudges?: boolean; // If Citizens act as judges
+}

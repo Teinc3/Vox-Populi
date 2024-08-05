@@ -1,9 +1,12 @@
 import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
 import { type Guild } from 'discord.js';
 
-import PoliticalRole, { President, PrimeMinister, HeadModerator, Senator, Judge, Moderator, Citizen, deletePoliticalRoleDocument, PoliticalRoleObjectList } from "./PoliticalRole.js";
+import PoliticalRole, { VoxPopuli, President, PrimeMinister, HeadModerator, Senator, Judge, Moderator, Citizen, deletePoliticalRoleDocument, PoliticalRoleObjectList } from "./PoliticalRole.js";
 
 class PoliticalRoleHolder {
+    @prop({ required: true, ref: () => 'VoxPopuli' })
+    VoxPopuli!: Ref<VoxPopuli>;
+
     @prop({ ref: () => 'President' })
     President?: Ref<President>;
 
@@ -22,8 +25,8 @@ class PoliticalRoleHolder {
     @prop({ ref: () => 'Moderator' })
     Moderator?: Ref<Moderator>;
 
-    @prop({ ref: () => 'Citizen' })
-    Citizen?: Ref<Citizen>;
+    @prop({ required: true, ref: () => 'Citizen' })
+    Citizen!: Ref<Citizen>; // Must have a citizen role
 }
 
 const PoliticalRoleHolderModel = getModelForClass(PoliticalRoleHolder);
