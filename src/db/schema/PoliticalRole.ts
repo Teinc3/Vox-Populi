@@ -1,10 +1,11 @@
 import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
-import type { Guild } from 'discord.js';
+import type { ColorResolvable, Guild } from 'discord.js';
 
 import { PoliticalSystemsType } from '../../types/static.js';
 import PoliticalRoleHolder from './PoliticalRolesHolder.js';
 
 import { type DDChamberOptions } from '../../types/static.js';
+import constants from '../../data/constants.json' assert { type: "json" };
 
 class PoliticalRole {
     @prop({ required: true })
@@ -17,55 +18,55 @@ class PoliticalRole {
     roleID?: string;
 
     @prop({ required: true })
-    roleColor!: number;
+    roleColor!: string;
 }
 
 class VoxPopuli extends PoliticalRole {
-    name = "Vox Populi";
-    hierarchy = 0;
-    roleColor = 0xffffff; // White
+    name = constants.roles.VoxPopuli.name;
+    hierarchy = constants.roles.VoxPopuli.hierarchy;
+    roleColor = constants.roles.VoxPopuli.color; // White
 }
 
 class President extends PoliticalRole {
-    name = "President";
-    hierarchy = 1;
-    roleColor = 0xff0000; // Red
+    name = constants.roles.President.name;
+    hierarchy = constants.roles.President.hierarchy;
+    roleColor = constants.roles.President.color // Red
 }
 
 class PrimeMinister extends PoliticalRole {
-    name = "Prime Minister";
-    hierarchy = 1;
-    roleColor = 0xff0000; // Red
+    name = constants.roles.PrimeMinister.name;
+    hierarchy = constants.roles.PrimeMinister.hierarchy;
+    roleColor = constants.roles.PrimeMinister.color; // Red
 }
 
 class HeadModerator extends PoliticalRole {
-    name = "Head Moderator";
-    hierarchy = 2;
-    roleColor = 0xff8000; // Orange
+    name = constants.roles.HeadModerator.name;
+    hierarchy = constants.roles.HeadModerator.hierarchy;
+    roleColor = constants.roles.HeadModerator.color; // Orange
 }
 
 class Senator extends PoliticalRole {
-    name = "Senator";
-    hierarchy = 3
-    roleColor = 0x0000ff; // Blue
+    name = constants.roles.Senator.name;
+    hierarchy = constants.roles.Senator.hierarchy;
+    roleColor = constants.roles.Senator.color; // Blue
 }
 
 class Judge extends PoliticalRole {
-    name = "Judge";
-    hierarchy = 3;
-    roleColor = 0xff00ff; // Purple
+    name = constants.roles.Judge.name;
+    hierarchy = constants.roles.Judge.hierarchy;
+    roleColor = constants.roles.Judge.color; // Purple
 }
 
 class Moderator extends PoliticalRole {
-    name = "Moderator";
-    hierarchy = 4; 
-    roleColor = 0xffff00; // Orange
+    name = constants.roles.Moderator.name;
+    hierarchy = constants.roles.Moderator.hierarchy;
+    roleColor = constants.roles.Moderator.color; // Yellow
 }
 
 class Citizen extends PoliticalRole {
-    name = "Citizen";
-    hierarchy = 5; 
-    roleColor = 0x00ff00; // Green
+    name = constants.roles.Citizen.name;
+    hierarchy = constants.roles.Citizen.hierarchy;
+    roleColor = constants.roles.Citizen.color; // Green
 }
 
 const PoliticalRoleObjectList: Array<new () => PoliticalRole> = [VoxPopuli, President, PrimeMinister, HeadModerator, Senator, Judge, Moderator, Citizen].sort((a, b) => a.prototype.hierarchy - b.prototype.hierarchy);
@@ -103,13 +104,12 @@ async function createPoliticalRoleDocuments(guild: Guild, politicalSytemType: Po
 
 async function deletePoliticalRoleDocument<T extends PoliticalRole>(guild: Guild, _id: Ref<T>, reason?: string) {
     // Find role document
-    const roleDocument = await PoliticalRoleModel.findOne({ _id });
+    const roleDocument = await PoliticalRoleModel.findOneAndDelete({ _id });
     if (!roleDocument) {
         return;
     }
 
     await unlinkDiscordRole(guild, roleDocument.roleID, reason);
-    await PoliticalRoleModel.deleteOne({ _id });
 }
 
 async function linkDiscordRole<T extends PoliticalRole>(guild: Guild, role: T, reason?: string): Promise<T> {
@@ -132,7 +132,7 @@ async function linkDiscordRole<T extends PoliticalRole>(guild: Guild, role: T, r
                     name: name,
                     permissions: [],
                     hoist: true,
-                    color: role.roleColor,
+                    color: role.roleColor as ColorResolvable,
                     reason
                 });
                 role.roleID = newRole.id;

@@ -23,7 +23,7 @@ Not checked for latest commit.
 
 ## TODO
 ### Active
-- Refactor Legislature to not depend on PoliticalRole, and link to the channel instead
+- Add setup screens for "create" command for Elections (includes buttons to adjust term limits/lengths, or toggle certain options for DD)
 - Move schemas to its own subdirectory under `src`
 - Complete function to process our own permission system into discord permissions
 

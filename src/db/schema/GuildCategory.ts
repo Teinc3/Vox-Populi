@@ -4,8 +4,9 @@ import { type CategoryChannel, ChannelType, type Guild } from 'discord.js';
 import PoliticalChannel, { createPoliticalChannelDocument, deletePoliticalChannelDocument } from './PoliticalChannel.js';
 import type PoliticalRoleHolder from './PoliticalRolesHolder.js';
 import { filterRefRoleArray } from './ChannelPermissions.js';
+import { linkChamberChannelDocument } from './Chamber.js';
 
-import type { DDChamberOptions } from '../../types/static.js';
+import { PoliticalBranchType, type DDChamberOptions } from '../../types/static.js';
 
 class GuildCategory {
     constructor(name: string) {
@@ -18,7 +19,7 @@ class GuildCategory {
     @prop()
     categoryID?: string;
 
-    @prop()
+    @prop({ ref: () => 'PoliticalChannel' })
     channels?: Ref<PoliticalChannel>[];
 }
 
@@ -39,10 +40,13 @@ async function createGuildCategories(guild: Guild, roleHolder: PoliticalRoleHold
 async function createGuildCategoryDocument(guild: Guild, guildCategory: GuildCategory, roleHolder: PoliticalRoleHolder, chamberOptions: DDChamberOptions, reason?: string): Promise<Ref<GuildCategory>> {
     // Create and link the category to the object first
     guildCategory = await linkDiscordCategory(guild, guildCategory, reason);
-    const categoryChannel = await guild.channels.fetch(guildCategory.categoryID!) as CategoryChannel;
+    const categoryChannel = await guild.channels.fetch(guildCategory.categoryID!);
+    if (!categoryChannel || categoryChannel.type !== ChannelType.GuildCategory) {
+        throw new Error("Failed to fetch category channel");
+    }
 
-    // Triage channels for executive (moderation), legislative, and judicial later
-    // We will funnel the appropriate roles (obtained from roleHolder) to these channels
+    // Triage channels for executive (moderation), legislative, and judicial
+    // We funnel the appropriate roles (obtained from roleHolder) to these channels
     guildCategory.channels = await createPoliticalChannels(guildCategory, guild, roleHolder, categoryChannel, chamberOptions, reason);
 
     return await GuildCategoryModel.create(guildCategory);
@@ -100,13 +104,15 @@ async function createPoliticalChannels(guildCategory: GuildCategory, guild: Guil
             break;
 
         case "Legislative":
-            newChannelDocuments.push(await createPoliticalChannelDocument(guild, new PoliticalChannel(chamberOptions.isDD ? "referendum" : "senate-voting", ChannelType.GuildText, {
+            const legislatureChamberChannelDocument = await createPoliticalChannelDocument(guild, new PoliticalChannel(chamberOptions.isDD ? "referendum" : "senate-voting", ChannelType.GuildText, {
                 whoCanView: [],
                 whoCanInteract: chamberOptions.isDD ? [roleHolder.Citizen] : filterRefRoleArray([roleHolder.Senator]),
                 whoCanSend: [roleHolder.VoxPopuli], // Cant send messages to the senate, but can talk in the senate-lounge
                 whoCanModerate: [roleHolder.VoxPopuli],
                 whoCanManage: [roleHolder.VoxPopuli]
-            }), categoryChannel, reason));
+            }), categoryChannel, reason)
+            newChannelDocuments.push(legislatureChamberChannelDocument);
+            await linkChamberChannelDocument(guild.id, PoliticalBranchType.Legislative, legislatureChamberChannelDocument);
             
             if (!chamberOptions.isDD) { // No need senate discussions in DD, because referendums are the main way to pass laws
                 newChannelDocuments.push(await createPoliticalChannelDocument(guild, new PoliticalChannel("senate", ChannelType.GuildText, {
@@ -117,19 +123,20 @@ async function createPoliticalChannels(guildCategory: GuildCategory, guild: Guil
                     whoCanManage: [roleHolder.VoxPopuli]
                 }), categoryChannel, reason));
             }
-
             break;
 
         case "Judicial":
             // We create this channel: "courtroom"
             const permsArray = chamberOptions.isDD && !chamberOptions.appointJudges ? [roleHolder.Citizen] : filterRefRoleArray([roleHolder.Judge]);
-            newChannelDocuments.push(await createPoliticalChannelDocument(guild, new PoliticalChannel("courtroom", ChannelType.GuildText, {
+            const courtroomChannelDocument = await createPoliticalChannelDocument(guild, new PoliticalChannel("courtroom", ChannelType.GuildText, {
                 whoCanView: [],
                 whoCanInteract: permsArray,
                 whoCanSend: permsArray,
                 whoCanModerate: [roleHolder.VoxPopuli],
                 whoCanManage: [roleHolder.VoxPopuli]
-            }), categoryChannel, reason));
+            }), categoryChannel, reason);
+            newChannelDocuments.push(courtroomChannelDocument);
+            await linkChamberChannelDocument(guild.id, PoliticalBranchType.Judicial, courtroomChannelDocument);
             break;
 
         case "Electoral": // This should not be available in Direct Democracy
@@ -147,19 +154,17 @@ async function createPoliticalChannels(guildCategory: GuildCategory, guild: Guil
     return newChannelDocuments;
 }
 
-async function deleteGuildCategoryDocument(_id: Ref<GuildCategory>) {
+async function deleteGuildCategoryDocument(guild: Guild, categoryDocument: Ref<GuildCategory>, reason?: string) {
     // Find the guild category document
-    const guildCategory = await GuildCategoryModel.findOne({ _id });
+    const guildCategory = await GuildCategoryModel.findOneAndDelete({ _id: categoryDocument });
     if (!guildCategory) {
         return;
     }
 
-    const channels = guildCategory.channels;
-    for (const channel of channels ?? []) {
-        deletePoliticalChannelDocument(channel);
-    }
+    const deleteChannelPromises = (guildCategory.channels ?? []).map(channel => deletePoliticalChannelDocument(guild, channel, reason));
+    const unlinkCategoryPromise = unlinkDiscordCategory(guild, guildCategory.categoryID, reason);
 
-    await GuildCategoryModel.deleteOne({ _id });
+    await Promise.all([...deleteChannelPromises, unlinkCategoryPromise]);
 }
 
 async function linkDiscordCategory(guild: Guild, guildCategory: GuildCategory, reason?: string): Promise<GuildCategory> {
@@ -195,14 +200,10 @@ async function unlinkDiscordCategory(guild: Guild, categoryID: string | undefine
     if (!categoryID) {
         return;
     }
-    const categoryChannel = await guild.channels.fetch(categoryID) as CategoryChannel;
-    for (const channel of categoryChannel.children.cache.values()) {
-        await channel.delete(reason);
+    const categoryChannel = await guild.channels.fetch(categoryID) as CategoryChannel | null;
+    if (categoryChannel) {
+        await categoryChannel.delete(reason);
     }
-    if (categoryID) {
-        await guild.channels.delete(categoryID, reason);
-    }
-    await categoryChannel.delete();
 }
 
 export default GuildCategory;

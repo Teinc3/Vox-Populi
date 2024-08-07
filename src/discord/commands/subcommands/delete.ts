@@ -38,7 +38,7 @@ export default async function execute_delete(interaction: ChatInputCommandIntera
 
         if (collected.customId === 'delete_confirm') {
             // Proceed with deletion
-            const result = await deleteGuildDocument(guild);
+            const result = await deleteGuildDocument(guild, `Server configuration deletion requested by ${interaction.user.tag} (${interaction.user.id})`);
             if (result) {
                 await interaction.followUp({ content: 'Server configuration has been successfully deleted.', ephemeral: false });
             } else {

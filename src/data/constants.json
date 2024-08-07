@@ -9,17 +9,82 @@
     "maxMemberFreeConfigCount": 5,
     "interactionTimeout": 60E3
   },
-  "mechanics": {
-    "legislature": {
-      "_": "Term duration is 60 days with no term limit",
-      "termDuration": 5184E3,
-      "termLimit": 0
+  "legislature": {
+    "_threshold_": "Threshold: 1/2",
+    "threshold": 0.5,
+    "_amendmentThreshold_": "Amendment Threshold: 2/3",
+    "amendmentThreshold": 0.6666666666666666,
+    "senate": {
+      "_termLength_": "Term Length: 3 Months",
+      "termLength": 7776000,
+      "_termLimit_": "Term Limit: 4 Terms",
+      "termLimit": 4,
+      "_seats_": "Seats: 10",
+      "seats": 10
+    }
+  },
+  "judicial": {
+    "_termLength_": "Term Length: 6 Months",
+    "termLength": 15552000,
+    "_termLimit_": "Term Limit: No Limits",
+    "termLimit": 0,
+    "_threshold_": "Threshold: 1/2",
+    "threshold": 0.5
+  },
+  "politicalSystem": {
+    "presidential": {
+      "_termLength_": "Term Length: 2 Month",
+      "termLength": 5184000,
+      "_termLimit_": "Term Limit: 2 Terms",
+      "termLimit": 2
     },
     "directDemocracy": {
-      "_": "Members can vote in moderators for the server",
+      "_appointModerators_": "Members can vote in moderators for the server",
       "appointModerators": false,
-      "__": "Members can vote in judges for the server",
+      "_appointJudges_": "Members can vote in judges for the server",
       "appointJudges": false
+    }
+  },
+  "roles": {
+    "VoxPopuli": {
+      "name": "Vox Populi",
+      "hierarchy": 0,
+      "color": "#FFFFFF"
+    },
+    "President": {
+      "name": "President",
+      "hierarchy": 1,
+      "color": "#FF0000"
+    },
+    "PrimeMinister": {
+      "name": "Prime Minister",
+      "hierarchy": 1,
+      "color": "#FF0000"
+    },
+    "HeadModerator": {
+      "name": "Head Moderator",
+      "hierarchy": 2,
+      "color": "#FF8000"
+    },
+    "Senator": {
+      "name": "Senator",
+      "hierarchy": 3,
+      "color": "#0000FF"
+    },
+    "Judge": {
+      "name": "Judge",
+      "hierarchy": 3,
+      "color": "#FF00FF"
+    },
+    "Moderator": {
+      "name": "Moderator",
+      "hierarchy": 4,
+      "color": "#FFFF00"
+    },
+    "Citizen": {
+      "name": "Citizen",
+      "hierarchy": 5,
+      "color": "#00FF00"
     }
   }
 }

@@ -13,6 +13,8 @@ class PoliticalSystem {
     @prop({ required: true })
     id!: PoliticalSystemsType;
 
+    // I'm not entirely sure what use this has but I'll keep it for now
+    // Maybe shows up in server info or something like that
     @prop({ ref: () => 'PoliticalRole' })
     headOfState?: Ref<PoliticalRole>;
 
@@ -41,11 +43,11 @@ class DirectDemocracy extends PoliticalSystem {
 
     // If people vote on moderation, or if the moderation is done by mods appointed by referendums
     @prop({ required: true })
-    appointModerators: boolean = constants.mechanics.directDemocracy.appointModerators;
+    appointModerators: boolean = constants.politicalSystem.directDemocracy.appointModerators;
 
     // If people vote on judges, or if the judges are appointed by referendums
     @prop({ required: true })
-    appointJudges: boolean = constants.mechanics.directDemocracy.appointJudges;
+    appointJudges: boolean = constants.politicalSystem.directDemocracy.appointJudges;
 }
 
 const PoliticalSystemModel = getModelForClass(PoliticalSystem);
@@ -57,22 +59,20 @@ async function createPoliticalSystemDocument(
 
     let politicalSystem: PoliticalSystem;
     let headOfStateRole: Ref<PoliticalRole> | undefined;
-    let legislatureRole: Ref<PoliticalRole>;
 
     switch (politicalSystemType) {
         case PoliticalSystemsType.Presidential:
             politicalSystem = new Presidential();
             headOfStateRole = politicalRoleHolder.President!;
-            legislatureRole = politicalRoleHolder.Senator!;
             break;
+
         case PoliticalSystemsType.Parliamentary:
             politicalSystem = new Parliamentary();
             headOfStateRole = politicalRoleHolder.PrimeMinister!;
-            legislatureRole = politicalRoleHolder.Senator!;
             break;
+
         case PoliticalSystemsType.DirectDemocracy:
             politicalSystem = new DirectDemocracy();
-            legislatureRole = politicalRoleHolder.Citizen!;
             break;
     }
 
@@ -82,39 +82,37 @@ async function createPoliticalSystemDocument(
     }
 
     // Create Legislature document
-    politicalSystem.legislature = await createChamberDocument(legislatureRole, politicalSystemType === PoliticalSystemsType.DirectDemocracy ? Referendum : Senate);
-    politicalSystem.court = await createChamberDocument(politicalRoleHolder.Judge!, Court);
+    politicalSystem.legislature = await createChamberDocument(politicalSystemType === PoliticalSystemsType.DirectDemocracy ? Referendum : Senate);
+    politicalSystem.court = await createChamberDocument(Court);
 
     // Save the political system document and return the reference
     return await PoliticalSystemModel.create(politicalSystem);
 }
 
-async function deletePoliticalSystemDocument(guild: Guild, _id: Ref<PoliticalSystem>) {
+async function deletePoliticalSystemDocument(_id: Ref<PoliticalSystem>) {
     // Find the political system document
-    const politicalSystem = await PoliticalSystemModel.findOne({ _id });
+    const politicalSystem = await PoliticalSystemModel.findOneAndDelete({ _id });
     if (!politicalSystem) {
         return;
     }
 
     // Find documents: HoS, Legislature, Court
-    const headOfStateDocument = politicalSystem.headOfState;
     const legislatureDocument = politicalSystem.legislature;
     const courtDocument = politicalSystem.court;
 
-    // Delete hos and legislature if still exist
-    if (headOfStateDocument) {
-        await deletePoliticalRoleDocument(guild, headOfStateDocument);
-    }
+    // Delete legislature and court if still exist (not HOS, since deleted through political role)
     if (legislatureDocument) {
-        await deleteChamberDocument(guild, legislatureDocument);
+        await deleteChamberDocument(legislatureDocument);
     }
     if (courtDocument) {
-        await deleteChamberDocument(guild, courtDocument);
+        await deleteChamberDocument(courtDocument);
     }
+}
 
-    await PoliticalSystemModel.deleteOne({ _id });
-} 
+async function findPoliticalSystemDocument(_id: Ref<PoliticalSystem>): Promise<PoliticalSystem | null> {
+    return await PoliticalSystemModel.findOne({ _id });
+}
 
 export default PoliticalSystem;
 export { Presidential, Parliamentary, DirectDemocracy, PoliticalSystemModel };
-export { createPoliticalSystemDocument, deletePoliticalSystemDocument };
+export { createPoliticalSystemDocument, deletePoliticalSystemDocument, findPoliticalSystemDocument };

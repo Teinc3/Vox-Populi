@@ -1,9 +1,10 @@
 import { SlashCommandBuilder, PermissionsBitField, type ChatInputCommandInteraction, type Guild, type GuildMember } from "discord.js";
 
-import { findGuildDocument } from "../../db/schema/Guild.js";
 import init from "./subcommands/init.js";
 //import view from "./subcommands/view.js"
 import execute_delete from "./subcommands/delete.js";
+
+import GuildModel from "../../db/schema/Guild.js";
 
 import constants from "../../data/constants.json" assert { type: 'json' };
 
@@ -115,7 +116,7 @@ async function execute(interaction: ChatInputCommandInteraction) {
 4. Bot must have the necessary ADMINISTRATOR permissions
 */
 async function checkPermissions(interaction: ChatInputCommandInteraction, guild: Guild): Promise<boolean> {
-    const hasConfigedGuild = await findGuildDocument(guild.id) !== null;
+    const hasConfigedGuild = await GuildModel.exists({ guildID: guild.id });
     if (interaction.options.getSubcommand() === "init" && hasConfigedGuild) {
         await interaction.reply({ content: 'This server has already been configured.', ephemeral: false });
         return false;

@@ -1,10 +1,11 @@
-import { prop, type Ref, getModelForClass/* , modelOptions, Severity */ } from '@typegoose/typegoose';
-import { type Guild } from 'discord.js';
+import { prop, type Ref, getModelForClass,/* , modelOptions, Severity */ 
+isDocument} from '@typegoose/typegoose';
 
-import PoliticalRole, { Senator, Citizen, deletePoliticalRoleDocument } from "./PoliticalRole.js";
-import PoliticalChannel, { deletePoliticalChannelDocument } from './PoliticalChannel.js';
+import PoliticalChannel from './PoliticalChannel.js';
+import GuildModel from './Guild.js';
 
 import { PoliticalBranchType } from '../../types/static.js';
+import constants from '../../data/constants.json' assert { type: "json" };
 
 //@modelOptions({ schemaOptions: { collection: "chambers" }, options: { allowMixed: Severity.ALLOW } })
 class Chamber {
@@ -14,13 +15,10 @@ class Chamber {
     @prop({ required: true })
     name!: string;
 
-    @prop({ required: true, ref: () => 'PoliticalRole' })
-    role!: Ref<PoliticalRole>;
-
     @prop({ ref: () => 'PoliticalChannel' })
     channel?: Ref<PoliticalChannel>;
 
-    @prop({ required: true, default: 0.5 })
+    @prop({ required: true })
     threshold!: number;
     
     // These are optional because they are not used by Referendum
@@ -34,66 +32,76 @@ class Chamber {
 class Legislature extends Chamber {
     id = PoliticalBranchType.Legislative;
 
-    @prop({ required: true, default: 2/3 })
+    threshold = constants.legislature.threshold;
+
+    @prop({ required: true, default: constants.legislature.amendmentThreshold })
     amendmentThreshold!: number;
 }
 
 class Senate extends Legislature {
     name = "Senate";
-    declare role: Ref<Senator>;
 
-    termLimit = 2;
-    termLength = 90 * 86400;
+    termLimit = constants.legislature.senate.termLimit;
+    termLength = constants.legislature.senate.termLength;
 
-    @prop({ required: true, default: 10 })
+    @prop({ required: true, default: constants.legislature.senate.seats })
     seats!: number;
 }
 
 class Referendum extends Legislature {
     name = "Referendum";
-    declare role: Ref<Citizen>;
 }
 
 class Court extends Chamber {
     id = PoliticalBranchType.Judicial;
     name = "Court";
 
-    termLimit = 0;
-    termLength = 180 * 86400;
+    termLimit = constants.judicial.termLimit;
+    termLength = constants.judicial.termLength;
+    threshold = constants.judicial.threshold;
 }
 
 const ChamberModel = getModelForClass(Chamber);
 
-async function createChamberDocument<T extends Chamber>(role: Ref<PoliticalRole>, ChamberType: new () => T): Promise<Ref<T>> {
-    const chamber = new ChamberType();
-    chamber.role = role;
-    
-    return await ChamberModel.create(chamber) as Ref<T>;
+async function createChamberDocument<T extends Chamber>(ChamberType: new () => T): Promise<Ref<T>> {
+    return await ChamberModel.create(new ChamberType()) as Ref<T>;
 }
 
-async function deleteChamberDocument(guild: Guild, _id: Ref<Chamber>) {
-    // Find the chamber document
-    const chamber = await ChamberModel.findOne({ _id });
-    if (!chamber) {
+async function linkChamberChannelDocument(guildID: string, chamberType: PoliticalBranchType, politicalChannelDocument: Ref<PoliticalChannel>) {
+    // Find the guild document and populate the politicalSystem field
+    const guildDocument = await GuildModel.findOne({ guildID });
+    if (!guildDocument) {
         return;
     }
+    
+    await guildDocument.populate('politicalSystem');
 
-    // Find the role and channel documents
-    const roleDocument = chamber.role;
-    const channelDocument = chamber.channel;
-
-    // Delete them
-    if (roleDocument) {
-        await deletePoliticalRoleDocument(guild, roleDocument);
+    if (!isDocument(guildDocument.politicalSystem)) {
+        return;
     }
-    if (channelDocument) {
-        await deletePoliticalChannelDocument(channelDocument);
+    
+    // Determine the chamber based on the chamber type
+    let chamber: Ref<Chamber>;
+
+    switch (chamberType) {
+        case PoliticalBranchType.Legislative:
+            chamber = guildDocument.politicalSystem.legislature;
+            break;
+        case PoliticalBranchType.Judicial:
+            chamber = guildDocument.politicalSystem.court;
+            break;
+        default:
+            return;
     }
 
-    // Delete the chamber document
+    // Link the channel
+    await ChamberModel.findOneAndUpdate({ _id: chamber }, { channel: politicalChannelDocument }, { new: true });
+}
+
+async function deleteChamberDocument(_id: Ref<Chamber>) {
     await ChamberModel.deleteOne({ _id });
 }
 
 export default Chamber;
 export { Legislature, Senate, Referendum, ChamberModel, Court };
-export { createChamberDocument, deleteChamberDocument };
+export { createChamberDocument, linkChamberChannelDocument, deleteChamberDocument };

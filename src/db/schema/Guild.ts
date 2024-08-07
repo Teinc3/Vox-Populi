@@ -49,8 +49,8 @@ async function createGuildDocument(interaction: ChatInputCommandInteraction, pol
 
     const defaultChamberOptions = {
         isReferendum: politicalystemType === PoliticalSystemsType.DirectDemocracy,
-        appointModerators: constants.mechanics.directDemocracy.appointModerators,
-        appointJudges: constants.mechanics.directDemocracy.appointJudges
+        appointModerators: constants.politicalSystem.directDemocracy.appointModerators,
+        appointJudges: constants.politicalSystem.directDemocracy.appointJudges
     } as DDChamberOptions;
 
     // Create all political roles then link them to the guild document, and generate the role document refs
@@ -70,11 +70,11 @@ async function createGuildDocument(interaction: ChatInputCommandInteraction, pol
     return true
 }
 
-async function deleteGuildDocument(guild: Guild): Promise<boolean> {
+async function deleteGuildDocument(guild: Guild, reason?: string): Promise<boolean> {
     const guildID = guild.id;
-    const guildDocument = await findGuildDocument(guildID);
+    const guildDocument = await GuildModel.findOneAndDelete({ guildID });
     if (!guildDocument) {
-        return true;
+        return false;
     }
     
     // Obtain all Refs
@@ -82,26 +82,16 @@ async function deleteGuildDocument(guild: Guild): Promise<boolean> {
     const roles = guildDocument.roles;
     const politicalSystem = guildDocument.politicalSystem;
     
-    // Delete all categories, roles, and the political system
-    for (const category of categories ?? []) {
-        await deleteGuildCategoryDocument(category);
-    }
-    if (roles) {
-        await deletePoliticalRoleHolderDocument(guild, roles);
-    }
-    if (politicalSystem) {
-        await deletePoliticalSystemDocument(guild, politicalSystem);
-    }
+    // Delete all categories, roles, and the political system concurrently
+    const categoryPromises = (categories ?? []).map(category => deleteGuildCategoryDocument(guild, category, reason));
+    const rolePromise = roles ? deletePoliticalRoleHolderDocument(guild, roles, reason) : Promise.resolve();
+    const systemPromise = politicalSystem ? deletePoliticalSystemDocument(politicalSystem) : Promise.resolve();
 
-    // Finally delete the guild document and get the result
-    const result = await GuildModel.deleteOne({ guildID });
-    return result.deletedCount >= 1;
-}
+    await Promise.all([...categoryPromises, rolePromise, systemPromise]);
 
-async function findGuildDocument(guildID: string): Promise<GuildSchema | null> {
-    return await GuildModel.findOne({ guildID });
+    return true;
 }
 
 export default GuildModel;
 export { GuildSchema };
-export { createGuildDocument, deleteGuildDocument, findGuildDocument };
+export { createGuildDocument, deleteGuildDocument };

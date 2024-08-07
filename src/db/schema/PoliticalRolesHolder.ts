@@ -35,21 +35,19 @@ async function createPoliticalRoleHolderDocument(politicalRoleHolder: PoliticalR
     return await PoliticalRoleHolderModel.create(politicalRoleHolder);
 }
 
-async function deletePoliticalRoleHolderDocument(guild: Guild, _id: Ref<PoliticalRoleHolder>) {
-    const politicalRoleHolder = await PoliticalRoleHolderModel.findOne({ _id });
+async function deletePoliticalRoleHolderDocument(guild: Guild, _id: Ref<PoliticalRoleHolder>, reason?: string) {
+    const politicalRoleHolder = await PoliticalRoleHolderModel.findOneAndDelete({ _id });
     if (!politicalRoleHolder) {
         return;
     }
 
-    for (const PoliticalRoleObject of PoliticalRoleObjectList) {
+    await Promise.all(PoliticalRoleObjectList.map(async (PoliticalRoleObject) => {
         const roleName = PoliticalRoleObject.name;
         const role = politicalRoleHolder[roleName.replace(" ", "") as keyof PoliticalRoleHolder];
         if (role) {
-            await deletePoliticalRoleDocument(guild, role as Ref<PoliticalRole>);
+            await deletePoliticalRoleDocument(guild, role as Ref<PoliticalRole>, reason);
         }
-    }
-
-    await PoliticalRoleHolderModel.deleteOne({ _id });
+    }));
 }
 
 export default PoliticalRoleHolder;
