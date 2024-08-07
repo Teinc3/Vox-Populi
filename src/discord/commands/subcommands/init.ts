@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction } from 'discord.js';
-import { createGuildDocument } from '../../../db/schema/Guild.js';
+import { createGuildDocument } from '../../../schema/Guild.js';
 
-import { PoliticalSystemsType } from '../../../types/static.js';
+import { PoliticalSystemsType } from '../../../types/types.js';
 
 export default async function init(interaction: ChatInputCommandInteraction): Promise<boolean> {
     interaction.deferReply({ ephemeral: true });

@@ -33,12 +33,17 @@
   },
   "politicalSystem": {
     "presidential": {
+      "description": "A system of government where the executive branch exists separately from a legislature.",
       "_termLength_": "Term Length: 2 Month",
       "termLength": 5184000,
       "_termLimit_": "Term Limit: 2 Terms",
       "termLimit": 2
     },
+    "parliamentary": {
+      "description": "A system of government where the executive branch derives its democratic legitimacy from, and is held accountable to, the legislature."
+    },
     "directDemocracy": {
+      "description": "A form of democracy in which people decide on policy initiatives directly.",
       "_appointModerators_": "Members can vote in moderators for the server",
       "appointModerators": false,
       "_appointJudges_": "Members can vote in judges for the server",

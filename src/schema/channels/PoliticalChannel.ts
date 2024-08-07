@@ -1,7 +1,7 @@
 import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
 import { type CategoryChannel, ChannelType, type Guild } from 'discord.js';
 
-import ChannelPermissions from './ChannelPermissions.js';
+import ChannelPermissions from '../permissions/ChannelPermissions.js';
 
 type ChannelTypeType = ChannelType.GuildText | ChannelType.GuildVoice | ChannelType.GuildCategory | ChannelType.GuildAnnouncement | ChannelType.GuildStageVoice | ChannelType.GuildForum | ChannelType.GuildMedia;
 

@@ -1,6 +1,6 @@
 import { prop, Ref } from "@typegoose/typegoose";
 
-import type PoliticalRole from "./PoliticalRole";
+import type PoliticalRole from "../roles/PoliticalRole";
 
 // If array is empty then everyone has that perm there (provided they can Access the channel)
 // but if it's [VoxPopuli] then nobody has that perm (apart from the bot)

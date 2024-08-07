@@ -2,11 +2,11 @@ import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
 import { type CategoryChannel, ChannelType, type Guild } from 'discord.js';
 
 import PoliticalChannel, { createPoliticalChannelDocument, deletePoliticalChannelDocument } from './PoliticalChannel.js';
-import type PoliticalRoleHolder from './PoliticalRolesHolder.js';
-import { filterRefRoleArray } from './ChannelPermissions.js';
-import { linkChamberChannelDocument } from './Chamber.js';
+import type PoliticalRoleHolder from '../roles/PoliticalRolesHolder.js';
+import { filterRefRoleArray } from '../permissions/ChannelPermissions.js';
+import { linkChamberChannelDocument } from '../Chamber.js';
 
-import { PoliticalBranchType, type DDChamberOptions } from '../../types/static.js';
+import { PoliticalBranchType, type DDChamberOptions } from '../../types/types.js';
 
 class GuildCategory {
     constructor(name: string) {
@@ -50,7 +50,7 @@ async function createGuildCategoryDocument(guild: Guild, guildCategory: GuildCat
     guildCategory.channels = await createPoliticalChannels(guildCategory, guild, roleHolder, categoryChannel, chamberOptions, reason);
 
     return await GuildCategoryModel.create(guildCategory);
-};
+}
 
 async function createPoliticalChannels(guildCategory: GuildCategory, guild: Guild, roleHolder: PoliticalRoleHolder, categoryChannel: CategoryChannel, chamberOptions: DDChamberOptions, reason?: string | undefined): Promise<Ref<PoliticalChannel>[]> {
     const newChannelDocuments = new Array<Ref<PoliticalChannel>>();

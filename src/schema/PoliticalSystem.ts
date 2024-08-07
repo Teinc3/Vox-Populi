@@ -1,12 +1,11 @@
 import { prop, type Ref, getModelForClass} from '@typegoose/typegoose';
-import type { Guild } from 'discord.js';
 
-import PoliticalRole, { President, PrimeMinister, deletePoliticalRoleDocument } from "./PoliticalRole.js";
-import PoliticalRoleHolder from './PoliticalRolesHolder.js';
+import PoliticalRole, { President, PrimeMinister } from "./roles/PoliticalRole.js";
+import PoliticalRoleHolder from './roles/PoliticalRolesHolder.js';
 import Chamber, { Legislature, Senate, Referendum, Court, createChamberDocument, deleteChamberDocument } from "./Chamber.js";
 
-import { PoliticalSystemsType } from '../../types/static.js';
-import constants from '../../data/constants.json' assert { type: "json" };
+import { PoliticalSystemsType } from '../types/types.js';
+import constants from '../data/constants.json' assert { type: "json" };
 
 // Maybe can remove
 class PoliticalSystem {

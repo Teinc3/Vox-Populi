@@ -1,11 +1,11 @@
 import { prop, type Ref, getModelForClass,/* , modelOptions, Severity */ 
 isDocument} from '@typegoose/typegoose';
 
-import PoliticalChannel from './PoliticalChannel.js';
+import PoliticalChannel from './channels/PoliticalChannel.js';
 import GuildModel from './Guild.js';
 
-import { PoliticalBranchType } from '../../types/static.js';
-import constants from '../../data/constants.json' assert { type: "json" };
+import { PoliticalBranchType } from '../types/types.js';
+import constants from '../data/constants.json' assert { type: "json" };
 
 //@modelOptions({ schemaOptions: { collection: "chambers" }, options: { allowMixed: Severity.ALLOW } })
 class Chamber {

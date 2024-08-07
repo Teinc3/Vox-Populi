@@ -1,13 +1,16 @@
-import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
-import type { Guild, ChatInputCommandInteraction } from 'discord.js';
+import { getModelForClass, prop, type Ref } from '@typegoose/typegoose';
+import type { ChatInputCommandInteraction, Guild } from 'discord.js';
 
-import GuildCategory, { createGuildCategories, deleteGuildCategoryDocument } from './GuildCategory.js';
+import GuildCategory, { createGuildCategories, deleteGuildCategoryDocument } from './channels/GuildCategory.js';
 import PoliticalSystem, { createPoliticalSystemDocument, deletePoliticalSystemDocument } from './PoliticalSystem.js';
-import { createPoliticalRoleDocuments } from './PoliticalRole.js';
-import PoliticalRoleHolder, { createPoliticalRoleHolderDocument, deletePoliticalRoleHolderDocument } from './PoliticalRolesHolder.js';
+import { createPoliticalRoleDocuments } from './roles/PoliticalRole.js';
+import PoliticalRoleHolder, {
+    createPoliticalRoleHolderDocument,
+    deletePoliticalRoleHolderDocument
+} from './roles/PoliticalRolesHolder.js';
 
-import { PoliticalSystemsType, type DDChamberOptions } from '../../types/static.js';
-import constants from '../../data/constants.json' assert { type: "json" };
+import { type DDChamberOptions, PoliticalSystemsType } from '../types/types.js';
+import constants from '../data/constants.json' assert { type: 'json' };
 
 class GuildSchema {
     @prop({ required: true, unique: true })
@@ -19,7 +22,7 @@ class GuildSchema {
     @prop({ required: true, ref: () => 'PoliticalSystem' })
     politicalSystem!: Ref<PoliticalSystem>;
     
-    @prop({ default: new Array(), ref: () => 'GuildCategory' })
+    @prop({ default: [], ref: () => 'GuildCategory' })
     categories?: Ref<GuildCategory>[];
 
     @prop({ required: true, ref: () => 'PoliticalRoleHolder' })
@@ -58,12 +61,10 @@ async function createGuildDocument(interaction: ChatInputCommandInteraction, pol
     guildData.roles = await createPoliticalRoleHolderDocument(roleHolder);
 
     // Create special channel categories then link them to the guild document
-    const guildCategories = await createGuildCategories(discordGuild, roleHolder, defaultChamberOptions, reason);
-    guildData.categories = guildCategories;
+    guildData.categories = await createGuildCategories(discordGuild, roleHolder, defaultChamberOptions, reason);
 
     // Create Political System then link them to the guild document
-    const politicalSystem = await createPoliticalSystemDocument(politicalystemType, roleHolder);
-    guildData.politicalSystem = politicalSystem;
+    guildData.politicalSystem = await createPoliticalSystemDocument(politicalystemType, roleHolder);
 
     // Finally, create the guild document with the proper linkages
     await GuildModel.create(guildData);

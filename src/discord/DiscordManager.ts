@@ -2,18 +2,12 @@ import { GatewayIntentBits, Events } from 'discord.js';
 
 import ExtendedClient from "./ExtendedClient.js";
 
-import type DBManager from "../db/DBManager.js";
-
 class DiscordManager {
-    private dbManager: DBManager;
-
     private client: ExtendedClient;
     private readonly intents: GatewayIntentBits;
     private readonly token: string;
 
-    constructor(dbManager: DBManager, token: string) {
-        this.dbManager = dbManager;
-
+    constructor(token: string) {
         this.intents = GatewayIntentBits.MessageContent | GatewayIntentBits.GuildMembers;
         this.client = new ExtendedClient({ intents: this.intents });
         this.token = token;

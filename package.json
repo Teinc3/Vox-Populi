@@ -3,10 +3,11 @@
   "module": "src/index.ts",
   "type": "module",
   "scripts": {
-    "start": "tsc && node ./build/index.js",
-    "cleanbuild": "rm -rf build && tsc",
+    "start": "node ./build/index.js",
     "build": "tsc --build --verbose",
-    "deployCommands": "npm run build && node ./build/discord/deployCommands.js"
+    "clean": "rm -rf ./build",
+    "cleanWindows": "if exist build rmdir /s /q build && if exist tsconfig.tsbuildinfo del /f tsconfig.tsbuildinfo",
+    "deployCommands": "node ./build/discord/deployCommands.js"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"

@@ -1,6 +1,6 @@
 import { prop, getModelForClass } from '@typegoose/typegoose';
 
-import { PoliticalBranchType } from '../../types/static.js';
+import { PoliticalBranchType } from '../../types/types.js';
 
 class PoliticalPermissions {
     @prop({ required: true })

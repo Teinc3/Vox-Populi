@@ -2,8 +2,8 @@
 A democracy-simulating Discord bot in a server.
 
 ## Political Structure
-When creating a new server, three political systems can be chosen: Presidential, Parliamentry and Direct Democracy.
-These systems are similar with the exeption of the election process.
+When creating a new server, three political systems can be chosen: Presidential, Parliamentary and Direct Democracy.
+These systems are similar except the election process.
 
 See [Political Structure](docs/politicalStructure) for more detailed information.
 
@@ -24,7 +24,6 @@ Not checked for latest commit.
 ## TODO
 ### Active
 - Add setup screens for "create" command for Elections (includes buttons to adjust term limits/lengths, or toggle certain options for DD)
-- Move schemas to its own subdirectory under `src`
 - Complete function to process our own permission system into discord permissions
 
 ### Future

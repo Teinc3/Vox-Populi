@@ -1,10 +1,16 @@
-import { SlashCommandBuilder, PermissionsBitField, type ChatInputCommandInteraction, type Guild, type GuildMember } from "discord.js";
+import {
+    SlashCommandBuilder,
+    PermissionsBitField,
+    type ChatInputCommandInteraction,
+    type Guild,
+    type GuildMember
+} from "discord.js";
 
 import init from "./subcommands/init.js";
 //import view from "./subcommands/view.js"
 import execute_delete from "./subcommands/delete.js";
 
-import GuildModel from "../../db/schema/Guild.js";
+import GuildModel from "../../schema/Guild.js";
 
 import constants from "../../data/constants.json" assert { type: 'json' };
 
@@ -22,7 +28,7 @@ const data = new SlashCommandBuilder()
             option.addChoices(
                 { name: 'Presidential', value: 'presidential' },
                 { name: 'Parliamentary', value: 'parliamentary' },
-                { name: 'Direct Democracy', value: 'directdemocracy'}
+                { name: 'Direct Democracy', value: 'directdemocracy' }
             );
             return option;
         });
@@ -71,32 +77,30 @@ async function execute(interaction: ChatInputCommandInteraction) {
     }
 
     // Proceed with configuration
-    try {
-        // Handle subcommand
-        let result: boolean;
-        const subcommand = interaction.options.getSubcommand();
+    // Handle subcommand
+    let result = false;
+    const subcommand = interaction.options.getSubcommand();
 
-        switch (subcommand) {
-            case "init":
-                result = await init(interaction);
-                break;
-            case "view":
-                // Not implemented yet
-                result = false;
-                break;
-            case "delete":
-                result = await execute_delete(interaction, guild);
-                return;
-            default:
-                throw new Error('Invalid subcommand.');
-        }
+    switch (subcommand) {
+        case "init":
+            result = await init(interaction);
+            break;
+        case "view":
+            // Not implemented yet
+            break;
+        case "delete":
+            result = await execute_delete(interaction, guild);
+            return;
+        default:
+            console.error('Invalid Subcommand');
+            break;
+    }
 
-        if (!result) {
-            throw new Error('Configuration Error');
+    if (!result) {
+        const errorMsgObject = {
+            content: 'An error occurred while attempting to update the server configuration.',
+            ephemeral: true
         }
-    } catch (err) {
-        console.error(err);
-        const errorMsgObject = { content: 'An error occurred while attempting to update the server configuration.', ephemeral: true }
         if (interaction.replied) {
             await interaction.followUp(errorMsgObject);
         } else {
@@ -131,7 +135,10 @@ async function checkPermissions(interaction: ChatInputCommandInteraction, guild:
     const memberCount = guild.memberCount;
 
     if (!isUserBotOwner && !isServerOwner && !isAdmin && memberCount > constants.discord.maxMemberFreeConfigCount) {
-        await interaction.reply({ content: 'You do not have the necessary permissions to configure this server.', ephemeral: true });
+        await interaction.reply({
+            content: 'You do not have the necessary permissions to configure this server.',
+            ephemeral: true
+        });
         return false;
     }
 
@@ -140,7 +147,10 @@ async function checkPermissions(interaction: ChatInputCommandInteraction, guild:
     const isBotAdmin = isBotOwner || (interaction.guild?.members.me?.permissions.has(PermissionsBitField.Flags.Administrator) ?? false);
 
     if (!isBotAdmin) {
-        await interaction.reply({ content: 'I do not have the necessary permissions to configure this server.', ephemeral: false });
+        await interaction.reply({
+            content: 'I do not have the necessary permissions to configure this server.',
+            ephemeral: false
+        });
         return false;
     }
 

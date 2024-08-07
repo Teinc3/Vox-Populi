@@ -1,10 +1,10 @@
 import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
 import type { ColorResolvable, Guild } from 'discord.js';
 
-import { PoliticalSystemsType } from '../../types/static.js';
+import { PoliticalSystemsType } from '../../types/types.js';
 import PoliticalRoleHolder from './PoliticalRolesHolder.js';
 
-import { type DDChamberOptions } from '../../types/static.js';
+import { type DDChamberOptions } from '../../types/types.js';
 import constants from '../../data/constants.json' assert { type: "json" };
 
 class PoliticalRole {

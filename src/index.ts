@@ -2,7 +2,8 @@ import { config } from 'dotenv';
 config();
 
 import DiscordManager from "./discord/DiscordManager.js";
-import DBManager from "./db/DBManager.js";
+import mongoose from "mongoose";
+import constants from "./data/constants.json" assert { type: "json" };
 
 const token = process.env.DISCORD_TOKEN;
 if (!token) {
@@ -10,12 +11,9 @@ if (!token) {
     process.exit(1);
 }
 
-const dbManager = new DBManager();
-const discordManager = new DiscordManager(dbManager, process.env.TOKEN!);
+mongoose.connect(constants.mongo.uri)
+    .then(() => console.log('Connected to MongoDB!'))
+    .catch(console.error);
+const discordManager = new DiscordManager(process.env.TOKEN!);
 
-function startConnections() {
-    dbManager.connect().then();
-    discordManager.login().then();
-}
-
-startConnections();
+discordManager.login().then();
