@@ -35,7 +35,7 @@ class GuildSchema {
 
 const GuildModel = getModelForClass(GuildSchema);
 
-async function createGuildDocument(interaction: ChatInputCommandInteraction, politicalystemType: PoliticalSystemsType, reason?: string): Promise<boolean> {
+async function createGuildDocument(interaction: ChatInputCommandInteraction, politicalSystemType: PoliticalSystemsType, reason?: string) {
 
     const discordGuild = interaction.guild!;
     const guildID = discordGuild.id;
@@ -51,24 +51,23 @@ async function createGuildDocument(interaction: ChatInputCommandInteraction, pol
     guildData.isBotOwner = isBotOwner;
 
     const defaultChamberOptions = {
-        isReferendum: politicalystemType === PoliticalSystemsType.DirectDemocracy,
+        isDD: politicalSystemType === PoliticalSystemsType.DirectDemocracy,
         appointModerators: constants.politicalSystem.directDemocracy.appointModerators,
         appointJudges: constants.politicalSystem.directDemocracy.appointJudges
     } as DDChamberOptions;
 
     // Create all political roles then link them to the guild document, and generate the role document refs
-    const roleHolder = await createPoliticalRoleDocuments(discordGuild, politicalystemType, defaultChamberOptions, reason);
+    const roleHolder = await createPoliticalRoleDocuments(discordGuild, politicalSystemType, defaultChamberOptions, reason);
     guildData.roles = await createPoliticalRoleHolderDocument(roleHolder);
 
     // Create special channel categories then link them to the guild document
     guildData.categories = await createGuildCategories(discordGuild, roleHolder, defaultChamberOptions, reason);
 
     // Create Political System then link them to the guild document
-    guildData.politicalSystem = await createPoliticalSystemDocument(politicalystemType, roleHolder);
+    guildData.politicalSystem = await createPoliticalSystemDocument(politicalSystemType, roleHolder);
 
     // Finally, create the guild document with the proper linkages
-    await GuildModel.create(guildData);
-    return true
+    return await GuildModel.create(guildData);
 }
 
 async function deleteGuildDocument(guild: Guild, reason?: string): Promise<boolean> {

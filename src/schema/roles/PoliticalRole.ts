@@ -102,9 +102,9 @@ async function createPoliticalRoleDocuments(guild: Guild, politicalSytemType: Po
     return roleHolder;
 }
 
-async function deletePoliticalRoleDocument<T extends PoliticalRole>(guild: Guild, _id: Ref<T>, reason?: string) {
+async function deletePoliticalRoleDocument<T extends PoliticalRole>(guild: Guild, politicalRoleDocument: Ref<T>, reason?: string) {
     // Find role document
-    const roleDocument = await PoliticalRoleModel.findOneAndDelete({ _id });
+    const roleDocument = await PoliticalRoleModel.findOneAndDelete({ _id: politicalRoleDocument });
     if (!roleDocument) {
         return;
     }

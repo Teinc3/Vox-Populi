@@ -12,7 +12,7 @@ export enum PoliticalBranchType {
 }
 
 export interface DDChamberOptions {
-    isDD?: boolean; // If it is a Direct Democracy
-    appointModerators?: boolean; // If Citizens act as moderators
-    appointJudges?: boolean; // If Citizens act as judges
+    isDD: boolean; // If it is a Direct Democracy
+    appointModerators: boolean; // If Citizens act as moderators
+    appointJudges: boolean; // If Citizens act as judges
 }

@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node ./build/index.js",
     "build": "tsc --build --verbose",
-    "clean": "rm -rf ./build",
+    "clean": "rm -rf ./build && rm -f tsconfig.tsbuildinfo",
     "cleanWindows": "if exist build rmdir /s /q build && if exist tsconfig.tsbuildinfo del /f tsconfig.tsbuildinfo",
     "deployCommands": "node ./build/discord/deployCommands.js"
   },
