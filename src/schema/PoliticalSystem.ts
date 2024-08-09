@@ -2,32 +2,46 @@ import { prop, type Ref, getModelForClass} from '@typegoose/typegoose';
 
 import PoliticalRole, { President, PrimeMinister } from "./roles/PoliticalRole.js";
 import PoliticalRoleHolder from './roles/PoliticalRolesHolder.js';
-import Chamber, { Legislature, Senate, Referendum, Court, createChamberDocument, deleteChamberDocument } from "./Chamber.js";
+import Chamber, { Legislature, Senate, Referendum, createChamberDocument, deleteChamberDocument } from "./Chamber.js";
+import { PresidentialOptions, DDOptions } from './options.js';
 
-import { GuildConfigData, PoliticalSystemsType } from '../types/types.js';
-import constants from '../data/constants.json' assert { type: "json" };
+import { GuildConfigData, PoliticalBranchType, PoliticalSystemsType } from '../types/types.js';
 
 // Maybe can remove
 class PoliticalSystem {
     @prop({ required: true })
     id!: PoliticalSystemsType;
 
-    // I'm not entirely sure what use this has but I'll keep it for now
-    // Maybe shows up in server info or something like that
-    @prop({ ref: () => 'PoliticalRole' })
-    headOfState?: Ref<PoliticalRole>;
-
     @prop({ required: true, ref: () => 'Legislature' })
     legislature!: Ref<Legislature>;
 
     @prop({ required: true, ref: () => 'Chamber' })
     court!: Ref<Chamber>;
+
+    // I'm not entirely sure what use this has but I'll keep it for now
+    // Maybe shows up in server info or something like that
+    @prop({ ref: () => 'PoliticalRole' })
+    headOfState?: Ref<PoliticalRole>;
+
+    // Optional Presidential methods
+    @prop({ _id: false })
+    presidentialOptions?: PresidentialOptions;
+
+    // Optional DD methods
+    @prop({ _id: false })
+    ddOptions?: DDOptions;
 }
 
 class Presidential extends PoliticalSystem {
     id = PoliticalSystemsType.Presidential;
     declare headOfState?: Ref<President>;
     declare legislature: Ref<Senate>;
+    declare presidentialOptions: PresidentialOptions;
+
+    constructor() {
+        super();
+        this.presidentialOptions = new PresidentialOptions();
+    }
 }
 
 class Parliamentary extends PoliticalSystem {
@@ -39,14 +53,12 @@ class Parliamentary extends PoliticalSystem {
 class DirectDemocracy extends PoliticalSystem {
     id = PoliticalSystemsType.DirectDemocracy;
     declare legislature: Ref<Referendum>;
+    declare ddOptions: DDOptions;
 
-    // If people vote on moderation, or if the moderation is done by mods appointed by referendums
-    @prop({ required: true })
-    appointModerators!: boolean;
-
-    // If people vote on judges, or if the judges are appointed by referendums
-    @prop({ required: true })
-    appointJudges!: boolean;
+    constructor() {
+        super();
+        this.ddOptions = new DDOptions();
+    }
 }
 
 const PoliticalSystemModel = getModelForClass(PoliticalSystem);
@@ -61,17 +73,23 @@ async function createPoliticalSystemDocument(guildConfigData: GuildConfigData, p
         case PoliticalSystemsType.Presidential:
             politicalSystem = new Presidential();
             headOfStateRole = politicalRoleHolder.President!;
+
+            politicalSystem.presidentialOptions!.termOptions.termLength = guildConfigData.presidentialOptions!.termLength;
+            politicalSystem.presidentialOptions!.termOptions.termLimit = guildConfigData.presidentialOptions!.termLimits;
+            politicalSystem.presidentialOptions!.termOptions.consecutive = guildConfigData.presidentialOptions!.consecutive;
             break;
 
         case PoliticalSystemsType.Parliamentary:
             politicalSystem = new Parliamentary();
             headOfStateRole = politicalRoleHolder.PrimeMinister!;
+            
             break;
 
         case PoliticalSystemsType.DirectDemocracy:
             politicalSystem = new DirectDemocracy();
-            (politicalSystem as DirectDemocracy).appointModerators = guildConfigData.ddOptions!.appointModerators;
-            (politicalSystem as DirectDemocracy).appointJudges = guildConfigData.ddOptions!.appointJudges;
+
+            politicalSystem.ddOptions!.appointModerators = guildConfigData.ddOptions!.appointModerators;
+            politicalSystem.ddOptions!.appointJudges = guildConfigData.ddOptions!.appointJudges;
             break;
     }
 
@@ -82,8 +100,8 @@ async function createPoliticalSystemDocument(guildConfigData: GuildConfigData, p
 
     // Create Legislature document
     // BTW Pass guildConfigData stuff there as well
-    politicalSystem.legislature = await createChamberDocument(politicalSystemType === PoliticalSystemsType.DirectDemocracy ? Referendum : Senate);
-    politicalSystem.court = await createChamberDocument(Court);
+    politicalSystem.legislature = await createChamberDocument(PoliticalBranchType.Legislative, guildConfigData);
+    politicalSystem.court = await createChamberDocument(PoliticalBranchType.Judicial, guildConfigData);
 
     // Save the political system document and return the reference
     return await PoliticalSystemModel.create(politicalSystem);

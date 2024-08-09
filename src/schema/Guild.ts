@@ -9,8 +9,7 @@ import PoliticalRoleHolder, {
     deletePoliticalRoleHolderDocument
 } from './roles/PoliticalRolesHolder.js';
 
-import { type DDChamberOptions, GuildConfigData, PoliticalSystemsType } from '../types/types.js';
-import constants from '../data/constants.json' assert { type: 'json' };
+import { GuildConfigData } from '../types/types.js';
 
 class GuildSchema {
     @prop({ required: true, unique: true })

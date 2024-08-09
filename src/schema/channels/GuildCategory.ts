@@ -6,7 +6,7 @@ import type PoliticalRoleHolder from '../roles/PoliticalRolesHolder.js';
 import { filterRefRoleArray } from '../permissions/ChannelPermissions.js';
 import { linkChamberChannelDocument } from '../Chamber.js';
 
-import { GuildConfigData, PoliticalBranchType, PoliticalSystemsType, type DDChamberOptions } from '../../types/types.js';
+import { GuildConfigData, PoliticalBranchType, PoliticalSystemsType } from '../../types/types.js';
 
 class GuildCategory {
     constructor(name: string) {

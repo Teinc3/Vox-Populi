@@ -23,7 +23,7 @@ Not checked for latest commit.
 
 ## TODO
 ### Active
-- Add setup screens for "create" command for Elections (includes buttons to adjust term limits/lengths, or toggle certain options for DD)
+- Complete parliamentary, judiciary and dd referendum options in init wizard
 - Complete function to process our own permission system into discord permissions
 
 ### Future

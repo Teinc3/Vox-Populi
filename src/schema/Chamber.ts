@@ -3,9 +3,9 @@ isDocument} from '@typegoose/typegoose';
 
 import PoliticalChannel from './channels/PoliticalChannel.js';
 import GuildModel from './Guild.js';
+import { Thresholds, TermOptions, SeatOptions } from './options.js';
 
-import { PoliticalBranchType } from '../types/types.js';
-import constants from '../data/constants.json' assert { type: "json" };
+import { GuildConfigData, PoliticalBranchType, PoliticalSystemsType } from '../types/types.js';
 
 //@modelOptions({ schemaOptions: { collection: "chambers" }, options: { allowMixed: Severity.ALLOW } })
 class Chamber {
@@ -18,35 +18,33 @@ class Chamber {
     @prop({ ref: () => 'PoliticalChannel' })
     channel?: Ref<PoliticalChannel>;
 
-    @prop({ required: true })
-    threshold!: number;
+    @prop({ required: true, _id: false })
+    thresholds!: Thresholds;
     
     // These are optional because they are not used by Referendum
-    @prop()
-    termLength?: number;
+    @prop({ _id: false })
+    termOptions?: TermOptions;
 
-    @prop()
-    termLimit?: number;
+    @prop({ _id: false })
+    seatOptions?: SeatOptions;
 
-    @prop()
-    seats?: number;
+    constructor() {
+        this.thresholds = new Thresholds();
+    }
 }
 
 class Legislature extends Chamber {
     id = PoliticalBranchType.Legislative;
-
-    threshold = constants.legislature.threshold;
-
-    @prop({ required: true, default: constants.legislature.amendmentThreshold })
-    amendmentThreshold!: number;
 }
 
 class Senate extends Legislature {
     name = "Senate";
 
-    termLimit = constants.legislature.senate.termLimit;
-    termLength = constants.legislature.senate.termLength;
-    seats = constants.legislature.senate.seats;
+    constructor() {
+        super();
+        this.termOptions = new TermOptions();
+        this.seatOptions = new SeatOptions();
+    }
 }
 
 class Referendum extends Legislature {
@@ -57,16 +55,35 @@ class Court extends Chamber {
     id = PoliticalBranchType.Judicial;
     name = "Court";
 
-    termLimit = constants.judicial.termLimit;
-    termLength = constants.judicial.termLength;
-    threshold = constants.judicial.threshold;
-    seats = constants.judicial.seats;
+    constructor() {
+        super();
+        // this.termOptions = new TermOptions();
+        // this.seatOptions = new SeatOptions();
+        // this.seatOptions.scaleable = false; // Court seats are fixed
+    }
 }
 
 const ChamberModel = getModelForClass(Chamber);
 
-async function createChamberDocument<T extends Chamber>(ChamberType: new () => T): Promise<Ref<T>> {
-    return await ChamberModel.create(new ChamberType()) as Ref<T>;
+async function createChamberDocument<T extends Chamber>(politicalBranchType: PoliticalBranchType, guildConfigData: GuildConfigData): Promise<Ref<T>> {
+    const ChamberType: new () => Chamber = politicalBranchType === PoliticalBranchType.Legislative ? guildConfigData.politicalSystem === PoliticalSystemsType.DirectDemocracy ? Referendum : Senate : Court;
+    let chamber = new ChamberType();
+    
+    if (ChamberType === Senate) {
+        chamber.termOptions!.termLength = guildConfigData.senateOptions!.terms.termLength;
+        chamber.termOptions!.termLimit = guildConfigData.senateOptions!.terms.termLimits;
+        
+        chamber.seatOptions!.value = guildConfigData.senateOptions!.seats.value;
+        chamber.seatOptions!.scaleable = guildConfigData.senateOptions!.seats.scaleable;
+    } else if (ChamberType === Referendum) {
+        // Referendum Options
+    } else {
+        // Court options (substitute)
+        chamber.thresholds.amendment = guildConfigData.senateOptions!.threshold.amendment;
+        chamber.thresholds.pass = guildConfigData.senateOptions!.threshold.pass;
+    }
+    
+    return await ChamberModel.create(chamber) as Ref<T>;
 }
 
 async function linkChamberChannelDocument(guildID: string, chamberType: PoliticalBranchType, politicalChannelDocument: Ref<PoliticalChannel>) {

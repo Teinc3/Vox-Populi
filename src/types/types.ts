@@ -11,15 +11,17 @@ export enum PoliticalBranchType {
     Judicial = 3,
 }
 
-export interface DDChamberOptions {
-    isDD: boolean; // If it is a Direct Democracy
-    appointModerators: boolean; // If Citizens act as moderators
-    appointJudges: boolean; // If Citizens act as judges
-}
+/* export enum SenateSeatAllocationMethod {
+    Proportional = 0, // A percentage of the total number of Citizens
+    Fixed = 1 // A fixed number of seats
+} */
 
 export interface GuildConfigData {
     politicalSystem: PoliticalSystemsType;
-    ddOptions?: DDChamberOptions;
+    ddOptions?: {
+        appointModerators: boolean; // If Citizens act as moderators
+        appointJudges: boolean; // If Citizens act as judges
+    };
     presidentialOptions?: {
         termLength: number;
         termLimits: number;
@@ -27,16 +29,24 @@ export interface GuildConfigData {
 		cursor: number;
     }
     parliamentaryOptions?: {
-        // Snap election min time?
+        snapElection: number;
     }
     senateOptions?: {
-        termLength: number;
-        termLimits: number;
-        seats: number;
-        /* Other options
-        amendment thresholds?
-        normal vote thresholds?
-        */
+        terms: {
+            termLength: number;
+            termLimits: number;
+            cursor: number;
+        }
+        seats: {
+            scaleable: boolean; // If there are more allocation methods, we can expand to use enum SenateSeatAllocationMethod
+            value: number; // Citizens per seat or Number of seats
+        }
+        // In percentages
+        threshold: {
+            amendment: number;
+            pass: number;
+            cursor: number;
+        }
     }
     emergencyOptions: {}
 }
