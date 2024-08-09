@@ -4,7 +4,7 @@ import PoliticalRole, { President, PrimeMinister } from "./roles/PoliticalRole.j
 import PoliticalRoleHolder from './roles/PoliticalRolesHolder.js';
 import Chamber, { Legislature, Senate, Referendum, Court, createChamberDocument, deleteChamberDocument } from "./Chamber.js";
 
-import { PoliticalSystemsType } from '../types/types.js';
+import { GuildConfigData, PoliticalSystemsType } from '../types/types.js';
 import constants from '../data/constants.json' assert { type: "json" };
 
 // Maybe can remove
@@ -42,22 +42,20 @@ class DirectDemocracy extends PoliticalSystem {
 
     // If people vote on moderation, or if the moderation is done by mods appointed by referendums
     @prop({ required: true })
-    appointModerators: boolean = constants.politicalSystem.directDemocracy.appointModerators;
+    appointModerators!: boolean;
 
     // If people vote on judges, or if the judges are appointed by referendums
     @prop({ required: true })
-    appointJudges: boolean = constants.politicalSystem.directDemocracy.appointJudges;
+    appointJudges!: boolean;
 }
 
 const PoliticalSystemModel = getModelForClass(PoliticalSystem);
 
-async function createPoliticalSystemDocument(
-    politicalSystemType: PoliticalSystemsType,
-    politicalRoleHolder: PoliticalRoleHolder
-): Promise<Ref<PoliticalSystem>> {
+async function createPoliticalSystemDocument(guildConfigData: GuildConfigData, politicalRoleHolder: PoliticalRoleHolder): Promise<Ref<PoliticalSystem>> {
 
     let politicalSystem: PoliticalSystem;
     let headOfStateRole: Ref<PoliticalRole> | undefined;
+    const { politicalSystem: politicalSystemType } = guildConfigData;
 
     switch (politicalSystemType) {
         case PoliticalSystemsType.Presidential:
@@ -72,6 +70,8 @@ async function createPoliticalSystemDocument(
 
         case PoliticalSystemsType.DirectDemocracy:
             politicalSystem = new DirectDemocracy();
+            (politicalSystem as DirectDemocracy).appointModerators = guildConfigData.ddOptions!.appointModerators;
+            (politicalSystem as DirectDemocracy).appointJudges = guildConfigData.ddOptions!.appointJudges;
             break;
     }
 
@@ -81,6 +81,7 @@ async function createPoliticalSystemDocument(
     }
 
     // Create Legislature document
+    // BTW Pass guildConfigData stuff there as well
     politicalSystem.legislature = await createChamberDocument(politicalSystemType === PoliticalSystemsType.DirectDemocracy ? Referendum : Senate);
     politicalSystem.court = await createChamberDocument(Court);
 

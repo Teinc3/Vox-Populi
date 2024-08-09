@@ -16,3 +16,27 @@ export interface DDChamberOptions {
     appointModerators: boolean; // If Citizens act as moderators
     appointJudges: boolean; // If Citizens act as judges
 }
+
+export interface GuildConfigData {
+    politicalSystem: PoliticalSystemsType;
+    ddOptions?: DDChamberOptions;
+    presidentialOptions?: {
+        termLength: number;
+        termLimits: number;
+		consecutive: boolean;
+		cursor: number;
+    }
+    parliamentaryOptions?: {
+        // Snap election min time?
+    }
+    senateOptions?: {
+        termLength: number;
+        termLimits: number;
+        seats: number;
+        /* Other options
+        amendment thresholds?
+        normal vote thresholds?
+        */
+    }
+    emergencyOptions: {}
+}

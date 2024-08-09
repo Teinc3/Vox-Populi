@@ -9,7 +9,7 @@ import PoliticalRoleHolder, {
     deletePoliticalRoleHolderDocument
 } from './roles/PoliticalRolesHolder.js';
 
-import { type DDChamberOptions, PoliticalSystemsType } from '../types/types.js';
+import { type DDChamberOptions, GuildConfigData, PoliticalSystemsType } from '../types/types.js';
 import constants from '../data/constants.json' assert { type: 'json' };
 
 class GuildSchema {
@@ -35,7 +35,7 @@ class GuildSchema {
 
 const GuildModel = getModelForClass(GuildSchema);
 
-async function createGuildDocument(interaction: ChatInputCommandInteraction, politicalSystemType: PoliticalSystemsType, reason?: string) {
+async function createGuildDocument(interaction: ChatInputCommandInteraction, guildConfigData: GuildConfigData, reason?: string) {
 
     const discordGuild = interaction.guild!;
     const guildID = discordGuild.id;
@@ -50,21 +50,15 @@ async function createGuildDocument(interaction: ChatInputCommandInteraction, pol
     guildData.guildID = guildID;
     guildData.isBotOwner = isBotOwner;
 
-    const defaultChamberOptions = {
-        isDD: politicalSystemType === PoliticalSystemsType.DirectDemocracy,
-        appointModerators: constants.politicalSystem.directDemocracy.appointModerators,
-        appointJudges: constants.politicalSystem.directDemocracy.appointJudges
-    } as DDChamberOptions;
-
     // Create all political roles then link them to the guild document, and generate the role document refs
-    const roleHolder = await createPoliticalRoleDocuments(discordGuild, politicalSystemType, defaultChamberOptions, reason);
+    const roleHolder = await createPoliticalRoleDocuments(discordGuild, guildConfigData, reason);
     guildData.roles = await createPoliticalRoleHolderDocument(roleHolder);
 
     // Create special channel categories then link them to the guild document
-    guildData.categories = await createGuildCategories(discordGuild, roleHolder, defaultChamberOptions, reason);
+    guildData.categories = await createGuildCategories(discordGuild, roleHolder, guildConfigData, reason);
 
     // Create Political System then link them to the guild document
-    guildData.politicalSystem = await createPoliticalSystemDocument(politicalSystemType, roleHolder);
+    guildData.politicalSystem = await createPoliticalSystemDocument(guildConfigData, roleHolder);
 
     // Finally, create the guild document with the proper linkages
     return await GuildModel.create(guildData);

@@ -21,17 +21,6 @@ const data = new SlashCommandBuilder()
     .addSubcommand((subcommand) => {
         subcommand.setName('init');
         subcommand.setDescription('Creates a new server configuration.');
-        subcommand.addStringOption((option) => {
-            option.setName('politicalsystem');
-            option.setDescription('Select the desired political system for the server.');
-            option.setRequired(true);
-            option.addChoices(
-                { name: 'Presidential', value: 'presidential' },
-                { name: 'Parliamentary', value: 'parliamentary' },
-                { name: 'Direct Democracy', value: 'directdemocracy' }
-            );
-            return option;
-        });
         return subcommand;
     })
     .addSubcommandGroup((subcommandGroup) => {

@@ -10,44 +10,43 @@
     "interactionTimeout": 60E3
   },
   "legislature": {
-    "_threshold_": "Threshold: 1/2",
     "threshold": 0.5,
-    "_amendmentThreshold_": "Amendment Threshold: 2/3",
     "amendmentThreshold": 0.6666666666666666,
     "senate": {
-      "_termLength_": "Term Length: 3 Months",
-      "termLength": 7776000,
-      "_termLimit_": "Term Limit: 4 Terms",
+      "_": "3 Months",
+      "termLength": 3,
       "termLimit": 4,
-      "_seats_": "Seats: 10",
       "seats": 10
     }
   },
   "judicial": {
-    "_termLength_": "Term Length: 6 Months",
-    "termLength": 15552000,
-    "_termLimit_": "Term Limit: No Limits",
+    "_": "6 Months, No Term Limit",
+    "termLength": 6,
     "termLimit": 0,
-    "_threshold_": "Threshold: 1/2",
+    "seats": 3,
     "threshold": 0.5
   },
   "politicalSystem": {
     "presidential": {
       "description": "A system of government where the executive branch exists separately from a legislature.",
-      "_termLength_": "Term Length: 2 Month",
-      "termLength": 5184000,
-      "_termLimit_": "Term Limit: 2 Terms",
-      "termLimit": 2
+      "_": "2 Months",
+      "termLength": 2,
+      "termLimit": 2,
+      "consecutive": true
     },
     "parliamentary": {
       "description": "A system of government where the executive branch derives its democratic legitimacy from, and is held accountable to, the legislature."
     },
     "directDemocracy": {
       "description": "A form of democracy in which people decide on policy initiatives directly.",
-      "_appointModerators_": "Members can vote in moderators for the server",
-      "appointModerators": false,
-      "_appointJudges_": "Members can vote in judges for the server",
-      "appointJudges": false
+      "appointModerators": {
+        "description": "Citizens can appoint moderators through referendums. If false, Citizens collectively work as moderators.",
+        "value": false
+      },
+      "appointJudges": {
+        "description": "Citizens can appoint judges through referendums. If false, Citizens collectively work as judges.",
+        "value": false
+      }
     }
   },
   "roles": {

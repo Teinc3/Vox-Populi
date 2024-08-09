@@ -27,6 +27,9 @@ class Chamber {
 
     @prop()
     termLimit?: number;
+
+    @prop()
+    seats?: number;
 }
 
 class Legislature extends Chamber {
@@ -43,9 +46,7 @@ class Senate extends Legislature {
 
     termLimit = constants.legislature.senate.termLimit;
     termLength = constants.legislature.senate.termLength;
-
-    @prop({ required: true, default: constants.legislature.senate.seats })
-    seats!: number;
+    seats = constants.legislature.senate.seats;
 }
 
 class Referendum extends Legislature {
@@ -59,6 +60,7 @@ class Court extends Chamber {
     termLimit = constants.judicial.termLimit;
     termLength = constants.judicial.termLength;
     threshold = constants.judicial.threshold;
+    seats = constants.judicial.seats;
 }
 
 const ChamberModel = getModelForClass(Chamber);

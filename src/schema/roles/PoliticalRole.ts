@@ -1,10 +1,9 @@
 import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
 import type { ColorResolvable, Guild } from 'discord.js';
 
-import { PoliticalSystemsType } from '../../types/types.js';
 import PoliticalRoleHolder from './PoliticalRolesHolder.js';
 
-import { type DDChamberOptions } from '../../types/types.js';
+import { GuildConfigData, PoliticalSystemsType } from '../../types/types.js';
 import constants from '../../data/constants.json' assert { type: "json" };
 
 class PoliticalRole {
@@ -73,26 +72,28 @@ const PoliticalRoleObjectList: Array<new () => PoliticalRole> = [VoxPopuli, Pres
 
 const PoliticalRoleModel = getModelForClass(PoliticalRole);
 
-async function createPoliticalRoleDocuments(guild: Guild, politicalSytemType: PoliticalSystemsType, chamberOptions: DDChamberOptions, reason?: string): Promise<PoliticalRoleHolder> {
+async function createPoliticalRoleDocuments(guild: Guild, guildConfigData: GuildConfigData, reason?: string): Promise<PoliticalRoleHolder> {
+
+    const politicalSystemType = guildConfigData.politicalSystem;
 
     const roleHolder = new PoliticalRoleHolder();
     roleHolder.VoxPopuli = await PoliticalRoleModel.create(await linkDiscordRole(guild, new VoxPopuli(), reason));
 
-    if (politicalSytemType === PoliticalSystemsType.Presidential) {
+    if (politicalSystemType === PoliticalSystemsType.Presidential) {
         roleHolder.President = await PoliticalRoleModel.create(await linkDiscordRole(guild, new President(), reason));
-    } else if (politicalSytemType === PoliticalSystemsType.Parliamentary) {
+    } else if (politicalSystemType === PoliticalSystemsType.Parliamentary) {
         roleHolder.PrimeMinister = await PoliticalRoleModel.create(await linkDiscordRole(guild, new PrimeMinister(), reason));
     }
 
-    if (politicalSytemType !== PoliticalSystemsType.DirectDemocracy) {
+    if (politicalSystemType !== PoliticalSystemsType.DirectDemocracy) {
         roleHolder.Senator = await PoliticalRoleModel.create(await linkDiscordRole(guild, new Senator(), reason));
     }
 
     // For Direct Democracy, citizens can choose to appoint judges and moderators through referendums
-    if (!chamberOptions.isDD || chamberOptions.appointJudges) {
+    if (politicalSystemType !== PoliticalSystemsType.DirectDemocracy || guildConfigData.ddOptions!.appointJudges) {
         roleHolder.Judge = await PoliticalRoleModel.create(await linkDiscordRole(guild, new Judge(), reason));
     }
-    if (!chamberOptions.isDD || chamberOptions.appointModerators) {
+    if (politicalSystemType !== PoliticalSystemsType.DirectDemocracy || guildConfigData.ddOptions!.appointModerators) {
         roleHolder.HeadModerator = await PoliticalRoleModel.create(await linkDiscordRole(guild, new HeadModerator(), reason));
         roleHolder.Moderator = await PoliticalRoleModel.create(await linkDiscordRole(guild, new Moderator(), reason));
     }
