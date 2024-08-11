@@ -23,7 +23,8 @@ Not checked for latest commit.
 
 ## TODO
 ### Active
-- Complete parliamentary, judiciary and dd referendum options in init wizard
+- Simplify redundant code in Initialization Wizard
+- Add more JSDocs to schema files
 - Complete function to process our own permission system into discord permissions
 
 ### Future
