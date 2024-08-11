@@ -109,11 +109,11 @@ async function execute(interaction: ChatInputCommandInteraction) {
 4. Bot must have the necessary ADMINISTRATOR permissions
 */
 async function checkPermissions(interaction: ChatInputCommandInteraction, guild: Guild): Promise<boolean> {
-    const hasConfigedGuild = await GuildModel.exists({ guildID: guild.id });
-    if (interaction.options.getSubcommand() === "init" && hasConfigedGuild) {
+    const hasConfiguredGuild = await GuildModel.exists({ guildID: guild.id });
+    if (interaction.options.getSubcommand() === "init" && hasConfiguredGuild) {
         await interaction.reply({ content: 'This server has already been configured.', ephemeral: false });
         return false;
-    } else if (interaction.options.getSubcommand() !== "init" && !hasConfigedGuild) {
+    } else if (interaction.options.getSubcommand() !== "init" && !hasConfiguredGuild) {
         await interaction.reply({ content: 'This server does not have a proper configuration.', ephemeral: false });
         return false;
     }

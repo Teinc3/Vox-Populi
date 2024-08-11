@@ -1,7 +1,7 @@
-import { 
+import {
     EmbedBuilder, ActionRowBuilder, ButtonBuilder, Colors, ButtonStyle,
-    type ChatInputCommandInteraction, type Interaction, type InteractionResponse,
-    type ButtonInteraction, type APIButtonComponentWithCustomId,
+    type ChatInputCommandInteraction, type MessageComponentInteraction, type InteractionResponse,
+    type APIButtonComponentWithCustomId,
 } from 'discord.js';
 import { isDocument } from '@typegoose/typegoose';
 
@@ -38,7 +38,7 @@ class InitWizard {
         this.page = 1;
     }
 
-    private buttonFilter = (i: Interaction) => i.isButton() && i.user.id === this.interaction.user.id;
+    private buttonFilter = (i: MessageComponentInteraction) => i.isButton() && i.user.id === this.interaction.user.id;
 
     // response is optional first because the message may not be sent yet
     async selectPoliticalSystem(): Promise<void> {
@@ -86,20 +86,26 @@ class InitWizard {
                     .setEmoji("🏛️")
                     .setStyle(ButtonStyle.Secondary),
                 new ButtonBuilder()
-                    .setCustomId('system_directdemocracy')
+                    .setCustomId('system_dd')
                     .setLabel("Direct Democracy")
                     .setEmoji("🗳️")
                     .setStyle(ButtonStyle.Success)
             )
-        
+
         if (this.response) {
             await this.interaction.editReply({ embeds: [selectPoliticalSystemEmbed], components: [actionRow] });
         } else {
-            this.response = await this.interaction.reply({ embeds: [selectPoliticalSystemEmbed], components: [actionRow] });
+            this.response = await this.interaction.reply({
+                embeds: [selectPoliticalSystemEmbed],
+                components: [actionRow]
+            });
         }
 
         try {
-            const confirmation = await this.response.awaitMessageComponent({ filter: this.buttonFilter, time: constants.discord.interactionTimeout }) as ButtonInteraction;
+            const confirmation = await this.response.awaitMessageComponent({
+                filter: this.buttonFilter,
+                time: constants.discord.interactionTimeout
+            });
             await confirmation.deferUpdate();
 
             switch (confirmation.customId) {
@@ -116,7 +122,7 @@ class InitWizard {
                     this.prevFunctions = [this.selectPoliticalSystem];
                     return await this.setNextFunc(this.setParliamentaryOptions);
 
-                case "system_directdemocracy":
+                case "system_dd":
                     this.guildConfigData.politicalSystem = PoliticalSystemsType.DirectDemocracy;
                     this.prevFunctions = [this.selectPoliticalSystem];
                     return await this.setNextFunc(this.setDDOptions);
@@ -130,18 +136,18 @@ class InitWizard {
     }
 
     async setPresidentialOptions(): Promise<void> {
-	
+
         if (!this.guildConfigData.presidentialOptions) {
             this.guildConfigData.presidentialOptions = {
                 termLength: constants.politicalSystem.presidential.termLength,
-                termLimits: constants.politicalSystem.presidential.termLimit,
+                termLimit: constants.politicalSystem.presidential.termLimit,
                 consecutive: constants.politicalSystem.presidential.consecutive,
                 cursor: 0
             }
         }
-    
+
         const presidentialOptions = this.guildConfigData.presidentialOptions;
-    
+
         const fields = [
             {
                 name: "Term Length",
@@ -150,7 +156,7 @@ class InitWizard {
             },
             {
                 name: "Term Limits",
-                value: presidentialOptions.termLimits === 0 ? "No Limits" : presidentialOptions.termLimits.toString(),
+                value: presidentialOptions.termLimit === 0 ? "No Limits" : presidentialOptions.termLimit.toString(),
                 inline: true
             },
             {
@@ -159,12 +165,12 @@ class InitWizard {
                 inline: true
             }
         ]
-    
+
         const activeField = fields[presidentialOptions.cursor];
         activeField.inline = false;
-    
+
         const selectPresidentialOptionsEmbed = new EmbedBuilder()
-            .setTitle("Configure Options for Presidential System")
+            .setTitle("Configure GuildConfigOptionsOption for Presidential System")
             .setDescription("These options decide the maximum number of terms the President can serve and how long for each one.")
             .setFields(
                 fields[presidentialOptions.cursor],
@@ -173,92 +179,93 @@ class InitWizard {
             .setColor(Colors.Blurple)
             .setFooter({ text: "Page " + this.page })
             .toJSON();
-        
+
         const actionRow = new ActionRowBuilder<ButtonBuilder>()
             .addComponents(...[
                 new ButtonBuilder()
-                    .setCustomId("prez_options_back")
+                    .setCustomId("presidential_options_back")
                     .setLabel("Back")
                     .setStyle(ButtonStyle.Danger)
                     .setEmoji("↩️"),
                 new ButtonBuilder()
-                    .setCustomId("prez_options_negative")
+                    .setCustomId("presidential_options_negative")
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji("⬅️")
                     .setLabel(presidentialOptions.cursor === 0 ? "-1 Month" : "-1 Term")
-                    .setDisabled(presidentialOptions.cursor === 0 && presidentialOptions.termLength <= 1 || presidentialOptions.cursor === 1 && presidentialOptions.termLimits <= 0),
+                    .setDisabled(presidentialOptions.cursor === 0 && presidentialOptions.termLength <= 1 || presidentialOptions.cursor === 1 && presidentialOptions.termLimit <= 0),
                 new ButtonBuilder()
-                    .setCustomId("prez_options_positive")
+                    .setCustomId("presidential_options_positive")
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji("➡️")
                     .setLabel(presidentialOptions.cursor === 0 ? "+1 Month" : "+1 Term"),
                 new ButtonBuilder()
-                    .setCustomId("prez_options_toggle")
+                    .setCustomId("presidential_options_toggle")
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji("↕️")
                     .setLabel("Toggle Consecutive Terms"),
                 new ButtonBuilder()
-                    .setCustomId("prez_options_next")
+                    .setCustomId("presidential_options_next")
                     .setStyle(ButtonStyle.Secondary)
                     .setLabel("Next Option")
                     .setEmoji("🔄"),
                 new ButtonBuilder()
-                    .setCustomId("prez_options_confirm")
+                    .setCustomId("presidential_options_confirm")
                     .setStyle(ButtonStyle.Success)
                     .setLabel("Continue")
                     .setEmoji("✅")
             ].filter(button => {
                 const customID = (button.data as Partial<APIButtonComponentWithCustomId>).custom_id;
-                if (presidentialOptions.cursor === 2 && (customID === "prez_options_negative" || customID === "prez_options_positive")) {
+                if (presidentialOptions.cursor === 2 && (customID === "presidential_options_negative" || customID === "presidential_options_positive")) {
                     return false
                 }
-                if (presidentialOptions.cursor <= 1 && customID === "prez_options_toggle") {
-                    return false
-                }
-                return true;
+                return !(presidentialOptions.cursor <= 1 && customID === "presidential_options_toggle");
+
             }))
-    
+
         await this.interaction.editReply({ embeds: [selectPresidentialOptionsEmbed], components: [actionRow] })
 
         try {
-            const confirmation = await this.response!.awaitMessageComponent({ filter: this.buttonFilter, time: constants.discord.interactionTimeout }) as ButtonInteraction;
+            const confirmation = await this.response!.awaitMessageComponent({
+                filter: this.buttonFilter,
+                time: constants.discord.interactionTimeout
+            });
             await confirmation.deferUpdate();
 
             switch (confirmation.customId) {
-                case "prez_options_back":
+                case "presidential_options_back":
                     return await this.setPrevFunc();
-                case "prez_options_negative":
+                case "presidential_options_negative":
                     if (presidentialOptions.cursor === 0) {
                         presidentialOptions.termLength -= (presidentialOptions.termLength <= 1 ? 0 : 1);
                     } else if (presidentialOptions.cursor === 1) {
-                        presidentialOptions.termLimits -= (presidentialOptions.termLimits <= 0 ? 0 : 1);
+                        presidentialOptions.termLimit -= (presidentialOptions.termLimit <= 0 ? 0 : 1);
                     } else {
                         return await this.escape();
                     }
                     break;
-                case "prez_options_positive":
+                case "presidential_options_positive":
                     if (presidentialOptions.cursor === 0) {
                         presidentialOptions.termLength += 1;
                     } else if (presidentialOptions.cursor === 1) {
-                        presidentialOptions.termLimits += 1;
+                        presidentialOptions.termLimit += 1;
                     } else {
                         return await this.escape();
                     }
                     break;
-                case "prez_options_toggle":
+                case "presidential_options_toggle":
                     if (presidentialOptions.cursor === 2) {
                         presidentialOptions.consecutive = !presidentialOptions.consecutive;
                     } else {
                         return await this.escape();
                     }
                     break;
-                case "prez_options_next":
+                case "presidential_options_next":
                     presidentialOptions.cursor += 1;
                     if (presidentialOptions.cursor >= 3) {
                         presidentialOptions.cursor = 0;
                     }
                     break;
-                case "prez_options_confirm":
+                case "presidential_options_confirm":
                     this.prevFunctions.push(this.setPresidentialOptions);
                     return await this.setNextFunc(this.setSenateTermOptions);
                 default:
@@ -279,16 +286,16 @@ class InitWizard {
             this.guildConfigData.senateOptions = {
                 terms: {
                     termLength: constants.legislature.senate.termLength,
-                    termLimits: constants.legislature.senate.termLimit,
+                    termLimit: constants.legislature.senate.termLimit,
                     cursor: 0
                 },
                 seats: {
-                    scaleable: constants.legislature.senate.seats.scaleable,
+                    scalable: constants.legislature.senate.seats.scalable,
                     value: constants.legislature.senate.seats.value
                 },
                 threshold: {
-                    amendment: constants.legislature.amendmentThreshold,
-                    pass: constants.legislature.threshold,
+                    amendment: constants.legislature.thresholds.super,
+                    pass: constants.legislature.thresholds.simple,
                     cursor: 0
                 }
             }
@@ -298,7 +305,7 @@ class InitWizard {
         const cursor = termOptions.cursor;
 
         const embed = new EmbedBuilder()
-            .setTitle("Configure Senate Term Options")
+            .setTitle("Configure Senate Term GuildConfigOptionsOption")
             .setDescription("These options decide how long and how many terms Senators can serve.")
             .setFields([
                 {
@@ -308,7 +315,7 @@ class InitWizard {
                 },
                 {
                     name: "Term Limits",
-                    value: termOptions.termLimits === 0 ? "No Limits" : termOptions.termLimits.toString(),
+                    value: termOptions.termLimit === 0 ? "No Limits" : termOptions.termLimit.toString(),
                     inline: true
                 }
             ])
@@ -349,7 +356,10 @@ class InitWizard {
         await this.interaction.editReply({ embeds: [embed], components: [actionRow] });
 
         try {
-            const confirmation = await this.response!.awaitMessageComponent({ filter: this.buttonFilter, time: constants.discord.interactionTimeout }) as ButtonInteraction;
+            const confirmation = await this.response!.awaitMessageComponent({
+                filter: this.buttonFilter,
+                time: constants.discord.interactionTimeout
+            });
             await confirmation.deferUpdate();
 
             switch (confirmation.customId) {
@@ -359,7 +369,7 @@ class InitWizard {
                     if (cursor === 0) {
                         termOptions.termLength -= (termOptions.termLength <= 1 ? 0 : 1);
                     } else if (cursor === 1) {
-                        termOptions.termLimits -= (termOptions.termLimits <= 0 ? 0 : 1);
+                        termOptions.termLimit -= (termOptions.termLimit <= 0 ? 0 : 1);
                     } else {
                         return await this.escape();
                     }
@@ -368,7 +378,7 @@ class InitWizard {
                     if (cursor === 0) {
                         termOptions.termLength += 1;
                     } else if (cursor === 1) {
-                        termOptions.termLimits += 1;
+                        termOptions.termLimit += 1;
                     } else {
                         return await this.escape();
                     }
@@ -391,16 +401,16 @@ class InitWizard {
         const seatsOptions = this.guildConfigData.senateOptions!.seats;
 
         const embed = new EmbedBuilder()
-            .setTitle("Configure Senate Seat Options")
+            .setTitle("Configure Senate Seat GuildConfigOptionsOption")
             .setDescription("These options decide how many seats are available in the Senate.")
             .setFields([
                 {
                     name: "Method of Allocation",
-                    value: seatsOptions.scaleable ? "Scale by Population" : "Fixed Number",
+                    value: seatsOptions.scalable ? "Scale by Population" : "Fixed Number",
                     inline: true
                 },
                 {
-                    name: seatsOptions.scaleable ? "Citizens Per Seat" : "Number of Seats",
+                    name: seatsOptions.scalable ? "Citizens Per Seat" : "Number of Seats",
                     value: seatsOptions.value.toString(),
                     inline: true
                 }
@@ -438,18 +448,21 @@ class InitWizard {
                     .setStyle(ButtonStyle.Success)
                     .setEmoji("✅")
             )
-        
+
         await this.interaction.editReply({ embeds: [embed], components: [actionRow] });
 
         try {
-            const confirmation = await this.response!.awaitMessageComponent({ filter: this.buttonFilter, time: constants.discord.interactionTimeout }) as ButtonInteraction;
+            const confirmation = await this.response!.awaitMessageComponent({
+                filter: this.buttonFilter,
+                time: constants.discord.interactionTimeout
+            });
             await confirmation.deferUpdate();
 
             switch (confirmation.customId) {
                 case "senate_seat_back":
                     return await this.setPrevFunc();
                 case "senate_seat_toggle":
-                    seatsOptions.scaleable = !seatsOptions.scaleable;
+                    seatsOptions.scalable = !seatsOptions.scalable;
                     break;
                 case "senate_seat_negative":
                     seatsOptions.value -= (seatsOptions.value <= 1 ? 0 : 1);
@@ -472,6 +485,11 @@ class InitWizard {
         const thresholdOptions = this.guildConfigData.senateOptions!.threshold;
         const cursor = thresholdOptions.cursor;
 
+        // Should not happen, just for type safety
+        if (!thresholdOptions.amendment) {
+            return await this.escape();
+        }
+
         const fields = [
             {
                 name: "Amendment Threshold",
@@ -489,14 +507,14 @@ class InitWizard {
         }
 
         const embed = new EmbedBuilder()
-            .setTitle("Configure Senate Threshold Options")
+            .setTitle("Configure Senate Threshold GuildConfigOptionsOption")
             .setDescription("These options decide the percentage of votes needed for amendments or normal bills to pass.")
             .setFields(fields)
             .setColor(Colors.Blurple)
             .setFooter({ text: "Page " + this.page })
             .toJSON();
 
-        // The reason why 1% is minimum is because 0% would mean that no votes are needed to pass a bill
+        // The reason why 1% is minimum is that 0% would mean that no votes are needed to pass a bill
         // But 100% maximum is because 100% would mean that all votes are needed to pass a bill
         // So there is no error here
         const actionRowUtilities = new ActionRowBuilder<ButtonBuilder>()
@@ -517,39 +535,42 @@ class InitWizard {
                     .setStyle(ButtonStyle.Success)
                     .setEmoji("✅")
             )
-        
+
         const actionRowThreshold = new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
                 new ButtonBuilder()
-                .setCustomId('senate_threshold_minus_ten')
-                .setLabel("-10%")
-                .setStyle(ButtonStyle.Primary)
-                .setEmoji("⏪")
-                .setDisabled(cursor === 0 && thresholdOptions.amendment <= 10 || cursor === 1 && thresholdOptions.pass <= 10),
-            new ButtonBuilder()
-                .setCustomId('senate_threshold_minus_one')
-                .setLabel("-1%")
-                .setStyle(ButtonStyle.Primary)
-                .setEmoji("⬅️")
-                .setDisabled(cursor === 0 && thresholdOptions.amendment <= 1 || cursor === 1 && thresholdOptions.pass <= 1),
-            new ButtonBuilder()
-                .setCustomId('senate_threshold_plus_one')
-                .setLabel("+1%")
-                .setStyle(ButtonStyle.Primary)
-                .setEmoji("➡️")
-                .setDisabled(cursor === 0 && thresholdOptions.amendment >= 100 || cursor === 1 && thresholdOptions.pass >= 100),
-            new ButtonBuilder()
-                .setCustomId('senate_threshold_plus_ten')
-                .setLabel("+10%")
-                .setStyle(ButtonStyle.Primary)
-                .setEmoji("⏩")
-                .setDisabled(cursor === 0 && thresholdOptions.amendment >= 91 || cursor === 1 && thresholdOptions.pass >= 91),
+                    .setCustomId('senate_threshold_minus_ten')
+                    .setLabel("-10%")
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji("⏪")
+                    .setDisabled(cursor === 0 && thresholdOptions.amendment <= 10 || cursor === 1 && thresholdOptions.pass <= 10),
+                new ButtonBuilder()
+                    .setCustomId('senate_threshold_minus_one')
+                    .setLabel("-1%")
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji("⬅️")
+                    .setDisabled(cursor === 0 && thresholdOptions.amendment <= 1 || cursor === 1 && thresholdOptions.pass <= 1),
+                new ButtonBuilder()
+                    .setCustomId('senate_threshold_plus_one')
+                    .setLabel("+1%")
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji("➡️")
+                    .setDisabled(cursor === 0 && thresholdOptions.amendment >= 100 || cursor === 1 && thresholdOptions.pass >= 100),
+                new ButtonBuilder()
+                    .setCustomId('senate_threshold_plus_ten')
+                    .setLabel("+10%")
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji("⏩")
+                    .setDisabled(cursor === 0 && thresholdOptions.amendment >= 91 || cursor === 1 && thresholdOptions.pass >= 91),
             )
 
         await this.interaction.editReply({ embeds: [embed], components: [actionRowUtilities, actionRowThreshold] });
 
         try {
-            const confirmation = await this.response!.awaitMessageComponent({ filter: this.buttonFilter, time: constants.discord.interactionTimeout }) as ButtonInteraction;
+            const confirmation = await this.response!.awaitMessageComponent({
+                filter: this.buttonFilter,
+                time: constants.discord.interactionTimeout
+            });
             await confirmation.deferUpdate();
 
             switch (confirmation.customId) {
@@ -596,7 +617,7 @@ class InitWizard {
                     break;
                 case "senate_threshold_confirm":
                     this.prevFunctions.push(this.setSenateThresholdOptions);
-                    return await this.setNextFunc(this.selectEmergencyOptions);
+                    return await this.setNextFunc(this.setEmergencyOptions);
                 default:
                     return await this.escape();
             }
@@ -604,7 +625,7 @@ class InitWizard {
             return await this.timedOut();
         }
     }
-    
+
     async setDDOptions(): Promise<void> {
         if (!this.guildConfigData.ddOptions) {
             this.guildConfigData.ddOptions = {
@@ -613,7 +634,7 @@ class InitWizard {
             }
         }
         const selectDDOptionsEmbed = new EmbedBuilder()
-            .setTitle("Configure Options for Direct Democracy")
+            .setTitle("Configure GuildConfigOptionsOption for Direct Democracy")
             .setDescription("These options decide if Moderators and Judges are to be elected through referendums or if Citizens collectively complete their work instead.")
             .setFields([
                 {
@@ -630,7 +651,7 @@ class InitWizard {
             .setColor(Colors.Blurple)
             .setFooter({ text: "Page " + this.page })
             .toJSON();
-    
+
         const actionRow = new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
                 new ButtonBuilder()
@@ -647,18 +668,21 @@ class InitWizard {
                     .setCustomId('dd_options_appoint_judges')
                     .setLabel("Toggle Judges")
                     .setStyle(ButtonStyle.Primary)
-                    .setEmoji("⚖️"), 
+                    .setEmoji("⚖️"),
                 new ButtonBuilder()
                     .setCustomId('dd_options_confirm')
                     .setLabel("Continue")
                     .setStyle(ButtonStyle.Success)
                     .setEmoji("✅")
             )
-        
+
         await this.interaction.editReply({ embeds: [selectDDOptionsEmbed], components: [actionRow] });
-    
+
         try {
-            const confirmation = await this.response!.awaitMessageComponent({ filter: this.buttonFilter, time: constants.discord.interactionTimeout }) as ButtonInteraction;
+            const confirmation = await this.response!.awaitMessageComponent({
+                filter: this.buttonFilter,
+                time: constants.discord.interactionTimeout
+            });
             await confirmation.deferUpdate();
 
             switch (confirmation.customId) {
@@ -672,19 +696,26 @@ class InitWizard {
                     break;
                 case "dd_options_confirm":
                     this.prevFunctions.push(this.setDDOptions);
-                    return await this.setNextFunc(this.selectEmergencyOptions);
+                    return await this.setNextFunc(this.setEmergencyOptions);
                 default:
                     return await this.escape();
-            }	
+            }
         } catch (e) {
             return await this.timedOut();
         }
     }
-    
-    async selectEmergencyOptions(): Promise<void> {
+
+    async setCourtOptions(): Promise<void> {
+        // GuildConfigOptionsOption:
+        // First page: Number of Judges (fixed) + Verdict Threshold
+        // Second page: Term Length, Term Limits, Consecutive Terms
+
+    }
+
+    async setEmergencyOptions(): Promise<void> {
         // Footer add that after confirmation cannot modify changes outside this wizard! Also button name will be "Confirm" not "Continue"
         const embed = new EmbedBuilder()
-            .setTitle("Configure Emergency Options")
+            .setTitle("Configure Emergency GuildConfigOptionsOption")
             .setDescription("These options decide how the server handles emergencies.")
             .setColor(Colors.Red)
             .setFooter({ text: `Page: ${this.page}. This is the last page of the config wizard. After confirmation, all settings will be finalized!` })
@@ -708,11 +739,14 @@ class InitWizard {
                     .setStyle(ButtonStyle.Success)
                     .setEmoji("✅")
             )
-        
+
         await this.interaction.editReply({ embeds: [embed], components: [actionRow] });
 
         try {
-            const confirmation = await this.response!.awaitMessageComponent({ filter: this.buttonFilter, time: constants.discord.interactionTimeout }) as ButtonInteraction;
+            const confirmation = await this.response!.awaitMessageComponent({
+                filter: this.buttonFilter,
+                time: constants.discord.interactionTimeout
+            });
             await confirmation.deferUpdate();
 
             switch (confirmation.customId) {
@@ -729,32 +763,32 @@ class InitWizard {
             return await this.timedOut();
         }
     }
-    
+
     async completeInit(): Promise<void> {
         // Update database with new guild object
         const result = await createGuildDocument(this.interaction, this.guildConfigData, "Server Initialization");
         if (!result) {
             return await this.escape();
         }
-        
+
         const embed = new EmbedBuilder()
             .setTitle("Server Configuration")
             .setDescription("Server has been successfully configured.")
             .setColor(Colors.Green)
             .toJSON();
         await this.interaction.editReply({ embeds: [embed], components: [] });
-        
+
         // Assign the bot the Vox Populi role
         await result.populate({ path: 'roles', select: 'VoxPopuli' });
         if (!isDocument(result.roles)) {
             return await this.escape(true);
         }
-    
+
         await result.populate({ path: 'roles.VoxPopuli', model: PoliticalRoleModel, select: 'roleID' });
         if (!isDocument(result.roles.VoxPopuli)) {
             return await this.escape(true);
         }
-    
+
         const roleID = result.roles.VoxPopuli.roleID;
         if (!roleID) {
             return await this.escape(true);
@@ -765,7 +799,7 @@ class InitWizard {
             // Assign the role to the bot
             await guild.members.me?.roles.add(role);
         }
-    
+
         return await this.escape(true);
     }
 
@@ -779,7 +813,7 @@ class InitWizard {
         this.nextFunction = prevFunction.bind(this);
         return Promise.resolve();
     }
-    
+
     async timedOut() {
         const embed = new EmbedBuilder()
             .setTitle("Timeout")
@@ -794,7 +828,7 @@ class InitWizard {
         this.nextFunction = cleanEscape;
         return Promise.resolve();
     }
-    
+
     async setNextFunc(nextFunction: InitWizardFunction) {
         this.nextFunction = nextFunction.bind(this);
         this.page++;

@@ -21,7 +21,6 @@ class PoliticalChannel {
     @prop({ required: true })
     channelType!: ChannelTypeType;
 
-    // Subdoc
     @prop({ required: true, _id: false })
     channelPermissions!: ChannelPermissions
 }

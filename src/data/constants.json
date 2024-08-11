@@ -10,15 +10,17 @@
     "interactionTimeout": 60E3
   },
   "legislature": {
-    "threshold": 50,
-    "amendmentThreshold": 67,
+    "thresholds": {
+      "simple": 50,
+      "super": 67
+    },
     "senate": {
       "_": "3 Months",
       "termLength": 3,
       "termLimit": 4,
       "seats": {
         "_": "There is 1 seat for every 5 Citizens in the server.",
-        "scaleable": true,
+        "scalable": true,
         "value": 5
       }
     }

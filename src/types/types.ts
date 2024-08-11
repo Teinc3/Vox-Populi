@@ -1,3 +1,5 @@
+import { DDOptions, LegislativeThresholdOptions, SeatOptions, TermOptions, ThresholdOptions } from "../schema/options";
+
 export enum PoliticalSystemsType {
     Presidential = 0,
     Parliamentary = 1,
@@ -11,42 +13,29 @@ export enum PoliticalBranchType {
     Judicial = 3,
 }
 
-/* export enum SenateSeatAllocationMethod {
-    Proportional = 0, // A percentage of the total number of Citizens
-    Fixed = 1 // A fixed number of seats
-} */
+interface GuildConfigOptionsOption {}
+export class GuildConfigOptionsOptionClass implements GuildConfigOptionsOption {}
+
+export type ExtendedGuildConfigOptionsOption<OptionsType extends GuildConfigOptionsOption> = OptionsType & {
+    cursor: number;
+}
 
 export interface GuildConfigData {
     politicalSystem: PoliticalSystemsType;
-    ddOptions?: {
-        appointModerators: boolean; // If Citizens act as moderators
-        appointJudges: boolean; // If Citizens act as judges
-    };
-    presidentialOptions?: {
-        termLength: number;
-        termLimits: number;
-		consecutive: boolean;
-		cursor: number;
-    }
+    presidentialOptions?: ExtendedGuildConfigOptionsOption<TermOptions>;
     parliamentaryOptions?: {
         snapElection: number;
     }
+    ddOptions?: DDOptions;
     senateOptions?: {
-        terms: {
-            termLength: number;
-            termLimits: number;
-            cursor: number;
-        }
-        seats: {
-            scaleable: boolean; // If there are more allocation methods, we can expand to use enum SenateSeatAllocationMethod
-            value: number; // Citizens per seat or Number of seats
-        }
-        // In percentages
-        threshold: {
-            amendment: number;
-            pass: number;
-            cursor: number;
-        }
-    }
+        terms: ExtendedGuildConfigOptionsOption<TermOptions>;
+        seats: SeatOptions;
+        threshold: ExtendedGuildConfigOptionsOption<LegislativeThresholdOptions>;
+    },
+    courtOptions?: {
+        terms: ExtendedGuildConfigOptionsOption<TermOptions>;
+        seats: SeatOptions;
+        threshold: ThresholdOptions; // Since only one threshold is needed, no need to store current rotation on cursor
+    };
     emergencyOptions: {}
 }

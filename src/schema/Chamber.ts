@@ -3,7 +3,7 @@ isDocument} from '@typegoose/typegoose';
 
 import PoliticalChannel from './channels/PoliticalChannel.js';
 import GuildModel from './Guild.js';
-import { Thresholds, TermOptions, SeatOptions } from './options.js';
+import { ThresholdOptions, LegislativeThresholdOptions, TermOptions, SeatOptions } from './options.js';
 
 import { GuildConfigData, PoliticalBranchType, PoliticalSystemsType } from '../types/types.js';
 
@@ -19,7 +19,7 @@ class Chamber {
     channel?: Ref<PoliticalChannel>;
 
     @prop({ required: true, _id: false })
-    thresholds!: Thresholds;
+    thresholds!: ThresholdOptions;
     
     // These are optional because they are not used by Referendum
     @prop({ _id: false })
@@ -27,14 +27,17 @@ class Chamber {
 
     @prop({ _id: false })
     seatOptions?: SeatOptions;
-
-    constructor() {
-        this.thresholds = new Thresholds();
-    }
 }
 
 class Legislature extends Chamber {
     id = PoliticalBranchType.Legislative;
+
+    declare thresholds: LegislativeThresholdOptions;
+
+    constructor() {
+        super();
+        this.thresholds = new LegislativeThresholdOptions();
+    }
 }
 
 class Senate extends Legislature {
@@ -57,9 +60,10 @@ class Court extends Chamber {
 
     constructor() {
         super();
+        this.thresholds = new ThresholdOptions();
         // this.termOptions = new TermOptions();
         // this.seatOptions = new SeatOptions();
-        // this.seatOptions.scaleable = false; // Court seats are fixed
+        // this.seatOptions.scalable = false; // Court seats are fixed
     }
 }
 
@@ -70,16 +74,19 @@ async function createChamberDocument<T extends Chamber>(politicalBranchType: Pol
     let chamber = new ChamberType();
     
     if (ChamberType === Senate) {
+        // Type assertion for SenateOptions
+        if (!guildConfigData.senateOptions) {
+            throw new Error("SenateOptions is undefined, for some reason.");
+        }
         chamber.termOptions!.termLength = guildConfigData.senateOptions!.terms.termLength;
-        chamber.termOptions!.termLimit = guildConfigData.senateOptions!.terms.termLimits;
+        chamber.termOptions!.termLimit = guildConfigData.senateOptions!.terms.termLimit;
         
         chamber.seatOptions!.value = guildConfigData.senateOptions!.seats.value;
-        chamber.seatOptions!.scaleable = guildConfigData.senateOptions!.seats.scaleable;
+        chamber.seatOptions!.scalable = guildConfigData.senateOptions!.seats.scalable;
     } else if (ChamberType === Referendum) {
-        // Referendum Options
+        // Referendum GuildConfigOptionsOption
     } else {
         // Court options (substitute)
-        chamber.thresholds.amendment = guildConfigData.senateOptions!.threshold.amendment;
         chamber.thresholds.pass = guildConfigData.senateOptions!.threshold.pass;
     }
     

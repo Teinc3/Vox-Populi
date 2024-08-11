@@ -7,7 +7,6 @@ import { PresidentialOptions, DDOptions } from './options.js';
 
 import { GuildConfigData, PoliticalBranchType, PoliticalSystemsType } from '../types/types.js';
 
-// Maybe can remove
 class PoliticalSystem {
     @prop({ required: true })
     id!: PoliticalSystemsType;
@@ -18,7 +17,7 @@ class PoliticalSystem {
     @prop({ required: true, ref: () => 'Chamber' })
     court!: Ref<Chamber>;
 
-    // I'm not entirely sure what use this has but I'll keep it for now
+    // I'm not entirely sure what use this has, but I'll keep it for now
     // Maybe shows up in server info or something like that
     @prop({ ref: () => 'PoliticalRole' })
     headOfState?: Ref<PoliticalRole>;
@@ -75,7 +74,7 @@ async function createPoliticalSystemDocument(guildConfigData: GuildConfigData, p
             headOfStateRole = politicalRoleHolder.President!;
 
             politicalSystem.presidentialOptions!.termOptions.termLength = guildConfigData.presidentialOptions!.termLength;
-            politicalSystem.presidentialOptions!.termOptions.termLimit = guildConfigData.presidentialOptions!.termLimits;
+            politicalSystem.presidentialOptions!.termOptions.termLimit = guildConfigData.presidentialOptions!.termLimit;
             politicalSystem.presidentialOptions!.termOptions.consecutive = guildConfigData.presidentialOptions!.consecutive;
             break;
 
@@ -127,10 +126,6 @@ async function deletePoliticalSystemDocument(_id: Ref<PoliticalSystem>) {
     }
 }
 
-async function findPoliticalSystemDocument(_id: Ref<PoliticalSystem>): Promise<PoliticalSystem | null> {
-    return await PoliticalSystemModel.findOne({ _id });
-}
-
 export default PoliticalSystem;
 export { Presidential, Parliamentary, DirectDemocracy, PoliticalSystemModel };
-export { createPoliticalSystemDocument, deletePoliticalSystemDocument, findPoliticalSystemDocument };
+export { createPoliticalSystemDocument, deletePoliticalSystemDocument };
