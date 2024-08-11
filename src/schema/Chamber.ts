@@ -3,7 +3,7 @@ isDocument} from '@typegoose/typegoose';
 
 import PoliticalChannel from './channels/PoliticalChannel.js';
 import GuildModel from './Guild.js';
-import { ThresholdOptions, LegislativeThresholdOptions, TermOptions, SeatOptions } from './options.js';
+import { ThresholdOptions, TermOptions, SeatOptions } from './options/RoleOptions.js';
 
 import { GuildConfigData, PoliticalBranchType, PoliticalSystemsType } from '../types/types.js';
 
@@ -31,13 +31,6 @@ class Chamber {
 
 class Legislature extends Chamber {
     id = PoliticalBranchType.Legislative;
-
-    declare thresholds: LegislativeThresholdOptions;
-
-    constructor() {
-        super();
-        this.thresholds = new LegislativeThresholdOptions();
-    }
 }
 
 class Senate extends Legislature {
@@ -54,6 +47,16 @@ class Referendum extends Legislature {
     name = "Referendum";
 }
 
+/**
+ * Represents the Court chamber.
+ * 
+ * @extends Chamber
+ * @property {SeatOptions.seats} seats - The number of Judges in the Court.
+ * If Direct Democracy is enabled and appointJudges is false, this value is set to 0.
+ * 
+ * @class
+ * @public
+ */
 class Court extends Chamber {
     id = PoliticalBranchType.Judicial;
     name = "Court";
@@ -61,33 +64,50 @@ class Court extends Chamber {
     constructor() {
         super();
         this.thresholds = new ThresholdOptions();
-        // this.termOptions = new TermOptions();
-        // this.seatOptions = new SeatOptions();
-        // this.seatOptions.scalable = false; // Court seats are fixed
+        this.seatOptions = new SeatOptions();
+        this.seatOptions.scalable = false; // Court seats are fixed
+
+        // No term options as it might be possible that there are no judges (if ddOptions.appointJudges is false)
     }
 }
 
 const ChamberModel = getModelForClass(Chamber);
 
+/**
+ * This function creates a Chamber document based on the political branch type and the guild configuration data.
+ * 
+ * @param politicalBranchType 
+ * @param guildConfigData 
+ * @returns {Promise<Ref<T>>} - The reference to the created Chamber document
+ */
 async function createChamberDocument<T extends Chamber>(politicalBranchType: PoliticalBranchType, guildConfigData: GuildConfigData): Promise<Ref<T>> {
-    const ChamberType: new () => Chamber = politicalBranchType === PoliticalBranchType.Legislative ? guildConfigData.politicalSystem === PoliticalSystemsType.DirectDemocracy ? Referendum : Senate : Court;
-    let chamber = new ChamberType();
+    const ChamberType: typeof Senate | typeof Referendum | typeof Court 
+        = politicalBranchType === PoliticalBranchType.Legislative ? guildConfigData.politicalSystem === PoliticalSystemsType.DirectDemocracy ? Referendum : Senate : Court;
+    const chamber = new ChamberType();
     
-    if (ChamberType === Senate) {
-        // Type assertion for SenateOptions
-        if (!guildConfigData.senateOptions) {
-            throw new Error("SenateOptions is undefined, for some reason.");
+    if (chamber instanceof Senate) {
+        const { cursor, ...termOptions } = guildConfigData.senateOptions!.terms;
+        chamber.termOptions = termOptions;
+        chamber.seatOptions = guildConfigData.senateOptions!.seats;
+
+        const { cursor: _cursor, ...senateThresholds } = guildConfigData.senateOptions!.threshold;
+        chamber.thresholds = senateThresholds;
+
+    } else if (chamber instanceof Referendum) {
+        const { cursor, ...referendumThresholds } = guildConfigData.referendumThresholds!;
+        chamber.thresholds = referendumThresholds;
+
+    } else { // Court options 
+        if (guildConfigData.ddOptions?.appointJudges === false) {
+            chamber.seatOptions!.value = 0;
+            chamber.thresholds = guildConfigData.referendumThresholds!;
+        } else {
+            const { cursor, ...courtOptions } = guildConfigData.courtOptions!.terms;
+            chamber.termOptions = courtOptions;
+
+            chamber.thresholds = guildConfigData.courtOptions!.threshold;
+            chamber.seatOptions!.value = guildConfigData.courtOptions!.seats.value; // Since scalable is false, value is fixed, direct assignment is fine
         }
-        chamber.termOptions!.termLength = guildConfigData.senateOptions!.terms.termLength;
-        chamber.termOptions!.termLimit = guildConfigData.senateOptions!.terms.termLimit;
-        
-        chamber.seatOptions!.value = guildConfigData.senateOptions!.seats.value;
-        chamber.seatOptions!.scalable = guildConfigData.senateOptions!.seats.scalable;
-    } else if (ChamberType === Referendum) {
-        // Referendum GuildConfigOptionsOption
-    } else {
-        // Court options (substitute)
-        chamber.thresholds.pass = guildConfigData.senateOptions!.threshold.pass;
     }
     
     return await ChamberModel.create(chamber) as Ref<T>;

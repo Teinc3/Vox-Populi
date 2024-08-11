@@ -3,7 +3,7 @@ import { prop, type Ref, getModelForClass} from '@typegoose/typegoose';
 import PoliticalRole, { President, PrimeMinister } from "./roles/PoliticalRole.js";
 import PoliticalRoleHolder from './roles/PoliticalRolesHolder.js';
 import Chamber, { Legislature, Senate, Referendum, createChamberDocument, deleteChamberDocument } from "./Chamber.js";
-import { PresidentialOptions, DDOptions } from './options.js';
+import { PresidentialOptions, ParliamentaryOptions, DDOptions } from './options/SystemOptions.js';
 
 import { GuildConfigData, PoliticalBranchType, PoliticalSystemsType } from '../types/types.js';
 
@@ -26,6 +26,10 @@ class PoliticalSystem {
     @prop({ _id: false })
     presidentialOptions?: PresidentialOptions;
 
+    // Optional Parliamentary methods
+    @prop({ _id: false })
+    parliamentaryOptions?: ParliamentaryOptions;
+
     // Optional DD methods
     @prop({ _id: false })
     ddOptions?: DDOptions;
@@ -47,6 +51,11 @@ class Parliamentary extends PoliticalSystem {
     id = PoliticalSystemsType.Parliamentary;
     declare headOfState?: Ref<PrimeMinister>;
     declare legislature: Ref<Senate>;
+
+    constructor() {
+        super();
+        this.parliamentaryOptions = new ParliamentaryOptions();
+    }
 }
 
 class DirectDemocracy extends PoliticalSystem {
@@ -62,6 +71,14 @@ class DirectDemocracy extends PoliticalSystem {
 
 const PoliticalSystemModel = getModelForClass(PoliticalSystem);
 
+/**
+ * Creates a PoliticalSystem document based on the guildConfigData and the politicalRoleHolder.
+ * 
+ * @param guildConfigData 
+ * @param politicalRoleHolder 
+ * @return { Promise<Ref<PoliticalSystem>> } - The reference to the created PoliticalSystem document
+ * 
+ */
 async function createPoliticalSystemDocument(guildConfigData: GuildConfigData, politicalRoleHolder: PoliticalRoleHolder): Promise<Ref<PoliticalSystem>> {
 
     let politicalSystem: PoliticalSystem;
@@ -73,22 +90,21 @@ async function createPoliticalSystemDocument(guildConfigData: GuildConfigData, p
             politicalSystem = new Presidential();
             headOfStateRole = politicalRoleHolder.President!;
 
-            politicalSystem.presidentialOptions!.termOptions.termLength = guildConfigData.presidentialOptions!.termLength;
-            politicalSystem.presidentialOptions!.termOptions.termLimit = guildConfigData.presidentialOptions!.termLimit;
-            politicalSystem.presidentialOptions!.termOptions.consecutive = guildConfigData.presidentialOptions!.consecutive;
+            const { cursor, ...gcTermOptions } = guildConfigData.presidentialOptions!;
+            politicalSystem.presidentialOptions!.termOptions = gcTermOptions;
             break;
 
         case PoliticalSystemsType.Parliamentary:
             politicalSystem = new Parliamentary();
             headOfStateRole = politicalRoleHolder.PrimeMinister!;
-            
+
+            politicalSystem.parliamentaryOptions!.snapElection = guildConfigData.parliamentaryOptions!.snapElection;
             break;
 
         case PoliticalSystemsType.DirectDemocracy:
             politicalSystem = new DirectDemocracy();
 
-            politicalSystem.ddOptions!.appointModerators = guildConfigData.ddOptions!.appointModerators;
-            politicalSystem.ddOptions!.appointJudges = guildConfigData.ddOptions!.appointJudges;
+            politicalSystem.ddOptions! = guildConfigData.ddOptions!;
             break;
     }
 

@@ -1,4 +1,5 @@
-import { DDOptions, LegislativeThresholdOptions, SeatOptions, TermOptions, ThresholdOptions } from "../schema/options";
+import { SeatOptions, TermOptions, ThresholdOptions } from "../schema/options/RoleOptions";
+import { DDOptions } from "../schema/options/SystemOptions";
 
 export enum PoliticalSystemsType {
     Presidential = 0,
@@ -30,8 +31,9 @@ export interface GuildConfigData {
     senateOptions?: {
         terms: ExtendedGuildConfigOptionsOption<TermOptions>;
         seats: SeatOptions;
-        threshold: ExtendedGuildConfigOptionsOption<LegislativeThresholdOptions>;
+        threshold: ExtendedGuildConfigOptionsOption<ThresholdOptions>;
     },
+    referendumThresholds?: ExtendedGuildConfigOptionsOption<ThresholdOptions>;
     courtOptions?: {
         terms: ExtendedGuildConfigOptionsOption<TermOptions>;
         seats: SeatOptions;

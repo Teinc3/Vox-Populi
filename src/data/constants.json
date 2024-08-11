@@ -10,10 +10,6 @@
     "interactionTimeout": 60E3
   },
   "legislature": {
-    "thresholds": {
-      "simple": 50,
-      "super": 67
-    },
     "senate": {
       "_": "3 Months",
       "termLength": 3,
@@ -27,10 +23,16 @@
   },
   "judicial": {
     "_": "6 Months, No Term Limit",
-    "termLength": 6,
-    "termLimit": 0,
-    "seats": 3,
-    "threshold": 0.5
+    "terms": {
+      "termLength": 6,
+      "termLimit": 0,
+      "consecutive": true
+    },
+    "seats": 3
+  },
+  "thresholds": {
+    "simpleMajority": 50,
+    "superMajority": 67
   },
   "politicalSystem": {
     "presidential": {

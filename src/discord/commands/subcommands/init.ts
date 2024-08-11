@@ -120,7 +120,7 @@ class InitWizard {
                 case "system_parliamentary":
                     this.guildConfigData.politicalSystem = PoliticalSystemsType.Parliamentary;
                     this.prevFunctions = [this.selectPoliticalSystem];
-                    return await this.setNextFunc(this.setParliamentaryOptions);
+                    return await this.setNextFunc(this.setSenateTermOptions);
 
                 case "system_dd":
                     this.guildConfigData.politicalSystem = PoliticalSystemsType.DirectDemocracy;
@@ -147,6 +147,7 @@ class InitWizard {
         }
 
         const presidentialOptions = this.guildConfigData.presidentialOptions;
+        const cursor = presidentialOptions.cursor;
 
         const fields = [
             {
@@ -166,15 +167,15 @@ class InitWizard {
             }
         ]
 
-        const activeField = fields[presidentialOptions.cursor];
+        const activeField = fields[cursor];
         activeField.inline = false;
 
         const selectPresidentialOptionsEmbed = new EmbedBuilder()
-            .setTitle("Configure GuildConfigOptionsOption for Presidential System")
+            .setTitle("Configure Presidential Options (1/1)")
             .setDescription("These options decide the maximum number of terms the President can serve and how long for each one.")
             .setFields(
-                fields[presidentialOptions.cursor],
-                ...fields.filter((_, i) => i !== presidentialOptions.cursor)
+                fields[cursor],
+                ...fields.filter((_, i) => i !== cursor)
             )
             .setColor(Colors.Blurple)
             .setFooter({ text: "Page " + this.page })
@@ -191,13 +192,13 @@ class InitWizard {
                     .setCustomId("presidential_options_negative")
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji("⬅️")
-                    .setLabel(presidentialOptions.cursor === 0 ? "-1 Month" : "-1 Term")
-                    .setDisabled(presidentialOptions.cursor === 0 && presidentialOptions.termLength <= 1 || presidentialOptions.cursor === 1 && presidentialOptions.termLimit <= 0),
+                    .setLabel(cursor === 0 ? "-1 Month" : "-1 Term")
+                    .setDisabled(cursor === 0 && presidentialOptions.termLength <= 1 || cursor === 1 && presidentialOptions.termLimit <= 0),
                 new ButtonBuilder()
                     .setCustomId("presidential_options_positive")
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji("➡️")
-                    .setLabel(presidentialOptions.cursor === 0 ? "+1 Month" : "+1 Term"),
+                    .setLabel(cursor === 0 ? "+1 Month" : "+1 Term"),
                 new ButtonBuilder()
                     .setCustomId("presidential_options_toggle")
                     .setStyle(ButtonStyle.Primary)
@@ -206,7 +207,7 @@ class InitWizard {
                 new ButtonBuilder()
                     .setCustomId("presidential_options_next")
                     .setStyle(ButtonStyle.Secondary)
-                    .setLabel("Next Option")
+                    .setLabel(cursor === 0 ? "Modify Term Limit" : "Modify Term Length") // Won't show when cursor is 2
                     .setEmoji("🔄"),
                 new ButtonBuilder()
                     .setCustomId("presidential_options_confirm")
@@ -215,10 +216,10 @@ class InitWizard {
                     .setEmoji("✅")
             ].filter(button => {
                 const customID = (button.data as Partial<APIButtonComponentWithCustomId>).custom_id;
-                if (presidentialOptions.cursor === 2 && (customID === "presidential_options_negative" || customID === "presidential_options_positive")) {
+                if (cursor === 2 && (customID === "presidential_options_negative" || customID === "presidential_options_positive")) {
                     return false
                 }
-                return !(presidentialOptions.cursor <= 1 && customID === "presidential_options_toggle");
+                return !(cursor <= 1 && customID === "presidential_options_toggle");
 
             }))
 
@@ -235,29 +236,21 @@ class InitWizard {
                 case "presidential_options_back":
                     return await this.setPrevFunc();
                 case "presidential_options_negative":
-                    if (presidentialOptions.cursor === 0) {
+                    if (cursor === 0) {
                         presidentialOptions.termLength -= (presidentialOptions.termLength <= 1 ? 0 : 1);
-                    } else if (presidentialOptions.cursor === 1) {
-                        presidentialOptions.termLimit -= (presidentialOptions.termLimit <= 0 ? 0 : 1);
                     } else {
-                        return await this.escape();
+                        presidentialOptions.termLimit -= (presidentialOptions.termLimit <= 0 ? 0 : 1);
                     }
                     break;
                 case "presidential_options_positive":
-                    if (presidentialOptions.cursor === 0) {
+                    if (cursor === 0) {
                         presidentialOptions.termLength += 1;
-                    } else if (presidentialOptions.cursor === 1) {
-                        presidentialOptions.termLimit += 1;
                     } else {
-                        return await this.escape();
+                        presidentialOptions.termLimit += 1;
                     }
                     break;
                 case "presidential_options_toggle":
-                    if (presidentialOptions.cursor === 2) {
-                        presidentialOptions.consecutive = !presidentialOptions.consecutive;
-                    } else {
-                        return await this.escape();
-                    }
+                    presidentialOptions.consecutive = !presidentialOptions.consecutive;
                     break;
                 case "presidential_options_next":
                     presidentialOptions.cursor += 1;
@@ -278,7 +271,86 @@ class InitWizard {
 
     async setParliamentaryOptions(): Promise<void> {
         // Basically just snap elections, coalitions/majorities, oppositions, etc.
-        return await this.setNextFunc(this.setSenateTermOptions);
+        // Now we only do snap Elections
+
+        // Clamp the snap election value to be within the term length (otherwise weird things happen)
+        if (!this.guildConfigData.parliamentaryOptions) {
+            this.guildConfigData.parliamentaryOptions = {
+                snapElection: Math.min(constants.politicalSystem.parliamentary.snapElection, this.guildConfigData.senateOptions!.terms.termLength - 1)
+            }
+        } else if (this.guildConfigData.parliamentaryOptions.snapElection > this.guildConfigData.senateOptions!.terms.termLength - 1) {
+            this.guildConfigData.parliamentaryOptions.snapElection = this.guildConfigData.senateOptions!.terms.termLength - 1;
+        }
+
+        const embed = new EmbedBuilder()
+            .setTitle("Configure options for Parliamentary System (1/1)")
+            .setDescription("These options decide the frequency of snap elections.")
+            .setFields([
+                {
+                    name: "Minimum Snap Election Interval",
+                    value: this.guildConfigData.parliamentaryOptions.snapElection === 0 ? "Snap Elections Disabled" : this.guildConfigData.parliamentaryOptions.snapElection === 1 ? "1 Month" : this.guildConfigData.parliamentaryOptions.snapElection.toString() + " Months",
+                    inline: true
+                },
+                {
+                    name: "Configured Senator Term Length",
+                    value: this.guildConfigData.senateOptions!.terms.termLength === 1 ? "1 Month" : this.guildConfigData.senateOptions!.terms.termLength.toString() + " Months",
+                    inline: true
+                }
+            ])
+            .setColor(Colors.Blurple)
+            .setFooter({ text: "Page " + this.page })
+            .toJSON();
+
+        const actionRow = new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId('parliamentary_options_back')
+                    .setLabel("Back")
+                    .setStyle(ButtonStyle.Danger)
+                    .setEmoji("↩️"),
+                new ButtonBuilder()
+                    .setCustomId('parliamentary_options_negative')
+                    .setLabel("-1 Month")
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji("⬅️")
+                    .setDisabled(this.guildConfigData.parliamentaryOptions.snapElection <= 0),
+                new ButtonBuilder()
+                    .setCustomId('parliamentary_options_positive')
+                    .setLabel("+1 Month")
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji("➡️")
+                    .setDisabled(this.guildConfigData.parliamentaryOptions.snapElection >= this.guildConfigData.senateOptions!.terms.termLength - 1),
+                new ButtonBuilder()
+                    .setCustomId('parliamentary_options_confirm')
+                    .setLabel("Continue")
+                    .setStyle(ButtonStyle.Success)
+                    .setEmoji("✅")
+            )
+        
+        await this.interaction.editReply({ embeds: [embed], components: [actionRow] });
+
+        try {
+            const confirmation = await this.response!.awaitMessageComponent({ filter: this.buttonFilter, time: constants.discord.interactionTimeout});
+            await confirmation.deferUpdate();
+
+            switch (confirmation.customId) {
+                case "parliamentary_options_back":
+                    return await this.setPrevFunc();
+                case "parliamentary_options_negative":
+                    this.guildConfigData.parliamentaryOptions.snapElection -= (this.guildConfigData.parliamentaryOptions.snapElection <= 0 ? 0 : 1);
+                    break;
+                case "parliamentary_options_positive":
+                    this.guildConfigData.parliamentaryOptions.snapElection += (this.guildConfigData.parliamentaryOptions.snapElection >= this.guildConfigData.senateOptions!.terms.termLength - 1 ? 0 : 1);
+                    break;
+                case "parliamentary_options_confirm":
+                    this.prevFunctions.push(this.setParliamentaryOptions);
+                    return await this.setNextFunc(this.setCourtGenericOptions); // Since we first went to configure senate then came back
+                default:
+                    return await this.escape();
+            }
+        } catch (e) {
+            return await this.timedOut();
+        }
     }
 
     async setSenateTermOptions(): Promise<void> {
@@ -287,6 +359,7 @@ class InitWizard {
                 terms: {
                     termLength: constants.legislature.senate.termLength,
                     termLimit: constants.legislature.senate.termLimit,
+                    consecutive: true,
                     cursor: 0
                 },
                 seats: {
@@ -294,8 +367,8 @@ class InitWizard {
                     value: constants.legislature.senate.seats.value
                 },
                 threshold: {
-                    amendment: constants.legislature.thresholds.super,
-                    pass: constants.legislature.thresholds.simple,
+                    superMajority: constants.thresholds.superMajority,
+                    simpleMajority: constants.thresholds.simpleMajority,
                     cursor: 0
                 }
             }
@@ -305,7 +378,7 @@ class InitWizard {
         const cursor = termOptions.cursor;
 
         const embed = new EmbedBuilder()
-            .setTitle("Configure Senate Term GuildConfigOptionsOption")
+            .setTitle("Configure Senate Term Options (1/3)")
             .setDescription("These options decide how long and how many terms Senators can serve.")
             .setFields([
                 {
@@ -335,7 +408,7 @@ class InitWizard {
                     .setLabel(cursor === 0 ? "-1 Month" : "-1 Term")
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji("⬅️")
-                    .setDisabled(termOptions.termLength <= 1),
+                    .setDisabled(cursor === 0 ? termOptions.termLength <= 1 : termOptions.termLimit <= 0),
                 new ButtonBuilder()
                     .setCustomId('senate_term_positive')
                     .setLabel(cursor === 0 ? "+1 Month" : "+1 Term")
@@ -344,7 +417,7 @@ class InitWizard {
                 new ButtonBuilder()
                     .setCustomId("senate_term_next")
                     .setStyle(ButtonStyle.Secondary)
-                    .setLabel("Next Option")
+                    .setLabel(cursor === 0 ? "Modify Term Limit" : "Modify Term Length")
                     .setEmoji("🔄"),
                 new ButtonBuilder()
                     .setCustomId('senate_term_confirm')
@@ -368,19 +441,15 @@ class InitWizard {
                 case "senate_term_negative":
                     if (cursor === 0) {
                         termOptions.termLength -= (termOptions.termLength <= 1 ? 0 : 1);
-                    } else if (cursor === 1) {
-                        termOptions.termLimit -= (termOptions.termLimit <= 0 ? 0 : 1);
                     } else {
-                        return await this.escape();
+                        termOptions.termLimit -= (termOptions.termLimit <= 0 ? 0 : 1);
                     }
                     break;
                 case "senate_term_positive":
                     if (cursor === 0) {
                         termOptions.termLength += 1;
-                    } else if (cursor === 1) {
-                        termOptions.termLimit += 1;
                     } else {
-                        return await this.escape();
+                        termOptions.termLimit += 1;
                     }
                     break;
                 case "senate_term_next":
@@ -401,7 +470,7 @@ class InitWizard {
         const seatsOptions = this.guildConfigData.senateOptions!.seats;
 
         const embed = new EmbedBuilder()
-            .setTitle("Configure Senate Seat GuildConfigOptionsOption")
+            .setTitle("Configure Senate Seat Options (2/3)")
             .setDescription("These options decide how many seats are available in the Senate.")
             .setFields([
                 {
@@ -486,19 +555,19 @@ class InitWizard {
         const cursor = thresholdOptions.cursor;
 
         // Should not happen, just for type safety
-        if (!thresholdOptions.amendment) {
+        if (!thresholdOptions.superMajority) {
             return await this.escape();
         }
 
         const fields = [
             {
-                name: "Amendment Threshold",
-                value: thresholdOptions.amendment.toString() + "%",
+                name: "Supermajority Threshold",
+                value: thresholdOptions.superMajority.toString() + "%",
                 inline: true
             },
             {
-                name: "Pass Threshold",
-                value: thresholdOptions.pass.toString() + "%",
+                name: "Simple Majority Threshold",
+                value: thresholdOptions.simpleMajority.toString() + "%",
                 inline: true
             }
         ]
@@ -507,16 +576,17 @@ class InitWizard {
         }
 
         const embed = new EmbedBuilder()
-            .setTitle("Configure Senate Threshold GuildConfigOptionsOption")
-            .setDescription("These options decide the percentage of votes needed for amendments or normal bills to pass.")
+            .setTitle("Configure Senate Threshold Options (3/3)")
+            .setDescription("These options decide the percentage of votes needed for simple or super majorities.")
             .setFields(fields)
             .setColor(Colors.Blurple)
             .setFooter({ text: "Page " + this.page })
             .toJSON();
 
-        // The reason why 1% is minimum is that 0% would mean that no votes are needed to pass a bill
-        // But 100% maximum is because 100% would mean that all votes are needed to pass a bill
-        // So there is no error here
+        /* The reason why 1% is minimum is that 0% would mean that no votes are needed to pass a bill
+         But 100% maximum is because 100% would mean that all votes are needed to pass a bill
+         So there is no error here
+         */
         const actionRowUtilities = new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
                 new ButtonBuilder()
@@ -526,7 +596,7 @@ class InitWizard {
                     .setEmoji("↩️"),
                 new ButtonBuilder()
                     .setCustomId('senate_threshold_toggle')
-                    .setLabel("Next Option")
+                    .setLabel(cursor === 0 ? "Modify Simple Majority Threshold" : "Modify Supermajority Threshold")
                     .setStyle(ButtonStyle.Secondary)
                     .setEmoji("🔄"),
                 new ButtonBuilder()
@@ -543,25 +613,25 @@ class InitWizard {
                     .setLabel("-10%")
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji("⏪")
-                    .setDisabled(cursor === 0 && thresholdOptions.amendment <= 10 || cursor === 1 && thresholdOptions.pass <= 10),
+                    .setDisabled(cursor === 0 && thresholdOptions.superMajority <= 10 || cursor === 1 && thresholdOptions.simpleMajority <= 10),
                 new ButtonBuilder()
                     .setCustomId('senate_threshold_minus_one')
                     .setLabel("-1%")
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji("⬅️")
-                    .setDisabled(cursor === 0 && thresholdOptions.amendment <= 1 || cursor === 1 && thresholdOptions.pass <= 1),
+                    .setDisabled(cursor === 0 && thresholdOptions.superMajority <= 1 || cursor === 1 && thresholdOptions.simpleMajority <= 1),
                 new ButtonBuilder()
                     .setCustomId('senate_threshold_plus_one')
                     .setLabel("+1%")
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji("➡️")
-                    .setDisabled(cursor === 0 && thresholdOptions.amendment >= 100 || cursor === 1 && thresholdOptions.pass >= 100),
+                    .setDisabled(cursor === 0 && thresholdOptions.superMajority >= 100 || cursor === 1 && thresholdOptions.simpleMajority >= 100),
                 new ButtonBuilder()
                     .setCustomId('senate_threshold_plus_ten')
                     .setLabel("+10%")
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji("⏩")
-                    .setDisabled(cursor === 0 && thresholdOptions.amendment >= 91 || cursor === 1 && thresholdOptions.pass >= 91),
+                    .setDisabled(cursor === 0 && thresholdOptions.superMajority >= 91 || cursor === 1 && thresholdOptions.simpleMajority >= 91),
             )
 
         await this.interaction.editReply({ embeds: [embed], components: [actionRowUtilities, actionRowThreshold] });
@@ -578,36 +648,36 @@ class InitWizard {
                     return await this.setPrevFunc();
                 case "senate_threshold_minus_ten":
                     if (cursor === 0) {
-                        thresholdOptions.amendment -= (thresholdOptions.amendment <= 10 ? 0 : 10);
+                        thresholdOptions.superMajority -= (thresholdOptions.superMajority <= 10 ? 0 : 10);
                     } else if (cursor === 1) {
-                        thresholdOptions.pass -= (thresholdOptions.pass <= 10 ? 0 : 10);
+                        thresholdOptions.simpleMajority -= (thresholdOptions.simpleMajority <= 10 ? 0 : 10);
                     } else {
                         return await this.escape();
                     }
                     break;
                 case "senate_threshold_minus_one":
                     if (cursor === 0) {
-                        thresholdOptions.amendment -= (thresholdOptions.amendment <= 1 ? 0 : 1);
+                        thresholdOptions.superMajority -= (thresholdOptions.superMajority <= 1 ? 0 : 1);
                     } else if (cursor === 1) {
-                        thresholdOptions.pass -= (thresholdOptions.pass <= 1 ? 0 : 1);
+                        thresholdOptions.simpleMajority -= (thresholdOptions.simpleMajority <= 1 ? 0 : 1);
                     } else {
                         return await this.escape();
                     }
                     break;
                 case "senate_threshold_plus_one":
                     if (cursor === 0) {
-                        thresholdOptions.amendment += (thresholdOptions.amendment >= 100 ? 0 : 1);
+                        thresholdOptions.superMajority += (thresholdOptions.superMajority >= 100 ? 0 : 1);
                     } else if (cursor === 1) {
-                        thresholdOptions.pass += (thresholdOptions.pass >= 100 ? 0 : 1);
+                        thresholdOptions.simpleMajority += (thresholdOptions.simpleMajority >= 100 ? 0 : 1);
                     } else {
                         return await this.escape();
                     }
                     break;
                 case "senate_threshold_plus_ten":
                     if (cursor === 0) {
-                        thresholdOptions.amendment += (thresholdOptions.amendment >= 91 ? 0 : 10);
+                        thresholdOptions.superMajority += (thresholdOptions.superMajority >= 91 ? 0 : 10);
                     } else if (cursor === 1) {
-                        thresholdOptions.pass += (thresholdOptions.pass >= 91 ? 0 : 10);
+                        thresholdOptions.simpleMajority += (thresholdOptions.simpleMajority >= 91 ? 0 : 10);
                     } else {
                         return await this.escape();
                     }
@@ -617,7 +687,9 @@ class InitWizard {
                     break;
                 case "senate_threshold_confirm":
                     this.prevFunctions.push(this.setSenateThresholdOptions);
-                    return await this.setNextFunc(this.setEmergencyOptions);
+                    // For Parliamentary, we go to configure Parliamentary Options (since we skipped it first for snap elections which are more relevant after senate is set up)
+                    // Since DD does not have Senate, and only DD has the option to disable Judges, we can still go to Court Options
+                    return await this.setNextFunc(this.guildConfigData.politicalSystem === PoliticalSystemsType.Parliamentary ? this.setParliamentaryOptions : this.setCourtGenericOptions);
                 default:
                     return await this.escape();
             }
@@ -630,11 +702,11 @@ class InitWizard {
         if (!this.guildConfigData.ddOptions) {
             this.guildConfigData.ddOptions = {
                 appointModerators: constants.politicalSystem.directDemocracy.appointModerators.value,
-                appointJudges: constants.politicalSystem.directDemocracy.appointJudges.value
+                appointJudges: constants.politicalSystem.directDemocracy.appointJudges.value,
             }
         }
         const selectDDOptionsEmbed = new EmbedBuilder()
-            .setTitle("Configure GuildConfigOptionsOption for Direct Democracy")
+            .setTitle("Configure Options for Direct Democracy (1/1)")
             .setDescription("These options decide if Moderators and Judges are to be elected through referendums or if Citizens collectively complete their work instead.")
             .setFields([
                 {
@@ -696,6 +768,388 @@ class InitWizard {
                     break;
                 case "dd_options_confirm":
                     this.prevFunctions.push(this.setDDOptions);
+                    return await this.setNextFunc(this.setReferendumOptions);
+                default:
+                    return await this.escape();
+            }
+        } catch (e) {
+            return await this.timedOut();
+        }
+    }
+
+    async setReferendumOptions(): Promise<void> {
+        if (!this.guildConfigData.referendumThresholds) {
+            this.guildConfigData.referendumThresholds = {
+                simpleMajority: constants.thresholds.simpleMajority,
+                superMajority: constants.thresholds.superMajority,
+                cursor: 0
+            }
+        }
+
+        const referendumThresholds = this.guildConfigData.referendumThresholds;
+        const cursor = referendumThresholds.cursor;
+
+        const fields = [
+            {
+                name: "Supermajority Threshold",
+                value: referendumThresholds.superMajority.toString() + "%",
+                inline: true
+            },
+            {
+                name: "Simple Majority Threshold",
+                value: referendumThresholds.simpleMajority.toString() + "%",
+                inline: true
+            }
+        ]
+
+        if (cursor === 1) {
+            fields.reverse();
+        }
+
+        const embed = new EmbedBuilder()
+            .setTitle("Configure Referendum Thresholds (1/1)")
+            .setDescription("These options decide the percentage of votes needed for simple or super majorities in referendums.")
+            .setFields(fields)
+            .setColor(Colors.Blurple)
+            .setFooter({ text: "Page " + this.page })
+            .toJSON();
+
+        const actionRowUtilities = new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId('referendum_back')
+                    .setLabel("Back")
+                    .setStyle(ButtonStyle.Danger)
+                    .setEmoji("↩️"),
+                new ButtonBuilder()
+                    .setCustomId('referendum_toggle')
+                    .setLabel(cursor === 0 ? "Modify Simple Majority Threshold" : "Modify Supermajority Threshold")
+                    .setStyle(ButtonStyle.Secondary)
+                    .setEmoji("🔄"),
+                new ButtonBuilder()
+                    .setCustomId('referendum_confirm')
+                    .setLabel("Continue")
+                    .setStyle(ButtonStyle.Success)
+                    .setEmoji("✅")
+            )
+
+        const actionRowThreshold = new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId('referendum_minus_ten')
+                    .setLabel("-10%")
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji("⏪")
+                    .setDisabled(cursor === 0 && referendumThresholds.superMajority <= 10 || cursor === 1 && referendumThresholds.simpleMajority <= 10),
+                new ButtonBuilder()
+                    .setCustomId('referendum_minus_one')
+                    .setLabel("-1%")
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji("⬅️")
+                    .setDisabled(cursor === 0 && referendumThresholds.superMajority <= 1 || cursor === 1 && referendumThresholds.simpleMajority <= 1),
+                new ButtonBuilder()
+                    .setCustomId('referendum_plus_one')
+                    .setLabel("+1%")
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji("➡️")
+                    .setDisabled(cursor === 0 && referendumThresholds.superMajority >= 100 || cursor === 1 && referendumThresholds.simpleMajority >= 100),
+                new ButtonBuilder()
+                    .setCustomId('referendum_plus_ten')
+                    .setLabel("+10%")
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji("⏩")
+                    .setDisabled(cursor === 0 && referendumThresholds.superMajority >= 91 || cursor === 1 && referendumThresholds.simpleMajority >= 91),
+            )
+
+        await this.interaction.editReply({ embeds: [embed], components: [actionRowUtilities, actionRowThreshold] });
+
+        try {
+            const confirmation = await this.response!.awaitMessageComponent({ filter: this.buttonFilter, time: constants.discord.interactionTimeout });
+            await confirmation.deferUpdate();
+
+            switch (confirmation.customId) {
+                case "referendum_back":
+                    return await this.setPrevFunc();
+                case "referendum_minus_ten":
+                    if (cursor === 0) {
+                        referendumThresholds.superMajority -= (referendumThresholds.superMajority <= 10 ? 0 : 10);
+                    } else if (cursor === 1) {
+                        referendumThresholds.simpleMajority -= (referendumThresholds.simpleMajority <= 10 ? 0 : 10);
+                    } else {
+                        return await this.escape();
+                    }
+                    break;
+                case "referendum_minus_one":
+                    if (cursor === 0) {
+                        referendumThresholds.superMajority -= (referendumThresholds.superMajority <= 1 ? 0 : 1);
+                    } else if (cursor === 1) {
+                        referendumThresholds.simpleMajority -= (referendumThresholds.simpleMajority <= 1 ? 0 : 1);
+                    } else {
+                        return await this.escape();
+                    }
+                    break;
+                case "referendum_plus_one":
+                    if (cursor === 0) {
+                        referendumThresholds.superMajority += (referendumThresholds.superMajority >= 100 ? 0 : 1);
+                    } else if (cursor === 1) {
+                        referendumThresholds.simpleMajority += (referendumThresholds.simpleMajority >= 100 ? 0 : 1);
+                    } else {
+                        return await this.escape();
+                    }
+                    break;
+                case "referendum_plus_ten":
+                    if (cursor === 0) {
+                        referendumThresholds.superMajority += (referendumThresholds.superMajority >= 91 ? 0 : 10);
+                    } else if (cursor === 1) {
+                        referendumThresholds.simpleMajority += (referendumThresholds.simpleMajority >= 91 ? 0 : 10);
+                    } else {
+                        return await this.escape();
+                    }
+                    break;
+                case "referendum_toggle":
+                    referendumThresholds.cursor = 1 - referendumThresholds.cursor;
+                    break;
+                case "referendum_confirm":
+                    this.prevFunctions.push(this.setReferendumOptions);
+                    return await this.setNextFunc(this.guildConfigData.ddOptions!.appointJudges ? this.setCourtGenericOptions : this.setEmergencyOptions);
+                default:
+                    return await this.escape();
+            }
+        } catch (e) {
+            return await this.timedOut();
+        }
+    }
+
+    /**
+     * First page of Court Options
+     * 
+     * Sets number of Judges and Threshold for Court Verdicts
+     */
+    async setCourtGenericOptions(): Promise<void> {   
+        // Initialize the Court Options if they don't exist
+        if (!this.guildConfigData.courtOptions) {
+            this.guildConfigData.courtOptions = {
+                terms: {
+                    termLength: constants.judicial.terms.termLength,
+                    termLimit: constants.judicial.terms.termLimit,
+                    consecutive: true,
+                    cursor: 0
+                },
+                seats: {
+                    scalable: false,
+                    value: constants.judicial.seats
+                },
+                threshold: {
+                    simpleMajority: constants.thresholds.simpleMajority,
+                    superMajority: constants.thresholds.superMajority,
+                }
+            }
+        }
+
+        const courtOptions = this.guildConfigData.courtOptions;
+
+        const embed = new EmbedBuilder()
+            .setTitle("Configure Court Options (1/2)")
+            .setDescription("These options decide how many seats are available in the Court and the threshold for a verdict to pass.")
+            .setFields([
+                {
+                    name: "Number of Judges",
+                    value: courtOptions.seats.value.toString(),
+                    inline: true
+                },
+                {
+                    name: "Verdict Threshold",
+                    value: courtOptions.threshold.simpleMajority.toString() + "%",
+                    inline: true
+                }
+            ])
+            .setColor(Colors.Blurple)
+            .setFooter({ text: "Page " + this.page })
+            .toJSON();
+        
+        const actionRowUtilities = new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId('court_generic_back')
+                    .setLabel("Back")
+                    .setStyle(ButtonStyle.Danger)
+                    .setEmoji("↩️"),
+                new ButtonBuilder()
+                    .setCustomId("court_judges_minus")
+                    .setLabel("-1 Judge")
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji("⬇️")
+                    .setDisabled(courtOptions.seats.value <= 1),
+                new ButtonBuilder()
+                    .setCustomId("court_judges_plus")
+                    .setLabel("+1 Judge")
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji("⬆️"),
+                new ButtonBuilder()
+                    .setCustomId('court_generic_confirm')
+                    .setLabel("Continue")
+                    .setStyle(ButtonStyle.Success)
+                    .setEmoji("✅")
+            )
+        
+        const actionRowThreshold = new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId('court_threshold_minus_ten')
+                    .setLabel("-10%")
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji("⏪")
+                    .setDisabled(courtOptions.threshold.simpleMajority <= 10),
+                new ButtonBuilder()
+                    .setCustomId('court_threshold_minus_one')
+                    .setLabel("-1%")
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji("⬅️")
+                    .setDisabled(courtOptions.threshold.simpleMajority <= 1),
+                new ButtonBuilder()
+                    .setCustomId('court_threshold_plus_one')
+                    .setLabel("+1%")
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji("➡️")
+                    .setDisabled(courtOptions.threshold.simpleMajority >= 100),
+                new ButtonBuilder()
+                    .setCustomId('court_threshold_plus_ten')
+                    .setLabel("+10%")
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji("⏩")
+                    .setDisabled(courtOptions.threshold.simpleMajority >= 91)
+            )
+
+        await this.interaction.editReply({ embeds: [embed], components: [actionRowUtilities, actionRowThreshold] });
+
+        try {
+            const confirmation = await this.response!.awaitMessageComponent({ filter: this.buttonFilter, time: constants.discord.interactionTimeout });
+            await confirmation.deferUpdate();
+
+            switch (confirmation.customId) {
+                case "court_generic_back":
+                    return await this.setPrevFunc();
+                case "court_judges_minus":
+                    courtOptions.seats.value -= (courtOptions.seats.value <= 1 ? 0 : 1);
+                    break;
+                case "court_judges_plus":
+                    courtOptions.seats.value += 1;
+                    break;
+                case "court_threshold_minus_ten":
+                    courtOptions.threshold.simpleMajority -= (courtOptions.threshold.simpleMajority <= 10 ? 0 : 10);
+                    break;
+                case "court_threshold_minus_one":
+                    courtOptions.threshold.simpleMajority -= (courtOptions.threshold.simpleMajority <= 1 ? 0 : 1);
+                    break;
+                case "court_threshold_plus_one":
+                    courtOptions.threshold.simpleMajority += (courtOptions.threshold.simpleMajority >= 100 ? 0 : 1);
+                    break;
+                case "court_threshold_plus_ten":
+                    courtOptions.threshold.simpleMajority += (courtOptions.threshold.simpleMajority >= 91 ? 0 : 10);
+                    break;
+                case "court_generic_confirm":
+                    this.prevFunctions.push(this.setCourtGenericOptions);
+                    return await this.setNextFunc(this.setCourtThresholdOptions);
+                default:
+                    return await this.escape();
+            }
+        } catch (e) {
+            return await this.timedOut();
+        }
+    }
+
+    /**
+     * Second page of Court Options
+     * 
+     * Sets Term Length, Term Limits and if Consecutive Terms are allowed for Court Judges
+     */
+    async setCourtThresholdOptions(): Promise<void> {
+        const courtOptions = this.guildConfigData.courtOptions!;
+        const cursor = courtOptions.terms.cursor;
+
+        const fields = [
+            {
+                name: "Term Length",
+                value: courtOptions.terms.termLength === 1 ? "1 Month" : courtOptions.terms.termLength.toString() + " Months",
+                inline: true
+            },
+            {
+                name: "Term Limits",
+                value: courtOptions.terms.termLimit === 0 ? "No Limits" : courtOptions.terms.termLimit.toString(),
+                inline: true
+            }
+        ]
+
+        if (cursor === 1) {
+            fields.reverse();
+        }
+
+        const embed = new EmbedBuilder()
+            .setTitle("Configure Court Options (2/2)")
+            .setDescription("These options decide how long and how many terms Judges can serve.")
+            .setFields(fields)
+            .setColor(Colors.Blurple)
+            .setFooter({ text: "Page " + this.page })
+            .toJSON();
+
+        const actionRow = new ActionRowBuilder<ButtonBuilder>()
+            .addComponents([
+                new ButtonBuilder()
+                    .setCustomId("court_term_back")
+                    .setLabel("Back")
+                    .setStyle(ButtonStyle.Danger)
+                    .setEmoji("↩️"),
+                new ButtonBuilder()
+                    .setCustomId("court_term_negative")
+                    .setLabel(cursor === 0 ? "-1 Month" : "-1 Term")
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji("⬅️")
+                    .setDisabled(cursor === 0 && courtOptions.terms.termLength <= 1 || cursor === 1 && courtOptions.terms.termLimit <= 0),
+                new ButtonBuilder()
+                    .setCustomId("court_term_positive")
+                    .setLabel(cursor === 0 ? "+1 Month" : "+1 Term")
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji("➡️"),
+                new ButtonBuilder()
+                    .setCustomId("court_term_next")
+                    .setLabel(cursor === 0 ? "Modify Term Limit" : "Modify Term Length")
+                    .setStyle(ButtonStyle.Secondary)
+                    .setEmoji("🔄"),
+                new ButtonBuilder()
+                    .setCustomId("court_term_confirm")
+                    .setLabel("Continue")
+                    .setStyle(ButtonStyle.Success)
+                    .setEmoji("✅")
+            ])
+
+        await this.interaction.editReply({ embeds: [embed], components: [actionRow] });
+
+        try {
+            const confirmation = await this.response!.awaitMessageComponent({ filter: this.buttonFilter, time: constants.discord.interactionTimeout });
+            await confirmation.deferUpdate();
+
+            switch (confirmation.customId) {
+                case "court_term_back":
+                    return await this.setPrevFunc();
+                case "court_term_negative":
+                    if (cursor === 0) {
+                        courtOptions.terms.termLength -= (courtOptions.terms.termLength <= 1 ? 0 : 1);
+                    } else {
+                        courtOptions.terms.termLimit -= (courtOptions.terms.termLimit <= 0 ? 0 : 1);
+                    }
+                    break;
+                case "court_term_positive":
+                    if (cursor === 0) {
+                        courtOptions.terms.termLength += 1;
+                    } else {
+                        courtOptions.terms.termLimit += 1;
+                    }
+                    break;
+                case "court_term_next":
+                    courtOptions.terms.cursor = 1 - courtOptions.terms.cursor;
+                    break;
+                case "court_term_confirm":
+                    this.prevFunctions.push(this.setCourtThresholdOptions);
                     return await this.setNextFunc(this.setEmergencyOptions);
                 default:
                     return await this.escape();
@@ -705,17 +1159,10 @@ class InitWizard {
         }
     }
 
-    async setCourtOptions(): Promise<void> {
-        // GuildConfigOptionsOption:
-        // First page: Number of Judges (fixed) + Verdict Threshold
-        // Second page: Term Length, Term Limits, Consecutive Terms
-
-    }
-
     async setEmergencyOptions(): Promise<void> {
         // Footer add that after confirmation cannot modify changes outside this wizard! Also button name will be "Confirm" not "Continue"
         const embed = new EmbedBuilder()
-            .setTitle("Configure Emergency GuildConfigOptionsOption")
+            .setTitle("Configure Emergency Options (1/1)")
             .setDescription("These options decide how the server handles emergencies.")
             .setColor(Colors.Red)
             .setFooter({ text: `Page: ${this.page}. This is the last page of the config wizard. After confirmation, all settings will be finalized!` })
