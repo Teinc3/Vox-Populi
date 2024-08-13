@@ -31,8 +31,9 @@
     "seats": 3
   },
   "thresholds": {
-    "simpleMajority": 50,
-    "superMajority": 67
+    "simple": 50,
+    "super": 67,
+    "unanimous": 100
   },
   "politicalSystem": {
     "presidential": {

@@ -1,7 +1,6 @@
 import {
     EmbedBuilder, ActionRowBuilder, ButtonBuilder, Colors, ButtonStyle,
-    type ChatInputCommandInteraction, type MessageComponentInteraction, type InteractionResponse,
-    type APIButtonComponentWithCustomId,
+    type ChatInputCommandInteraction, type MessageComponentInteraction, type InteractionResponse, type APIButtonComponentWithCustomId,
 } from 'discord.js';
 import { isDocument } from '@typegoose/typegoose';
 
@@ -21,6 +20,18 @@ export default async function init(interaction: ChatInputCommandInteraction): Pr
 
 type InitWizardFunction = () => Promise<void>;
 
+/**
+ * A class containing functions of the initialization wizard for setting up a new server configuration.
+ * 
+ * @class InitWizard
+ * @property {ChatInputCommandInteraction} interaction - The interaction object that triggered the command
+ * @property {GuildConfigData} guildConfigData - The data to be stored in the Guild document
+ * @property {InteractionResponse} response - The response message sent by the bot. Used to edit the message when changing pages. Undefined if the message has not been sent yet.
+ * @property {InitWizardFunction[]} prevFunctions - An array of functions that were previously called, so that the user can go back to the previous page without losing configuration data.
+ * @property {InitWizardFunction | boolean} nextFunction - The next function to be called. If set to false, the wizard will end.
+ * @property {number} page - The current page number of the wizard, used for the footer of the embed.
+ * 
+ */
 class InitWizard {
     interaction: ChatInputCommandInteraction;
     guildConfigData: GuildConfigData;
@@ -40,7 +51,6 @@ class InitWizard {
 
     private buttonFilter = (i: MessageComponentInteraction) => i.isButton() && i.user.id === this.interaction.user.id;
 
-    // response is optional first because the message may not be sent yet
     async selectPoliticalSystem(): Promise<void> {
         // Send an embed to prompt the user to select a political system with 3 buttons
         const selectPoliticalSystemEmbed = new EmbedBuilder()
@@ -367,8 +377,8 @@ class InitWizard {
                     value: constants.legislature.senate.seats.value
                 },
                 threshold: {
-                    superMajority: constants.thresholds.superMajority,
-                    simpleMajority: constants.thresholds.simpleMajority,
+                    super: constants.thresholds.super,
+                    simple: constants.thresholds.simple,
                     cursor: 0
                 }
             }
@@ -555,19 +565,19 @@ class InitWizard {
         const cursor = thresholdOptions.cursor;
 
         // Should not happen, just for type safety
-        if (!thresholdOptions.superMajority) {
+        if (!thresholdOptions.super) {
             return await this.escape();
         }
 
         const fields = [
             {
                 name: "Supermajority Threshold",
-                value: thresholdOptions.superMajority.toString() + "%",
+                value: thresholdOptions.super.toString() + "%",
                 inline: true
             },
             {
                 name: "Simple Majority Threshold",
-                value: thresholdOptions.simpleMajority.toString() + "%",
+                value: thresholdOptions.simple.toString() + "%",
                 inline: true
             }
         ]
@@ -613,25 +623,25 @@ class InitWizard {
                     .setLabel("-10%")
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji("⏪")
-                    .setDisabled(cursor === 0 && thresholdOptions.superMajority <= 10 || cursor === 1 && thresholdOptions.simpleMajority <= 10),
+                    .setDisabled(cursor === 0 && thresholdOptions.super <= 10 || cursor === 1 && thresholdOptions.simple <= 10),
                 new ButtonBuilder()
                     .setCustomId('senate_threshold_minus_one')
                     .setLabel("-1%")
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji("⬅️")
-                    .setDisabled(cursor === 0 && thresholdOptions.superMajority <= 1 || cursor === 1 && thresholdOptions.simpleMajority <= 1),
+                    .setDisabled(cursor === 0 && thresholdOptions.super <= 1 || cursor === 1 && thresholdOptions.simple <= 1),
                 new ButtonBuilder()
                     .setCustomId('senate_threshold_plus_one')
                     .setLabel("+1%")
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji("➡️")
-                    .setDisabled(cursor === 0 && thresholdOptions.superMajority >= 100 || cursor === 1 && thresholdOptions.simpleMajority >= 100),
+                    .setDisabled(cursor === 0 && thresholdOptions.super >= 100 || cursor === 1 && thresholdOptions.simple >= 100),
                 new ButtonBuilder()
                     .setCustomId('senate_threshold_plus_ten')
                     .setLabel("+10%")
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji("⏩")
-                    .setDisabled(cursor === 0 && thresholdOptions.superMajority >= 91 || cursor === 1 && thresholdOptions.simpleMajority >= 91),
+                    .setDisabled(cursor === 0 && thresholdOptions.super >= 91 || cursor === 1 && thresholdOptions.simple >= 91),
             )
 
         await this.interaction.editReply({ embeds: [embed], components: [actionRowUtilities, actionRowThreshold] });
@@ -648,36 +658,36 @@ class InitWizard {
                     return await this.setPrevFunc();
                 case "senate_threshold_minus_ten":
                     if (cursor === 0) {
-                        thresholdOptions.superMajority -= (thresholdOptions.superMajority <= 10 ? 0 : 10);
+                        thresholdOptions.super -= (thresholdOptions.super <= 10 ? 0 : 10);
                     } else if (cursor === 1) {
-                        thresholdOptions.simpleMajority -= (thresholdOptions.simpleMajority <= 10 ? 0 : 10);
+                        thresholdOptions.simple -= (thresholdOptions.simple <= 10 ? 0 : 10);
                     } else {
                         return await this.escape();
                     }
                     break;
                 case "senate_threshold_minus_one":
                     if (cursor === 0) {
-                        thresholdOptions.superMajority -= (thresholdOptions.superMajority <= 1 ? 0 : 1);
+                        thresholdOptions.super -= (thresholdOptions.super <= 1 ? 0 : 1);
                     } else if (cursor === 1) {
-                        thresholdOptions.simpleMajority -= (thresholdOptions.simpleMajority <= 1 ? 0 : 1);
+                        thresholdOptions.simple -= (thresholdOptions.simple <= 1 ? 0 : 1);
                     } else {
                         return await this.escape();
                     }
                     break;
                 case "senate_threshold_plus_one":
                     if (cursor === 0) {
-                        thresholdOptions.superMajority += (thresholdOptions.superMajority >= 100 ? 0 : 1);
+                        thresholdOptions.super += (thresholdOptions.super >= 100 ? 0 : 1);
                     } else if (cursor === 1) {
-                        thresholdOptions.simpleMajority += (thresholdOptions.simpleMajority >= 100 ? 0 : 1);
+                        thresholdOptions.simple += (thresholdOptions.simple >= 100 ? 0 : 1);
                     } else {
                         return await this.escape();
                     }
                     break;
                 case "senate_threshold_plus_ten":
                     if (cursor === 0) {
-                        thresholdOptions.superMajority += (thresholdOptions.superMajority >= 91 ? 0 : 10);
+                        thresholdOptions.super += (thresholdOptions.super >= 91 ? 0 : 10);
                     } else if (cursor === 1) {
-                        thresholdOptions.simpleMajority += (thresholdOptions.simpleMajority >= 91 ? 0 : 10);
+                        thresholdOptions.simple += (thresholdOptions.simple >= 91 ? 0 : 10);
                     } else {
                         return await this.escape();
                     }
@@ -780,8 +790,8 @@ class InitWizard {
     async setReferendumOptions(): Promise<void> {
         if (!this.guildConfigData.referendumThresholds) {
             this.guildConfigData.referendumThresholds = {
-                simpleMajority: constants.thresholds.simpleMajority,
-                superMajority: constants.thresholds.superMajority,
+                simple: constants.thresholds.simple,
+                super: constants.thresholds.super,
                 cursor: 0
             }
         }
@@ -792,12 +802,12 @@ class InitWizard {
         const fields = [
             {
                 name: "Supermajority Threshold",
-                value: referendumThresholds.superMajority.toString() + "%",
+                value: referendumThresholds.super.toString() + "%",
                 inline: true
             },
             {
                 name: "Simple Majority Threshold",
-                value: referendumThresholds.simpleMajority.toString() + "%",
+                value: referendumThresholds.simple.toString() + "%",
                 inline: true
             }
         ]
@@ -840,25 +850,25 @@ class InitWizard {
                     .setLabel("-10%")
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji("⏪")
-                    .setDisabled(cursor === 0 && referendumThresholds.superMajority <= 10 || cursor === 1 && referendumThresholds.simpleMajority <= 10),
+                    .setDisabled(cursor === 0 && referendumThresholds.super <= 10 || cursor === 1 && referendumThresholds.simple <= 10),
                 new ButtonBuilder()
                     .setCustomId('referendum_minus_one')
                     .setLabel("-1%")
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji("⬅️")
-                    .setDisabled(cursor === 0 && referendumThresholds.superMajority <= 1 || cursor === 1 && referendumThresholds.simpleMajority <= 1),
+                    .setDisabled(cursor === 0 && referendumThresholds.super <= 1 || cursor === 1 && referendumThresholds.simple <= 1),
                 new ButtonBuilder()
                     .setCustomId('referendum_plus_one')
                     .setLabel("+1%")
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji("➡️")
-                    .setDisabled(cursor === 0 && referendumThresholds.superMajority >= 100 || cursor === 1 && referendumThresholds.simpleMajority >= 100),
+                    .setDisabled(cursor === 0 && referendumThresholds.super >= 100 || cursor === 1 && referendumThresholds.simple >= 100),
                 new ButtonBuilder()
                     .setCustomId('referendum_plus_ten')
                     .setLabel("+10%")
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji("⏩")
-                    .setDisabled(cursor === 0 && referendumThresholds.superMajority >= 91 || cursor === 1 && referendumThresholds.simpleMajority >= 91),
+                    .setDisabled(cursor === 0 && referendumThresholds.super >= 91 || cursor === 1 && referendumThresholds.simple >= 91),
             )
 
         await this.interaction.editReply({ embeds: [embed], components: [actionRowUtilities, actionRowThreshold] });
@@ -872,36 +882,36 @@ class InitWizard {
                     return await this.setPrevFunc();
                 case "referendum_minus_ten":
                     if (cursor === 0) {
-                        referendumThresholds.superMajority -= (referendumThresholds.superMajority <= 10 ? 0 : 10);
+                        referendumThresholds.super -= (referendumThresholds.super <= 10 ? 0 : 10);
                     } else if (cursor === 1) {
-                        referendumThresholds.simpleMajority -= (referendumThresholds.simpleMajority <= 10 ? 0 : 10);
+                        referendumThresholds.simple -= (referendumThresholds.simple <= 10 ? 0 : 10);
                     } else {
                         return await this.escape();
                     }
                     break;
                 case "referendum_minus_one":
                     if (cursor === 0) {
-                        referendumThresholds.superMajority -= (referendumThresholds.superMajority <= 1 ? 0 : 1);
+                        referendumThresholds.super -= (referendumThresholds.super <= 1 ? 0 : 1);
                     } else if (cursor === 1) {
-                        referendumThresholds.simpleMajority -= (referendumThresholds.simpleMajority <= 1 ? 0 : 1);
+                        referendumThresholds.simple -= (referendumThresholds.simple <= 1 ? 0 : 1);
                     } else {
                         return await this.escape();
                     }
                     break;
                 case "referendum_plus_one":
                     if (cursor === 0) {
-                        referendumThresholds.superMajority += (referendumThresholds.superMajority >= 100 ? 0 : 1);
+                        referendumThresholds.super += (referendumThresholds.super >= 100 ? 0 : 1);
                     } else if (cursor === 1) {
-                        referendumThresholds.simpleMajority += (referendumThresholds.simpleMajority >= 100 ? 0 : 1);
+                        referendumThresholds.simple += (referendumThresholds.simple >= 100 ? 0 : 1);
                     } else {
                         return await this.escape();
                     }
                     break;
                 case "referendum_plus_ten":
                     if (cursor === 0) {
-                        referendumThresholds.superMajority += (referendumThresholds.superMajority >= 91 ? 0 : 10);
+                        referendumThresholds.super += (referendumThresholds.super >= 91 ? 0 : 10);
                     } else if (cursor === 1) {
-                        referendumThresholds.simpleMajority += (referendumThresholds.simpleMajority >= 91 ? 0 : 10);
+                        referendumThresholds.simple += (referendumThresholds.simple >= 91 ? 0 : 10);
                     } else {
                         return await this.escape();
                     }
@@ -940,8 +950,8 @@ class InitWizard {
                     value: constants.judicial.seats
                 },
                 threshold: {
-                    simpleMajority: constants.thresholds.simpleMajority,
-                    superMajority: constants.thresholds.superMajority,
+                    simple: constants.thresholds.simple,
+                    super: constants.thresholds.unanimous,
                 }
             }
         }
@@ -959,7 +969,7 @@ class InitWizard {
                 },
                 {
                     name: "Verdict Threshold",
-                    value: courtOptions.threshold.simpleMajority.toString() + "%",
+                    value: courtOptions.threshold.simple.toString() + "%",
                     inline: true
                 }
             ])
@@ -999,25 +1009,25 @@ class InitWizard {
                     .setLabel("-10%")
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji("⏪")
-                    .setDisabled(courtOptions.threshold.simpleMajority <= 10),
+                    .setDisabled(courtOptions.threshold.simple <= 10),
                 new ButtonBuilder()
                     .setCustomId('court_threshold_minus_one')
                     .setLabel("-1%")
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji("⬅️")
-                    .setDisabled(courtOptions.threshold.simpleMajority <= 1),
+                    .setDisabled(courtOptions.threshold.simple <= 1),
                 new ButtonBuilder()
                     .setCustomId('court_threshold_plus_one')
                     .setLabel("+1%")
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji("➡️")
-                    .setDisabled(courtOptions.threshold.simpleMajority >= 100),
+                    .setDisabled(courtOptions.threshold.simple >= 100),
                 new ButtonBuilder()
                     .setCustomId('court_threshold_plus_ten')
                     .setLabel("+10%")
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji("⏩")
-                    .setDisabled(courtOptions.threshold.simpleMajority >= 91)
+                    .setDisabled(courtOptions.threshold.simple >= 91)
             )
 
         await this.interaction.editReply({ embeds: [embed], components: [actionRowUtilities, actionRowThreshold] });
@@ -1036,16 +1046,16 @@ class InitWizard {
                     courtOptions.seats.value += 1;
                     break;
                 case "court_threshold_minus_ten":
-                    courtOptions.threshold.simpleMajority -= (courtOptions.threshold.simpleMajority <= 10 ? 0 : 10);
+                    courtOptions.threshold.simple -= (courtOptions.threshold.simple <= 10 ? 0 : 10);
                     break;
                 case "court_threshold_minus_one":
-                    courtOptions.threshold.simpleMajority -= (courtOptions.threshold.simpleMajority <= 1 ? 0 : 1);
+                    courtOptions.threshold.simple -= (courtOptions.threshold.simple <= 1 ? 0 : 1);
                     break;
                 case "court_threshold_plus_one":
-                    courtOptions.threshold.simpleMajority += (courtOptions.threshold.simpleMajority >= 100 ? 0 : 1);
+                    courtOptions.threshold.simple += (courtOptions.threshold.simple >= 100 ? 0 : 1);
                     break;
                 case "court_threshold_plus_ten":
-                    courtOptions.threshold.simpleMajority += (courtOptions.threshold.simpleMajority >= 91 ? 0 : 10);
+                    courtOptions.threshold.simple += (courtOptions.threshold.simple >= 91 ? 0 : 10);
                     break;
                 case "court_generic_confirm":
                     this.prevFunctions.push(this.setCourtGenericOptions);

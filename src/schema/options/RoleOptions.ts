@@ -4,16 +4,17 @@ import { GuildConfigOptionsOptionClass } from "../../types/types.js";
 
 class ThresholdOptions extends GuildConfigOptionsOptionClass {
     /**
-     * Percentage of votes needed to pass
+     * Percentage of votes needed to pass a normal resolution
      */
     @prop({ required: true })
-    simpleMajority!: number;
+    simple!: number;
 
     /**
-     * Percentage of votes needed to amend the constitution, override a veto (if any), and impeach an official
+     * Percentage of votes needed for "Important Affairs",
+     * such as amending the constitution, overriding a veto (if allowed), and impeaching an official
      */
-        @prop({ required: true })
-        superMajority!: number;
+    @prop({ required: true })
+    super!: number;
 }
 
 class TermOptions extends GuildConfigOptionsOptionClass {
@@ -30,10 +31,10 @@ class TermOptions extends GuildConfigOptionsOptionClass {
     termLimit!: number;
 
     /**
-     * Can the person run for consecutive terms?
+     * Can the person hold consecutive terms?
      */
     @prop({ required: true })
-    consecutive!: boolean; // Only needed for HOS roles
+    consecutive!: boolean;
 }
 
 class SeatOptions extends GuildConfigOptionsOptionClass {
