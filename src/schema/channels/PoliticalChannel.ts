@@ -1,7 +1,7 @@
 import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
 import { type CategoryChannel, ChannelType, type Guild } from 'discord.js';
 
-import ChannelPermissions from '../permissions/ChannelPermissions.js';
+import ChannelPermissions, { createChannelPermissionsOverwrite } from '../permissions/ChannelPermissions.js';
 
 type ChannelTypeType = ChannelType.GuildText | ChannelType.GuildVoice | ChannelType.GuildCategory | ChannelType.GuildAnnouncement | ChannelType.GuildStageVoice | ChannelType.GuildForum | ChannelType.GuildMedia;
 
@@ -61,7 +61,7 @@ async function linkDiscordChannel(guild: Guild, politicalChannel: PoliticalChann
             name,
             type: politicalChannel.channelType,
             parent: categoryChannel,
-            permissionOverwrites: processPermissions(politicalChannel.channelPermissions),
+            permissionOverwrites: await createChannelPermissionsOverwrite(guild.id, politicalChannel.channelPermissions),
             reason
         });
         // Link the channel
@@ -83,19 +83,6 @@ async function unlinkDiscordChannel(guild: Guild, channelID: string, reason?: st
     if (discordChannel) {
         await discordChannel.delete(reason);
     }
-}
-
-function processPermissions(_channelPermissions: ChannelPermissions) {
-    return [];
-    /* const permissionOverwrites = [];
-    for (const permission of channelPermissions.keys()) {
-        permissionOverwrites.push({
-            id: permission.id,
-            allow: permission.allow,
-            deny: permission.deny
-        });
-    }
-    return permissionOverwrites; */
 }
 
 export default PoliticalChannel;

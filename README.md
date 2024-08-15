@@ -23,9 +23,8 @@ Not checked for latest commit.
 
 ## TODO
 ### Active
-- Simplify redundant code in Initialization Wizard
 - Add more JSDocs to schema files
-- Complete function to process our own permission system into discord permissions
 
 ### Future
 - Add logging and command to view logs
+- ~~ Simplify redundant code in Initialization Wizard~~
