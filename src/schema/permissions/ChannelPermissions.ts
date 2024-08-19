@@ -1,8 +1,10 @@
 import { prop, Ref } from "@typegoose/typegoose";
 
 import type PoliticalRole from "../roles/PoliticalRole";
-import { ChannelType, OverwriteData, PermissionsBitField } from "discord.js";
+import { OverwriteData, PermissionsBitField } from "discord.js";
 import { PoliticalRoleModel, VoxPopuli } from "../roles/PoliticalRole.js";
+
+import { PermissionsCategories } from "../../types/permissions.js";
 
 // If array is empty then everyone has that perm there (provided they can Access the channel)
 // but if it's [VoxPopuli] then nobody has that perm (apart from the bot)
@@ -21,51 +23,30 @@ type RefRoleArray = Ref<PoliticalRole>[];
 class ChannelPermissions {
     /**
      * Who can view the channel
-     * 
-     * Permissions:
-     * - View Channel
      */
     @prop({ required: true, default: new Array<Ref<PoliticalRole>>(), ref: () => 'PoliticalRole' })
     whoCanView!: RefRoleArray;
 
     /**
      * Who can interact with the channel
-     * 
-     * Permissions:
-     * - Create Public and Private Threads
-     * - Send Messages in Threads
-     * - Add Reactions
      */
     @prop({ required: true, default: new Array<Ref<PoliticalRole>>(), ref: () => 'PoliticalRole' })
     whoCanInteract!: RefRoleArray;
 
     /**
      * Who can send messages in the channel
-     * 
-     * Permissions:
-     * - Send Messages
-     * - Use Application Commands, Activities, and External Apps
      */
     @prop({ required: true, default: new Array<Ref<PoliticalRole>>(), ref: () => 'PoliticalRole' })
     whoCanSend!: RefRoleArray;
 
     /**
      * Who can moderate the channel
-     * 
-     * Permissions:
-     * - Manage Messages
-     * - Manage Threads
      */
     @prop({ required: true, default: new Array<Ref<PoliticalRole>>(), ref: () => 'PoliticalRole' })
     whoCanModerate!: RefRoleArray;
 
     /**
      * Who can manage the channel
-     * 
-     * Permissions:
-     * - Manage Channel
-     * - Manage Permissions
-     * - Manage Webhooks
      */
     @prop({ required: true, default: new Array<Ref<PoliticalRole>>(), ref: () => 'PoliticalRole' })
     whoCanManage!: RefRoleArray;
@@ -76,13 +57,11 @@ function filterRefRoleArray(refRoleArray: Array<Ref<PoliticalRole> | undefined>)
 }
 
 const discordPermissionOverwritesReference = {
-    whoCanView: [PermissionsBitField.Flags.ViewChannel],
-    whoCanInteract: [PermissionsBitField.Flags.AddReactions],
-    whoCanSend: [PermissionsBitField.Flags.SendMessages |
-        PermissionsBitField.Flags.CreatePublicThreads | PermissionsBitField.Flags.CreatePrivateThreads | PermissionsBitField.Flags.SendMessagesInThreads |
-        PermissionsBitField.Flags.UseApplicationCommands | PermissionsBitField.Flags.UseEmbeddedActivities | BigInt(1 << 50)] /* USE_EXTERNAL_APPS is still in dev build*/,
-    whoCanModerate: [PermissionsBitField.Flags.ManageMessages],
-    whoCanManage: [PermissionsBitField.Flags.ManageChannels | PermissionsBitField.Flags.ManageRoles | PermissionsBitField.Flags.ManageWebhooks]
+    whoCanView: PermissionsCategories.view.overwrites,
+    whoCanSend: PermissionsCategories.send.overwrites,
+    whoCanInteract: PermissionsCategories.interact.overwrites,
+    whoCanModerate: PermissionsCategories.moderate.overwrites,
+    whoCanManage: PermissionsCategories.manage.overwrites
 };
 
 async function createChannelPermissionsOverwrite(guildID: string, channelPermissions: ChannelPermissions): Promise<OverwriteData[]> {

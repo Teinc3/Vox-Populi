@@ -61,9 +61,9 @@ async function createPoliticalChannels(guildCategory: GuildCategory, guild: Guil
             // Announcements and Admin office are only for Hierarchical systems
             if (!isDD) {
                 newChannelDocuments.push(await createPoliticalChannelDocument(guild, new PoliticalChannel("announcements", ChannelType.GuildText, {
-                    whoCanView: [roleHolder.Citizen],
-                    whoCanInteract: [],
-                    whoCanSend: filterRefRoleArray([roleHolder.President, roleHolder.PrimeMinister]),
+                    whoCanView: [],
+                    whoCanInteract: [roleHolder.Citizen],
+                    whoCanSend: filterRefRoleArray([roleHolder.President, roleHolder.PrimeMinister, roleHolder.HeadModerator]),
                     whoCanModerate: filterRefRoleArray([roleHolder.President, roleHolder.PrimeMinister, roleHolder.HeadModerator]),
                     whoCanManage: filterRefRoleArray([roleHolder.President, roleHolder.PrimeMinister])
                 }), categoryChannel, reason));

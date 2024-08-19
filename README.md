@@ -23,6 +23,7 @@ Not checked for latest commit.
 
 ## TODO
 ### Active
+- Refactor Permission Overwrite system to be less redundant
 - Add more JSDocs to schema files
 
 ### Future

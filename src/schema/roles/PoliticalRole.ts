@@ -1,9 +1,10 @@
 import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
-import type { ColorResolvable, Guild } from 'discord.js';
+import { type ColorResolvable, type Guild } from 'discord.js';
 
 import PoliticalRoleHolder from './PoliticalRolesHolder.js';
 
 import { GuildConfigData, PoliticalSystemsType } from '../../types/types.js';
+import { PermissionsCategories, PermissionsLevel } from '../../types/permissions.js';
 import constants from '../../data/constants.json' assert { type: "json" };
 
 class PoliticalRole {
@@ -18,54 +19,82 @@ class PoliticalRole {
 
     @prop({ required: true })
     roleColor!: string;
+
+    @prop({ type: () => [BigInt], required: true })
+    permissions!: bigint[];
+}
+
+/**
+ * Automatically assigns all permissions from the highest permission level the role has to the lowest
+ * 
+ * @param index The index of the highest permission level the role has
+ * @returns An array of permissions
+ */
+function progressivePermissionsAllocator(index: PermissionsLevel): bigint[] {
+    const permissions: bigint[] = [];
+    const categoriesArray = Object.values(PermissionsCategories);
+
+    // Assuming categoriesArray is already sorted by permission levels
+    for (let i = index; i < categoriesArray.length; i++) {
+        permissions.push(...categoriesArray[i].static, ...categoriesArray[i].overwrites);
+    }
+    return permissions;
 }
 
 class VoxPopuli extends PoliticalRole {
     name = constants.roles.VoxPopuli.name;
     hierarchy = constants.roles.VoxPopuli.hierarchy;
     roleColor = constants.roles.VoxPopuli.color; // White
+    permissions = progressivePermissionsAllocator(PermissionsLevel.Emergency);
 }
 
 class President extends PoliticalRole {
     name = constants.roles.President.name;
     hierarchy = constants.roles.President.hierarchy;
     roleColor = constants.roles.President.color // Red
+    permissions = progressivePermissionsAllocator(PermissionsLevel.Manage);
 }
 
 class PrimeMinister extends PoliticalRole {
     name = constants.roles.PrimeMinister.name;
     hierarchy = constants.roles.PrimeMinister.hierarchy;
     roleColor = constants.roles.PrimeMinister.color; // Red
+    permissions = progressivePermissionsAllocator(PermissionsLevel.Manage);
 }
 
 class HeadModerator extends PoliticalRole {
     name = constants.roles.HeadModerator.name;
     hierarchy = constants.roles.HeadModerator.hierarchy;
     roleColor = constants.roles.HeadModerator.color; // Orange
+    permissions = progressivePermissionsAllocator(PermissionsLevel.Moderate);
 }
 
 class Senator extends PoliticalRole {
     name = constants.roles.Senator.name;
     hierarchy = constants.roles.Senator.hierarchy;
     roleColor = constants.roles.Senator.color; // Blue
+    permissions = new Array<bigint>();
 }
 
 class Judge extends PoliticalRole {
     name = constants.roles.Judge.name;
     hierarchy = constants.roles.Judge.hierarchy;
     roleColor = constants.roles.Judge.color; // Purple
+    permissions = new Array<bigint>();
 }
 
 class Moderator extends PoliticalRole {
     name = constants.roles.Moderator.name;
     hierarchy = constants.roles.Moderator.hierarchy;
     roleColor = constants.roles.Moderator.color; // Yellow
+    permissions = progressivePermissionsAllocator(PermissionsLevel.Moderate);
 }
 
 class Citizen extends PoliticalRole {
     name = constants.roles.Citizen.name;
     hierarchy = constants.roles.Citizen.hierarchy;
     roleColor = constants.roles.Citizen.color; // Green
+    permissions = progressivePermissionsAllocator(PermissionsLevel.Interact);
 }
 
 const PoliticalRoleObjectList: Array<new () => PoliticalRole> = [VoxPopuli, President, PrimeMinister, HeadModerator, Senator, Judge, Moderator, Citizen].sort((a, b) => a.prototype.hierarchy - b.prototype.hierarchy);
@@ -131,7 +160,7 @@ async function linkDiscordRole<T extends PoliticalRole>(guild: Guild, role: T, r
             try {
                 const newRole = await guild.roles.create({
                     name: name,
-                    permissions: [],
+                    permissions: role.permissions,
                     hoist: true,
                     color: role.roleColor as ColorResolvable,
                     reason
@@ -159,4 +188,4 @@ async function unlinkDiscordRole(guild: Guild, roleID: string | undefined, reaso
 
 export default PoliticalRole;
 export { VoxPopuli, President, PrimeMinister, Senator, Judge, HeadModerator, Moderator, Citizen, PoliticalRoleObjectList, PoliticalRoleModel }
-export { createPoliticalRoleDocuments, deletePoliticalRoleDocument }
+export { createPoliticalRoleDocuments, deletePoliticalRoleDocument, progressivePermissionsAllocator }

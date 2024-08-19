@@ -1222,18 +1222,26 @@ class InitWizard {
     }
 
     async completeInit(): Promise<void> {
+        // Show "Configuring Server" message
+        const configuringEmbed = new EmbedBuilder()
+            .setTitle("Configuring Server")
+            .setDescription("Please wait while the server is being configured...")
+            .setColor(Colors.Blurple)
+            .toJSON();
+        await this.interaction.editReply({ embeds: [configuringEmbed], components: [] });
+
         // Update database with new guild object
         const result = await createGuildDocument(this.interaction, this.guildConfigData, "Server Initialization");
         if (!result) {
             return await this.escape();
         }
 
-        const embed = new EmbedBuilder()
+        const successEmbed = new EmbedBuilder()
             .setTitle("Server Configuration")
             .setDescription("Server has been successfully configured.")
             .setColor(Colors.Green)
             .toJSON();
-        await this.interaction.editReply({ embeds: [embed], components: [] });
+        await this.interaction.editReply({ embeds: [successEmbed], components: [] });
 
         // Assign the bot the Vox Populi role
         await result.populate({ path: 'roles', select: 'VoxPopuli' });
