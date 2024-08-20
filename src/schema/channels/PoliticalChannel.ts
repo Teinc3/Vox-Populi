@@ -1,19 +1,23 @@
 import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
-import { type CategoryChannel, ChannelType, type Guild } from 'discord.js';
+import { ChannelType, type CategoryChannel, type Guild } from 'discord.js';
 
 import ChannelPermissions, { createChannelPermissionsOverwrite } from '../permissions/ChannelPermissions.js';
 
 type ChannelTypeType = ChannelType.GuildText | ChannelType.GuildVoice | ChannelType.GuildCategory | ChannelType.GuildAnnouncement | ChannelType.GuildStageVoice | ChannelType.GuildForum | ChannelType.GuildMedia;
 
 class PoliticalChannel {
-    constructor(name: string, channelType: ChannelTypeType, channelPermissions: ChannelPermissions) {
+    constructor(name: string, channelType: ChannelTypeType, channelPermissions: ChannelPermissions, description?: string) {
         this.name = name;
         this.channelType = channelType;
         this.channelPermissions = channelPermissions;
+        this.description = description || "";
     }    
 
     @prop({ required: true })
     name!: string;
+
+    @prop({ required: true })
+    description!: string;
 
     @prop()
     channelID?: string;

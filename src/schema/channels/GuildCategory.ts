@@ -3,18 +3,23 @@ import { type CategoryChannel, ChannelType, type Guild } from 'discord.js';
 
 import PoliticalChannel, { createPoliticalChannelDocument, deletePoliticalChannelDocument } from './PoliticalChannel.js';
 import type PoliticalRoleHolder from '../roles/PoliticalRolesHolder.js';
-import { filterRefRoleArray } from '../permissions/ChannelPermissions.js';
+import ChannelPermissions, { filterRefRoleArray, type UnfilteredRefRoleArray } from '../permissions/ChannelPermissions.js';
 import { linkChamberChannelDocument } from '../Chamber.js';
 
-import { GuildConfigData, PoliticalBranchType, PoliticalSystemsType } from '../../types/types.js';
+import { GuildConfigData, PoliticalBranchType, PoliticalSystemsType, DefaultChannelData, CustomPermissionsOverwrite } from '../../types/types.js';
+import constants from '../../data/constants.json' assert { type: "json" };
 
 class GuildCategory {
-    constructor(name: string) {
+    constructor(name: string, description?: string) {
         this.name = name;
+        this.description = description || "";
     }
 
     @prop({ required: true })
     name!: string;
+
+    @prop({ required: true })
+    description!: string;
 
     @prop()
     categoryID?: string;
@@ -27,17 +32,16 @@ const GuildCategoryModel = getModelForClass(GuildCategory);
 
 async function createGuildCategories(guild: Guild, roleHolder: PoliticalRoleHolder, guildConfigData: GuildConfigData, reason?: string): Promise<Ref<GuildCategory>[]> {
     const categoryDocuments = new Array<Ref<GuildCategory>>();    
-    categoryDocuments.push(await createGuildCategoryDocument(guild, new GuildCategory("Executive"), roleHolder, guildConfigData, reason));
-    categoryDocuments.push(await createGuildCategoryDocument(guild, new GuildCategory("Legislative"), roleHolder, guildConfigData, reason));
-    categoryDocuments.push(await createGuildCategoryDocument(guild, new GuildCategory("Judicial"), roleHolder, guildConfigData, reason));
-    if (guildConfigData.politicalSystem !== PoliticalSystemsType.DirectDemocracy) {
-        categoryDocuments.push(await createGuildCategoryDocument(guild, new GuildCategory("Electoral"), roleHolder, guildConfigData, reason));
+    for (const category of constants.channelCategories) {
+        const guildCategoryDocument = await createGuildCategoryDocument(guild, new GuildCategory(category.name, category.description), roleHolder, guildConfigData, category.channels, reason);
+        if (guildCategoryDocument) {
+            categoryDocuments.push(guildCategoryDocument);
+        }
     }
-
     return categoryDocuments;
 }
 
-async function createGuildCategoryDocument(guild: Guild, guildCategory: GuildCategory, roleHolder: PoliticalRoleHolder, guildConfigData: GuildConfigData, reason?: string): Promise<Ref<GuildCategory>> {
+async function createGuildCategoryDocument(guild: Guild, guildCategory: GuildCategory, roleHolder: PoliticalRoleHolder, guildConfigData: GuildConfigData, defaultChannelsData: DefaultChannelData[], reason?: string): Promise<Ref<GuildCategory> | false> {
     // Create and link the category to the object first
     guildCategory = await linkDiscordCategory(guild, guildCategory, reason);
     const categoryChannel = await guild.channels.fetch(guildCategory.categoryID!);
@@ -47,110 +51,96 @@ async function createGuildCategoryDocument(guild: Guild, guildCategory: GuildCat
 
     // Triage channels for executive (moderation), legislative, and judicial
     // We funnel the appropriate roles (obtained from roleHolder) to these channels
-    guildCategory.channels = await createPoliticalChannels(guildCategory, guild, roleHolder, categoryChannel, guildConfigData, reason);
-
+    guildCategory.channels = await createPoliticalChannels(guild, roleHolder, categoryChannel, guildConfigData, defaultChannelsData, reason);
+    if (guildCategory.channels.length === 0) {
+        await unlinkDiscordCategory(guild, guildCategory.categoryID, reason); // No channels in the category, delete it
+        return false;
+    }
     return await GuildCategoryModel.create(guildCategory);
 }
 
-async function createPoliticalChannels(guildCategory: GuildCategory, guild: Guild, roleHolder: PoliticalRoleHolder, categoryChannel: CategoryChannel, guildConfigData: GuildConfigData, reason?: string | undefined): Promise<Ref<PoliticalChannel>[]> {
+async function createPoliticalChannels(guild: Guild, roleHolder: PoliticalRoleHolder, categoryChannel: CategoryChannel, guildConfigData: GuildConfigData, defaultChannelsData: DefaultChannelData[], reason?: string): Promise<Ref<PoliticalChannel>[]> {
     const newChannelDocuments = new Array<Ref<PoliticalChannel>>();
     const isDD = guildConfigData.politicalSystem === PoliticalSystemsType.DirectDemocracy; 
+    
+    for (const defaultChannelData of defaultChannelsData) {
+        const { disable, permissionOverwrites } = defaultChannelData;
 
-    switch (guildCategory.name) {
-        case "Executive":
-            // Announcements and Admin office are only for Hierarchical systems
-            if (!isDD) {
-                newChannelDocuments.push(await createPoliticalChannelDocument(guild, new PoliticalChannel("announcements", ChannelType.GuildText, {
-                    whoCanView: [],
-                    whoCanInteract: [roleHolder.Citizen],
-                    whoCanSend: filterRefRoleArray([roleHolder.President, roleHolder.PrimeMinister, roleHolder.HeadModerator]),
-                    whoCanModerate: filterRefRoleArray([roleHolder.President, roleHolder.PrimeMinister, roleHolder.HeadModerator]),
-                    whoCanManage: filterRefRoleArray([roleHolder.President, roleHolder.PrimeMinister])
-                }), categoryChannel, reason));
+        // Skip creating the channel if it is disabled by our config
+        const isDDMatch = disable?.isDD === isDD;
+        const appointJudgesMatch = disable?.appointJudges === undefined ? true : disable?.appointJudges === guildConfigData.ddOptions?.appointJudges;
+        const appointModeratorsMatch = disable?.appointModerators === undefined ? true : disable?.appointModerators === guildConfigData.ddOptions?.appointModerators;
+        if (disable && isDDMatch && appointJudgesMatch && appointModeratorsMatch) {
+            continue;
+        }
 
-                newChannelDocuments.push(await createPoliticalChannelDocument(guild, new PoliticalChannel("admin-office", ChannelType.GuildText, {
-                    whoCanView: filterRefRoleArray([roleHolder.President, roleHolder.PrimeMinister, roleHolder.HeadModerator]),
-                    whoCanInteract: [],
-                    whoCanSend: [],
-                    whoCanModerate: filterRefRoleArray([roleHolder.President, roleHolder.PrimeMinister, roleHolder.HeadModerator]),
-                    whoCanManage: filterRefRoleArray([roleHolder.President, roleHolder.PrimeMinister])
-                }), categoryChannel, reason));
+        // Parse permissions
+        const channelPermissions = new ChannelPermissions();
+        for (const key in permissionOverwrites) {
+            const refRoleArray: UnfilteredRefRoleArray = [];
+            for (const roleHierarchy of permissionOverwrites[key as keyof CustomPermissionsOverwrite<number>]) {
+                // Obtain role from roleHolder
+                switch (roleHierarchy) {
+                    case 0: // VoxPopuli
+                        refRoleArray.push(roleHolder.VoxPopuli);
+                        break;
+                    case 1: // President OR PrimeMinisters
+                        // We can double push here because the roleHolder will return undefined if the role does not exist
+                        refRoleArray.push(roleHolder.President)
+                        refRoleArray.push(roleHolder.PrimeMinister);
+                        break;
+                    case 2: // HeadModerator
+                        if (isDD && !guildConfigData.ddOptions!.appointModerators && !refRoleArray.includes(roleHolder.Citizen)) {
+                            refRoleArray.push(roleHolder.Citizen);
+                        } else {
+                            refRoleArray.push(roleHolder.HeadModerator);
+                        }
+                        break;
+                    case 3: // Moderator
+                        if (isDD && !guildConfigData.ddOptions!.appointModerators && !refRoleArray.includes(roleHolder.Citizen)) {
+                            refRoleArray.push(roleHolder.Citizen);
+                        } else {
+                            refRoleArray.push(roleHolder.Moderator);
+                        }
+                        break;
+                    case 4: // Senator
+                        if (isDD && !refRoleArray.includes(roleHolder.Citizen)) {
+                            refRoleArray.push(roleHolder.Citizen);
+                        } else {
+                            refRoleArray.push(roleHolder.Senator);
+                        }
+                        break;
+                    case 5: // Judge
+                        if (isDD && !guildConfigData.ddOptions!.appointJudges && !refRoleArray.includes(roleHolder.Citizen)) {
+                            refRoleArray.push(roleHolder.Citizen);
+                        } else {
+                            refRoleArray.push(roleHolder.Judge);
+                        }
+                        break;
+                    case 6: // Citizen
+                        // Prevent duplicates
+                        if (!refRoleArray.includes(roleHolder.Citizen)) {
+                            refRoleArray.push(roleHolder.Citizen);
+                        }
+                        break;
+                }                
             }
 
-            if (!isDD || guildConfigData.ddOptions!.appointModerators) {
-                newChannelDocuments.push(await createPoliticalChannelDocument(guild, new PoliticalChannel("moderator-lounge", ChannelType.GuildText, {
-                    whoCanView: filterRefRoleArray([roleHolder.President, roleHolder.PrimeMinister, roleHolder.HeadModerator, roleHolder.Moderator]),
-                    whoCanInteract: [],
-                    whoCanSend: [],
-                    whoCanModerate: filterRefRoleArray([roleHolder.HeadModerator]),
-                    whoCanManage: filterRefRoleArray([roleHolder.President, roleHolder.PrimeMinister, roleHolder.HeadModerator])
-                }), categoryChannel, reason));
+            // Finally run the filter function to remove undefined values
+            channelPermissions[key as keyof ChannelPermissions] = filterRefRoleArray(refRoleArray);
+        }
+
+        // Create the channel
+        const politicalChannelDocument = await createPoliticalChannelDocument(guild, new PoliticalChannel(defaultChannelData.name, ChannelType.GuildText, channelPermissions, defaultChannelData.description), categoryChannel, reason);
+        if (defaultChannelData.chamberTypeIsLegislative !== undefined) {
+            if (defaultChannelData.chamberTypeIsLegislative === true) {
+                await linkChamberChannelDocument(guild.id, PoliticalBranchType.Legislative, politicalChannelDocument);
+            } else {
+                await linkChamberChannelDocument(guild.id, PoliticalBranchType.Judicial, politicalChannelDocument);
             }
+        }
 
-            newChannelDocuments.push(await createPoliticalChannelDocument(guild, new PoliticalChannel("server-logs", ChannelType.GuildText, {
-                whoCanView: [],
-                whoCanInteract: [],
-                whoCanSend: [roleHolder.VoxPopuli],
-                whoCanModerate: [roleHolder.VoxPopuli],
-                whoCanManage: [roleHolder.VoxPopuli]
-            }), categoryChannel, reason));
-
-            newChannelDocuments.push(await createPoliticalChannelDocument(guild, new PoliticalChannel("chat-logs", ChannelType.GuildText, {
-                // Chat logs only for moderators. If mods not appointed in DD, then available to everyone.
-                whoCanView: isDD && !guildConfigData.ddOptions!.appointModerators ? [roleHolder.Citizen] : filterRefRoleArray([roleHolder.President, roleHolder.PrimeMinister, roleHolder.HeadModerator, roleHolder.Moderator]),
-                whoCanInteract: [],
-                whoCanSend: [roleHolder.VoxPopuli],
-                whoCanModerate: [roleHolder.VoxPopuli],
-                whoCanManage: [roleHolder.VoxPopuli]
-            }), categoryChannel, reason));
-            break;
-
-        case "Legislative":
-            const legislatureChamberChannelDocument = await createPoliticalChannelDocument(guild, new PoliticalChannel(isDD ? "referendum" : "senate-voting", ChannelType.GuildText, {
-                whoCanView: [],
-                whoCanInteract: isDD ? [roleHolder.Citizen] : filterRefRoleArray([roleHolder.Senator]),
-                whoCanSend: [roleHolder.VoxPopuli], // Cant send messages to the senate, but can talk in the senate-lounge
-                whoCanModerate: [roleHolder.VoxPopuli],
-                whoCanManage: [roleHolder.VoxPopuli]
-            }), categoryChannel, reason)
-            newChannelDocuments.push(legislatureChamberChannelDocument);
-            await linkChamberChannelDocument(guild.id, PoliticalBranchType.Legislative, legislatureChamberChannelDocument);
-            
-            if (!isDD) { // No need senate discussions in DD, because referendums are the main way to pass laws
-                newChannelDocuments.push(await createPoliticalChannelDocument(guild, new PoliticalChannel("senate", ChannelType.GuildText, {
-                    whoCanView: [],
-                    whoCanInteract: filterRefRoleArray([roleHolder.Senator]),
-                    whoCanSend: filterRefRoleArray([roleHolder.Senator]),
-                    whoCanModerate: [roleHolder.VoxPopuli],
-                    whoCanManage: [roleHolder.VoxPopuli]
-                }), categoryChannel, reason));
-            }
-            break;
-
-        case "Judicial":
-            // We create this channel: "courtroom"
-            const permsArray = isDD && !guildConfigData.ddOptions!.appointJudges ? [roleHolder.Citizen] : filterRefRoleArray([roleHolder.Judge]);
-            const courtroomChannelDocument = await createPoliticalChannelDocument(guild, new PoliticalChannel("courtroom", ChannelType.GuildText, {
-                whoCanView: [],
-                whoCanInteract: permsArray,
-                whoCanSend: permsArray,
-                whoCanModerate: [roleHolder.VoxPopuli],
-                whoCanManage: [roleHolder.VoxPopuli]
-            }), categoryChannel, reason);
-            newChannelDocuments.push(courtroomChannelDocument);
-            await linkChamberChannelDocument(guild.id, PoliticalBranchType.Judicial, courtroomChannelDocument);
-            break;
-
-        case "Electoral": // This should not be available in Direct Democracy
-            // We create this channel: "elections"
-            newChannelDocuments.push(await createPoliticalChannelDocument(guild, new PoliticalChannel("elections", ChannelType.GuildText, {
-                whoCanView: [],
-                whoCanInteract: [roleHolder.Citizen],
-                whoCanSend: [roleHolder.VoxPopuli],
-                whoCanModerate: [roleHolder.VoxPopuli],
-                whoCanManage: [roleHolder.VoxPopuli]
-            }), categoryChannel, reason));
-            break;
+        newChannelDocuments.push(politicalChannelDocument);
     }
 
     return newChannelDocuments;

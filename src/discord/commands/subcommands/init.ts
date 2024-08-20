@@ -1174,8 +1174,8 @@ class InitWizard {
         const embed = new EmbedBuilder()
             .setTitle("Configure Emergency Options (1/1)")
             .setDescription("These options decide how the server handles emergencies.")
-            .setColor(Colors.Red)
-            .setFooter({ text: `Page: ${this.page}. This is the last page of the config wizard. After confirmation, all settings will be finalized!` })
+            .setColor(Colors.Yellow)
+            .setFooter({ text: "This is the last page of the config wizard. After confirmation, all settings will be finalized!" })
             .toJSON();
 
         const actionRow = new ActionRowBuilder<ButtonBuilder>()
@@ -1240,6 +1240,8 @@ class InitWizard {
             .setTitle("Server Configuration")
             .setDescription("Server has been successfully configured.")
             .setColor(Colors.Green)
+            .setAuthor({ name: this.interaction.user.tag, iconURL: this.interaction.user.displayAvatarURL() })
+            .setTimestamp()
             .toJSON();
         await this.interaction.editReply({ embeds: [successEmbed], components: [] });
 

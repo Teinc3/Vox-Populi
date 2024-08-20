@@ -41,3 +41,25 @@ export interface GuildConfigData {
     };
     emergencyOptions: {}
 }
+
+export interface DefaultChannelData {
+    position: number;
+    name: string;
+    description: string;
+    disable?: Partial<DDOptions> & {
+        isDD?: boolean;
+    };
+    chamberTypeIsLegislative?: boolean;
+    permissionOverwrites: CustomPermissions<number>;
+}
+
+export interface CustomPermissions<T> {
+    view: T[];
+    send: T[];
+    interact: T[];
+    moderate: T[];
+    manage: T[];
+    emergency?: T[];
+}
+
+export type CustomPermissionsOverwrite<T> = Omit<CustomPermissions<T>, "emergency">

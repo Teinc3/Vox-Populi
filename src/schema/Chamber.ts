@@ -98,7 +98,7 @@ async function createChamberDocument<T extends Chamber>(politicalBranchType: Pol
         chamber.thresholds = referendumThresholds;
 
     } else { // Court options 
-        if (guildConfigData.ddOptions?.appointJudges === false) {
+        if (guildConfigData.politicalSystem === PoliticalSystemsType.DirectDemocracy && guildConfigData.ddOptions!.appointJudges === false) {
             chamber.seatOptions!.value = 0;
             chamber.thresholds = guildConfigData.referendumThresholds!;
         } else {

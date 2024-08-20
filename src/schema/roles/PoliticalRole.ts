@@ -27,15 +27,16 @@ class PoliticalRole {
 /**
  * Automatically assigns all permissions from the highest permission level the role has to the lowest
  * 
- * @param index The index of the highest permission level the role has
+ * @param start The index of the highest permission level the role has, inclusive
+ * @param end The index of the lowest permission level the role has, inclusive
  * @returns An array of permissions
  */
-function progressivePermissionsAllocator(index: PermissionsLevel): bigint[] {
+function progressivePermissionsAllocator(start: PermissionsLevel, end?: PermissionsLevel): bigint[] {
     const permissions: bigint[] = [];
     const categoriesArray = Object.values(PermissionsCategories);
 
     // Assuming categoriesArray is already sorted by permission levels
-    for (let i = index; i < categoriesArray.length; i++) {
+    for (let i = start; i <= (end ?? categoriesArray.length - 1); i++) {
         permissions.push(...categoriesArray[i].static, ...categoriesArray[i].overwrites);
     }
     return permissions;
@@ -45,28 +46,35 @@ class VoxPopuli extends PoliticalRole {
     name = constants.roles.VoxPopuli.name;
     hierarchy = constants.roles.VoxPopuli.hierarchy;
     roleColor = constants.roles.VoxPopuli.color; // White
-    permissions = progressivePermissionsAllocator(PermissionsLevel.Emergency);
+    permissions = progressivePermissionsAllocator(PermissionsLevel.Emergency, PermissionsLevel.Emergency);
 }
 
 class President extends PoliticalRole {
     name = constants.roles.President.name;
     hierarchy = constants.roles.President.hierarchy;
     roleColor = constants.roles.President.color // Red
-    permissions = progressivePermissionsAllocator(PermissionsLevel.Manage);
+    permissions = progressivePermissionsAllocator(PermissionsLevel.Manage, PermissionsLevel.Moderate);
 }
 
 class PrimeMinister extends PoliticalRole {
     name = constants.roles.PrimeMinister.name;
     hierarchy = constants.roles.PrimeMinister.hierarchy;
     roleColor = constants.roles.PrimeMinister.color; // Red
-    permissions = progressivePermissionsAllocator(PermissionsLevel.Manage);
+    permissions = progressivePermissionsAllocator(PermissionsLevel.Manage, PermissionsLevel.Moderate);
 }
 
 class HeadModerator extends PoliticalRole {
     name = constants.roles.HeadModerator.name;
     hierarchy = constants.roles.HeadModerator.hierarchy;
     roleColor = constants.roles.HeadModerator.color; // Orange
-    permissions = progressivePermissionsAllocator(PermissionsLevel.Moderate);
+    permissions = progressivePermissionsAllocator(PermissionsLevel.Moderate, PermissionsLevel.Moderate);
+}
+
+class Moderator extends PoliticalRole {
+    name = constants.roles.Moderator.name;
+    hierarchy = constants.roles.Moderator.hierarchy;
+    roleColor = constants.roles.Moderator.color; // Yellow
+    permissions = progressivePermissionsAllocator(PermissionsLevel.Moderate, PermissionsLevel.Moderate);
 }
 
 class Senator extends PoliticalRole {
@@ -83,21 +91,14 @@ class Judge extends PoliticalRole {
     permissions = new Array<bigint>();
 }
 
-class Moderator extends PoliticalRole {
-    name = constants.roles.Moderator.name;
-    hierarchy = constants.roles.Moderator.hierarchy;
-    roleColor = constants.roles.Moderator.color; // Yellow
-    permissions = progressivePermissionsAllocator(PermissionsLevel.Moderate);
-}
-
 class Citizen extends PoliticalRole {
     name = constants.roles.Citizen.name;
     hierarchy = constants.roles.Citizen.hierarchy;
     roleColor = constants.roles.Citizen.color; // Green
-    permissions = progressivePermissionsAllocator(PermissionsLevel.Interact);
+    permissions = progressivePermissionsAllocator(PermissionsLevel.Interact, PermissionsLevel.Interact);
 }
 
-const PoliticalRoleObjectList: Array<new () => PoliticalRole> = [VoxPopuli, President, PrimeMinister, HeadModerator, Senator, Judge, Moderator, Citizen].sort((a, b) => a.prototype.hierarchy - b.prototype.hierarchy);
+const PoliticalRoleObjectList: Array<new () => PoliticalRole> = [VoxPopuli, President, PrimeMinister, HeadModerator, Moderator, Senator, Judge, Citizen].sort((a, b) => a.prototype.hierarchy - b.prototype.hierarchy);
 
 const PoliticalRoleModel = getModelForClass(PoliticalRole);
 
@@ -114,17 +115,18 @@ async function createPoliticalRoleDocuments(guild: Guild, guildConfigData: Guild
         roleHolder.PrimeMinister = await PoliticalRoleModel.create(await linkDiscordRole(guild, new PrimeMinister(), reason));
     }
 
+    // For Direct Democracy, citizens can choose to appoint judges and moderators through referendums
+    if (politicalSystemType !== PoliticalSystemsType.DirectDemocracy || guildConfigData.ddOptions!.appointModerators) {
+        roleHolder.HeadModerator = await PoliticalRoleModel.create(await linkDiscordRole(guild, new HeadModerator(), reason));
+        roleHolder.Moderator = await PoliticalRoleModel.create(await linkDiscordRole(guild, new Moderator(), reason));
+    }
+
     if (politicalSystemType !== PoliticalSystemsType.DirectDemocracy) {
         roleHolder.Senator = await PoliticalRoleModel.create(await linkDiscordRole(guild, new Senator(), reason));
     }
 
-    // For Direct Democracy, citizens can choose to appoint judges and moderators through referendums
     if (politicalSystemType !== PoliticalSystemsType.DirectDemocracy || guildConfigData.ddOptions!.appointJudges) {
         roleHolder.Judge = await PoliticalRoleModel.create(await linkDiscordRole(guild, new Judge(), reason));
-    }
-    if (politicalSystemType !== PoliticalSystemsType.DirectDemocracy || guildConfigData.ddOptions!.appointModerators) {
-        roleHolder.HeadModerator = await PoliticalRoleModel.create(await linkDiscordRole(guild, new HeadModerator(), reason));
-        roleHolder.Moderator = await PoliticalRoleModel.create(await linkDiscordRole(guild, new Moderator(), reason));
     }
 
     roleHolder.Citizen = await PoliticalRoleModel.create(await linkDiscordRole(guild, new Citizen(), reason));

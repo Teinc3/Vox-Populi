@@ -16,14 +16,14 @@ class PoliticalRoleHolder {
     @prop({ ref: () => 'HeadModerator' })
     HeadModerator?: Ref<HeadModerator>;
 
+    @prop({ ref: () => 'Moderator' })
+    Moderator?: Ref<Moderator>;
+
     @prop({ ref: () => 'Senator' })
     Senator?: Ref<Senator>;
 
     @prop({ ref: () => 'Judge' })
     Judge?: Ref<Judge>;
-
-    @prop({ ref: () => 'Moderator' })
-    Moderator?: Ref<Moderator>;
 
     @prop({ required: true, ref: () => 'Citizen' })
     Citizen!: Ref<Citizen>; // Must have a citizen role

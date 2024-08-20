@@ -5,63 +5,65 @@ import { OverwriteData, PermissionsBitField } from "discord.js";
 import { PoliticalRoleModel, VoxPopuli } from "../roles/PoliticalRole.js";
 
 import { PermissionsCategories } from "../../types/permissions.js";
+import { CustomPermissionsOverwrite } from "../../types/types";
 
 // If array is empty then everyone has that perm there (provided they can Access the channel)
 // but if it's [VoxPopuli] then nobody has that perm (apart from the bot)
-type RefRoleArray = Ref<PoliticalRole>[];
+export type RefRoleArray = Ref<PoliticalRole>[];
+export type UnfilteredRefRoleArray = Array<Ref<PoliticalRole> | undefined>;
 
 /**
  * Represents simplified permissions for a Discord channel.
  * 
  * Scenarios:
  * - Array is non-empty: All roles in the arrays have the permission allowed, while `@everyone` has the permission denied.
- * - Array is empty: `@everyone` has the permission allowed.
- * - Array contains only Vox Populi: `@everyone` has the permission denied.
+ * - Array is empty: follow default Discord permissions.
+ * - Array contains only Vox Populi (0): `@everyone` has the permission denied.
  * 
  * @class
  */
-class ChannelPermissions {
+class ChannelPermissions implements CustomPermissionsOverwrite<Ref<PoliticalRole>> {
     /**
      * Who can view the channel
      */
     @prop({ required: true, default: new Array<Ref<PoliticalRole>>(), ref: () => 'PoliticalRole' })
-    whoCanView!: RefRoleArray;
+    view!: RefRoleArray;
 
     /**
      * Who can interact with the channel
      */
     @prop({ required: true, default: new Array<Ref<PoliticalRole>>(), ref: () => 'PoliticalRole' })
-    whoCanInteract!: RefRoleArray;
+    interact!: RefRoleArray;
 
     /**
      * Who can send messages in the channel
      */
     @prop({ required: true, default: new Array<Ref<PoliticalRole>>(), ref: () => 'PoliticalRole' })
-    whoCanSend!: RefRoleArray;
+    send!: RefRoleArray;
 
     /**
      * Who can moderate the channel
      */
     @prop({ required: true, default: new Array<Ref<PoliticalRole>>(), ref: () => 'PoliticalRole' })
-    whoCanModerate!: RefRoleArray;
+    moderate!: RefRoleArray;
 
     /**
      * Who can manage the channel
      */
     @prop({ required: true, default: new Array<Ref<PoliticalRole>>(), ref: () => 'PoliticalRole' })
-    whoCanManage!: RefRoleArray;
+    manage!: RefRoleArray;
 }
 
-function filterRefRoleArray(refRoleArray: Array<Ref<PoliticalRole> | undefined>): Ref<PoliticalRole>[] {
+function filterRefRoleArray(refRoleArray: UnfilteredRefRoleArray): RefRoleArray {
     return refRoleArray.filter((role): role is Ref<PoliticalRole> => role !== undefined);
 }
 
 const discordPermissionOverwritesReference = {
-    whoCanView: PermissionsCategories.view.overwrites,
-    whoCanSend: PermissionsCategories.send.overwrites,
-    whoCanInteract: PermissionsCategories.interact.overwrites,
-    whoCanModerate: PermissionsCategories.moderate.overwrites,
-    whoCanManage: PermissionsCategories.manage.overwrites
+    view: PermissionsCategories.view.overwrites,
+    send: PermissionsCategories.send.overwrites,
+    interact: PermissionsCategories.interact.overwrites,
+    moderate: PermissionsCategories.moderate.overwrites,
+    manage: PermissionsCategories.manage.overwrites
 };
 
 async function createChannelPermissionsOverwrite(guildID: string, channelPermissions: ChannelPermissions): Promise<OverwriteData[]> {
@@ -102,21 +104,21 @@ async function createChannelPermissionsOverwrite(guildID: string, channelPermiss
         allow: new PermissionsBitField(),
         deny: new PermissionsBitField()
     };
+    let hasOverwrites = false;
 
     const permissionOverwritesArray: Array<OverwriteData> = [everyonePermissionOverwrites];
 
     for (const key in channelPermissions) {
         const refRoleArray = channelPermissions[key as keyof ChannelPermissions];
         const permissions = discordPermissionOverwritesReference[key as keyof typeof discordPermissionOverwritesReference];
-        if (refRoleArray.length === 0) {
-            everyonePermissionOverwrites.allow.add(permissions);
-        } else {
+        if (refRoleArray.length !== 0) {
             if (refRoleArray.length === 1) {
                 const roleDocument = refRoleArray[0];
                 const politicalRoleObject = await PoliticalRoleModel.findOne({ _id: roleDocument });
 
                 if (politicalRoleObject?.name === new VoxPopuli().name) {
                     everyonePermissionOverwrites.deny!.add(permissions);
+                    hasOverwrites = true;
                     continue;
                 }
             }
@@ -130,6 +132,7 @@ async function createChannelPermissionsOverwrite(guildID: string, channelPermiss
                 const { permissionOverwrites } = rolePopulated;
                 permissionOverwrites.allow.add(permissions);
                 everyonePermissionOverwrites.deny!.add(permissions);
+                hasOverwrites = true;
                 
                 permissionOverwritesArray.push(permissionOverwrites);
             }
@@ -137,7 +140,7 @@ async function createChannelPermissionsOverwrite(guildID: string, channelPermiss
     }
 
     // Finally, return the permission overwrites
-    return permissionOverwritesArray;
+    return hasOverwrites ? permissionOverwritesArray : [];
 }
 
 interface RolePopulated {

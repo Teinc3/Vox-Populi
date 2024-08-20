@@ -23,7 +23,7 @@ Not checked for latest commit.
 
 ## TODO
 ### Active
-- Refactor Permission Overwrite system to be less redundant
+- Break down constants.json into smaller files
 - Add more JSDocs to schema files
 
 ### Future
