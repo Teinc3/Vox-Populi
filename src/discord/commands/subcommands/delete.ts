@@ -5,7 +5,7 @@ import {
 
 import { deleteGuildDocument } from "../../../schema/Guild.js";
 
-import constants from "../../../data/constants.json" assert { type: "json" };
+import settings from "../../../data/settings.json" assert { type: "json" };
 
 export default async function execute_delete(interaction: ChatInputCommandInteraction, guild: Guild): Promise<boolean> {
     const embed = new EmbedBuilder()
@@ -31,7 +31,7 @@ export default async function execute_delete(interaction: ChatInputCommandIntera
     const filter = (i: MessageComponentInteraction) => i.isButton() && i.customId === 'delete_confirm' || i.customId === 'delete_cancel';
 
     try {
-        const collected = await response.awaitMessageComponent({ filter, time: constants.discord.interactionTimeout });
+        const collected = await response.awaitMessageComponent({ filter, time: settings.discord.interactionTimeout });
 
         // Deferring the follow-up to prevent the interaction from timing out
         await collected.deferUpdate();

@@ -3,10 +3,16 @@ import { ChannelType, type CategoryChannel, type Guild } from 'discord.js';
 
 import ChannelPermissions, { createChannelPermissionsOverwrite } from '../permissions/ChannelPermissions.js';
 
-type ChannelTypeType = ChannelType.GuildText | ChannelType.GuildVoice | ChannelType.GuildCategory | ChannelType.GuildAnnouncement | ChannelType.GuildStageVoice | ChannelType.GuildForum | ChannelType.GuildMedia;
+/**
+ * @see {@link https://discord.js.org/docs/packages/discord.js/main/GuildChannelCreateOptions:Interface#type}
+ */
+type CreatableChannelType = Exclude<ChannelType, ChannelType.DM | ChannelType.GroupDM | ChannelType.PublicThread | ChannelType.AnnouncementThread | ChannelType.PrivateThread>;
 
+/**
+ * Represents a Political channel in a guild.
+ */
 class PoliticalChannel {
-    constructor(name: string, channelType: ChannelTypeType, channelPermissions: ChannelPermissions, description?: string) {
+    constructor(name: string, channelType: CreatableChannelType, channelPermissions: ChannelPermissions, description?: string) {
         this.name = name;
         this.channelType = channelType;
         this.channelPermissions = channelPermissions;
@@ -23,7 +29,7 @@ class PoliticalChannel {
     channelID?: string;
 
     @prop({ required: true })
-    channelType!: ChannelTypeType;
+    channelType!: CreatableChannelType;
 
     @prop({ required: true, _id: false })
     channelPermissions!: ChannelPermissions
@@ -63,7 +69,7 @@ async function linkDiscordChannel(guild: Guild, politicalChannel: PoliticalChann
         // Create the channel if it DNE
         const discordChannel = await guild.channels.create({
             name,
-            type: politicalChannel.channelType,
+            type: politicalChannel.channelType as CreatableChannelType,
             parent: categoryChannel,
             permissionOverwrites: await createChannelPermissionsOverwrite(guild.id, politicalChannel.channelPermissions),
             reason

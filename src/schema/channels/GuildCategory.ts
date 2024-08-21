@@ -1,5 +1,5 @@
-import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
-import { type CategoryChannel, ChannelType, type Guild } from 'discord.js';
+import { prop, getModelForClass, type Ref } from '@typegoose/typegoose';
+import { ChannelType, type CategoryChannel, type Guild } from 'discord.js';
 
 import PoliticalChannel, { createPoliticalChannelDocument, deletePoliticalChannelDocument } from './PoliticalChannel.js';
 import type PoliticalRoleHolder from '../roles/PoliticalRolesHolder.js';
@@ -7,8 +7,22 @@ import ChannelPermissions, { filterRefRoleArray, type UnfilteredRefRoleArray } f
 import { linkChamberChannelDocument } from '../Chamber.js';
 
 import { GuildConfigData, PoliticalBranchType, PoliticalSystemsType, DefaultChannelData, CustomPermissionsOverwrite } from '../../types/types.js';
-import constants from '../../data/constants.json' assert { type: "json" };
+import channelDefaults from '../../data/defaults/channels.json' assert { type: "json" };
 
+/**
+ * Represents a Category that contains Political Channels.
+ * 
+ * A Discord CategoryChannel can be linked to a GuildCategory.
+ * 
+ * @property {string} name - The name of the category channel as shown in Discord
+ * @property {string} description - The description of the category channel as shown in Discord
+ * @property {string} [categoryID] - The ID of the Discord CategoryChannel
+ * @property {Array} [channels] - The Political Channels that are linked to this category
+ * 
+ * @class
+ * 
+ * @see {@link https://discord.js.org/docs/packages/discord.js/main/CategoryChannel:Class}
+ */
 class GuildCategory {
     constructor(name: string, description?: string) {
         this.name = name;
@@ -32,7 +46,7 @@ const GuildCategoryModel = getModelForClass(GuildCategory);
 
 async function createGuildCategories(guild: Guild, roleHolder: PoliticalRoleHolder, guildConfigData: GuildConfigData, reason?: string): Promise<Ref<GuildCategory>[]> {
     const categoryDocuments = new Array<Ref<GuildCategory>>();    
-    for (const category of constants.channelCategories) {
+    for (const category of channelDefaults) {
         const guildCategoryDocument = await createGuildCategoryDocument(guild, new GuildCategory(category.name, category.description), roleHolder, guildConfigData, category.channels, reason);
         if (guildCategoryDocument) {
             categoryDocuments.push(guildCategoryDocument);

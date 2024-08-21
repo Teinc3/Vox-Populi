@@ -1,4 +1,4 @@
-import { prop, type Ref, getModelForClass} from '@typegoose/typegoose';
+import { prop, getModelForClass, type Ref } from '@typegoose/typegoose';
 
 import PoliticalRole, { President, PrimeMinister } from "./roles/PoliticalRole.js";
 import PoliticalRoleHolder from './roles/PoliticalRolesHolder.js';

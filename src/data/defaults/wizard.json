@@ -1,0 +1,53 @@
+{ 
+  "legislature": {
+    "senate": {
+      "_": "3 Months",
+      "termLength": 3,
+      "termLimit": 4,
+      "seats": {
+        "_": "There is 1 seat for every 5 Citizens in the server.",
+        "scalable": true,
+        "value": 5
+      }
+    }
+  },
+  "judicial": {
+    "_": "6 Months, No Term Limit",
+    "terms": {
+      "termLength": 6,
+      "termLimit": 0,
+      "consecutive": true
+    },
+    "seats": 3
+  },
+  "thresholds": {
+    "simple": 50,
+    "super": 67,
+    "unanimous": 100
+  },
+  "politicalSystem": {
+    "presidential": {
+      "description": "A system of government where the executive branch exists separately from a legislature.",
+      "_": "2 Months per term, allow consecutive terms",
+      "termLength": 2,
+      "termLimit": 2,
+      "consecutive": true
+    },
+    "parliamentary": {
+      "description": "A system of government where the executive branch derives its democratic legitimacy from, and is held accountable to, the legislature.",
+      "_": "Cannot call snap election until 1 month after the last election. If set to 0, snap election is disabled.",
+      "snapElection": 1
+    },
+    "directDemocracy": {
+      "description": "A form of democracy in which people decide on policy initiatives directly.",
+      "appointModerators": {
+        "description": "Citizens can appoint moderators through referendums. If false, Citizens collectively work as moderators.",
+        "value": false
+      },
+      "appointJudges": {
+        "description": "Citizens can appoint judges through referendums. If false, Citizens collectively work as judges.",
+        "value": false
+      }
+    }
+  }
+}

@@ -8,7 +8,8 @@ import { createGuildDocument } from '../../../schema/Guild.js';
 import { PoliticalRoleModel } from '../../../schema/roles/PoliticalRole.js';
 
 import { GuildConfigData, PoliticalSystemsType } from '../../../types/types.js';
-import constants from '../../../data/constants.json' assert { type: 'json' };
+import settings from '../../../data/settings.json' assert { type: 'json' };
+import wizardDefaults from '../../../data/defaults/wizard.json' assert { type: 'json' };
 
 export default async function init(interaction: ChatInputCommandInteraction): Promise<boolean> {
     const initWizard = new InitWizard(interaction);
@@ -59,17 +60,17 @@ class InitWizard {
             .setFields([
                 {
                     name: "Presidential",
-                    value: constants.politicalSystem.presidential.description,
+                    value: wizardDefaults.politicalSystem.presidential.description,
                     inline: false
                 },
                 {
                     name: "Parliamentary",
-                    value: constants.politicalSystem.parliamentary.description,
+                    value: wizardDefaults.politicalSystem.parliamentary.description,
                     inline: false
                 },
                 {
                     name: "Direct Democracy",
-                    value: constants.politicalSystem.directDemocracy.description,
+                    value: wizardDefaults.politicalSystem.directDemocracy.description,
                     inline: false
                 }
             ])
@@ -114,7 +115,7 @@ class InitWizard {
         try {
             const confirmation = await this.response.awaitMessageComponent({
                 filter: this.buttonFilter,
-                time: constants.discord.interactionTimeout
+                time: settings.discord.interactionTimeout
             });
             await confirmation.deferUpdate();
 
@@ -149,9 +150,9 @@ class InitWizard {
 
         if (!this.guildConfigData.presidentialOptions) {
             this.guildConfigData.presidentialOptions = {
-                termLength: constants.politicalSystem.presidential.termLength,
-                termLimit: constants.politicalSystem.presidential.termLimit,
-                consecutive: constants.politicalSystem.presidential.consecutive,
+                termLength: wizardDefaults.politicalSystem.presidential.termLength,
+                termLimit: wizardDefaults.politicalSystem.presidential.termLimit,
+                consecutive: wizardDefaults.politicalSystem.presidential.consecutive,
                 cursor: 0
             }
         }
@@ -238,7 +239,7 @@ class InitWizard {
         try {
             const confirmation = await this.response!.awaitMessageComponent({
                 filter: this.buttonFilter,
-                time: constants.discord.interactionTimeout
+                time: settings.discord.interactionTimeout
             });
             await confirmation.deferUpdate();
 
@@ -286,7 +287,7 @@ class InitWizard {
         // Clamp the snap election value to be within the term length (otherwise weird things happen)
         if (!this.guildConfigData.parliamentaryOptions) {
             this.guildConfigData.parliamentaryOptions = {
-                snapElection: Math.min(constants.politicalSystem.parliamentary.snapElection, this.guildConfigData.senateOptions!.terms.termLength - 1)
+                snapElection: Math.min(wizardDefaults.politicalSystem.parliamentary.snapElection, this.guildConfigData.senateOptions!.terms.termLength - 1)
             }
         } else if (this.guildConfigData.parliamentaryOptions.snapElection > this.guildConfigData.senateOptions!.terms.termLength - 1) {
             this.guildConfigData.parliamentaryOptions.snapElection = this.guildConfigData.senateOptions!.terms.termLength - 1;
@@ -340,7 +341,7 @@ class InitWizard {
         await this.interaction.editReply({ embeds: [embed], components: [actionRow] });
 
         try {
-            const confirmation = await this.response!.awaitMessageComponent({ filter: this.buttonFilter, time: constants.discord.interactionTimeout});
+            const confirmation = await this.response!.awaitMessageComponent({ filter: this.buttonFilter, time: settings.discord.interactionTimeout});
             await confirmation.deferUpdate();
 
             switch (confirmation.customId) {
@@ -367,18 +368,18 @@ class InitWizard {
         if (!this.guildConfigData.senateOptions) {
             this.guildConfigData.senateOptions = {
                 terms: {
-                    termLength: constants.legislature.senate.termLength,
-                    termLimit: constants.legislature.senate.termLimit,
+                    termLength: wizardDefaults.legislature.senate.termLength,
+                    termLimit: wizardDefaults.legislature.senate.termLimit,
                     consecutive: true,
                     cursor: 0
                 },
                 seats: {
-                    scalable: constants.legislature.senate.seats.scalable,
-                    value: constants.legislature.senate.seats.value
+                    scalable: wizardDefaults.legislature.senate.seats.scalable,
+                    value: wizardDefaults.legislature.senate.seats.value
                 },
                 threshold: {
-                    super: constants.thresholds.super,
-                    simple: constants.thresholds.simple,
+                    super: wizardDefaults.thresholds.super,
+                    simple: wizardDefaults.thresholds.simple,
                     cursor: 0
                 }
             }
@@ -441,7 +442,7 @@ class InitWizard {
         try {
             const confirmation = await this.response!.awaitMessageComponent({
                 filter: this.buttonFilter,
-                time: constants.discord.interactionTimeout
+                time: settings.discord.interactionTimeout
             });
             await confirmation.deferUpdate();
 
@@ -533,7 +534,7 @@ class InitWizard {
         try {
             const confirmation = await this.response!.awaitMessageComponent({
                 filter: this.buttonFilter,
-                time: constants.discord.interactionTimeout
+                time: settings.discord.interactionTimeout
             });
             await confirmation.deferUpdate();
 
@@ -649,7 +650,7 @@ class InitWizard {
         try {
             const confirmation = await this.response!.awaitMessageComponent({
                 filter: this.buttonFilter,
-                time: constants.discord.interactionTimeout
+                time: settings.discord.interactionTimeout
             });
             await confirmation.deferUpdate();
 
@@ -711,8 +712,8 @@ class InitWizard {
     async setDDOptions(): Promise<void> {
         if (!this.guildConfigData.ddOptions) {
             this.guildConfigData.ddOptions = {
-                appointModerators: constants.politicalSystem.directDemocracy.appointModerators.value,
-                appointJudges: constants.politicalSystem.directDemocracy.appointJudges.value,
+                appointModerators: wizardDefaults.politicalSystem.directDemocracy.appointModerators.value,
+                appointJudges: wizardDefaults.politicalSystem.directDemocracy.appointJudges.value,
             }
         }
         const selectDDOptionsEmbed = new EmbedBuilder()
@@ -763,7 +764,7 @@ class InitWizard {
         try {
             const confirmation = await this.response!.awaitMessageComponent({
                 filter: this.buttonFilter,
-                time: constants.discord.interactionTimeout
+                time: settings.discord.interactionTimeout
             });
             await confirmation.deferUpdate();
 
@@ -790,8 +791,8 @@ class InitWizard {
     async setReferendumOptions(): Promise<void> {
         if (!this.guildConfigData.referendumThresholds) {
             this.guildConfigData.referendumThresholds = {
-                simple: constants.thresholds.simple,
-                super: constants.thresholds.super,
+                simple: wizardDefaults.thresholds.simple,
+                super: wizardDefaults.thresholds.super,
                 cursor: 0
             }
         }
@@ -874,7 +875,7 @@ class InitWizard {
         await this.interaction.editReply({ embeds: [embed], components: [actionRowUtilities, actionRowThreshold] });
 
         try {
-            const confirmation = await this.response!.awaitMessageComponent({ filter: this.buttonFilter, time: constants.discord.interactionTimeout });
+            const confirmation = await this.response!.awaitMessageComponent({ filter: this.buttonFilter, time: settings.discord.interactionTimeout });
             await confirmation.deferUpdate();
 
             switch (confirmation.customId) {
@@ -940,18 +941,18 @@ class InitWizard {
         if (!this.guildConfigData.courtOptions) {
             this.guildConfigData.courtOptions = {
                 terms: {
-                    termLength: constants.judicial.terms.termLength,
-                    termLimit: constants.judicial.terms.termLimit,
+                    termLength: wizardDefaults.judicial.terms.termLength,
+                    termLimit: wizardDefaults.judicial.terms.termLimit,
                     consecutive: true,
                     cursor: 0
                 },
                 seats: {
                     scalable: false,
-                    value: constants.judicial.seats
+                    value: wizardDefaults.judicial.seats
                 },
                 threshold: {
-                    simple: constants.thresholds.simple,
-                    super: constants.thresholds.unanimous,
+                    simple: wizardDefaults.thresholds.simple,
+                    super: wizardDefaults.thresholds.unanimous,
                 }
             }
         }
@@ -1033,7 +1034,7 @@ class InitWizard {
         await this.interaction.editReply({ embeds: [embed], components: [actionRowUtilities, actionRowThreshold] });
 
         try {
-            const confirmation = await this.response!.awaitMessageComponent({ filter: this.buttonFilter, time: constants.discord.interactionTimeout });
+            const confirmation = await this.response!.awaitMessageComponent({ filter: this.buttonFilter, time: settings.discord.interactionTimeout });
             await confirmation.deferUpdate();
 
             switch (confirmation.customId) {
@@ -1135,7 +1136,7 @@ class InitWizard {
         await this.interaction.editReply({ embeds: [embed], components: [actionRow] });
 
         try {
-            const confirmation = await this.response!.awaitMessageComponent({ filter: this.buttonFilter, time: constants.discord.interactionTimeout });
+            const confirmation = await this.response!.awaitMessageComponent({ filter: this.buttonFilter, time: settings.discord.interactionTimeout });
             await confirmation.deferUpdate();
 
             switch (confirmation.customId) {
@@ -1202,7 +1203,7 @@ class InitWizard {
         try {
             const confirmation = await this.response!.awaitMessageComponent({
                 filter: this.buttonFilter,
-                time: constants.discord.interactionTimeout
+                time: settings.discord.interactionTimeout
             });
             await confirmation.deferUpdate();
 

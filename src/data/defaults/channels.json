@@ -1,0 +1,161 @@
+[
+  {
+    "name": "executive",
+    "description": "Channel category for the executive branch.",
+    "channels": [
+      {
+        "position": 0,
+        "name": "announcements",
+        "description": "Channel for official announcements.",
+        "disable": {
+          "isDD": true
+        },
+        "permissionOverwrites": {
+          "view": [],
+          "send": [1, 2],
+          "interact": [],
+          "moderate": [1, 2],
+          "manage": []
+        }
+      },
+      {
+        "position": 1,
+        "name": "admin-office",
+        "description": "Channel for administrative purposes.",
+        "disable": {
+          "isDD": true
+        },
+        "permissionOverwrites": {
+          "view": [1, 2],
+          "send": [],
+          "interact": [],
+          "moderate": [],
+          "manage": []
+        }
+      },
+      {
+        "position": 2,
+        "name": "server-moderation",
+        "description": "Channel for server moderation.",
+        "permissionOverwrites": {
+          "view": [1, 2, 3],
+          "send": [],
+          "interact": [],
+          "moderate": [1, 2, 3],
+          "manage": []
+        }
+      },
+      {
+        "position": 3,
+        "name": "server-logs",
+        "description": "Channel for server logs.",
+        "permissionOverwrites": {
+          "view": [],
+          "send": [0],
+          "interact": [],
+          "moderate": [0],
+          "manage": [0]
+        }
+      },
+      {
+        "position": 4,
+        "name": "chat-logs",
+        "description": "Channel for chat logs.",
+        "permissionOverwrites": {
+          "view": [1, 2, 3, 5],
+          "send": [0],
+          "interact": [],
+          "moderate": [0],
+          "manage": [0]
+        }
+      }
+    ]
+  }, {
+    "name": "legislature",
+    "description": "Channel category for the legislative branch.",
+    "channels": [
+      {
+        "position": 0,
+        "name": "voting-chamber",
+        "description": "Channel for voting on bills.",
+        "chamberTypeIsLegislative": true,
+        "permissionOverwrites": {
+          "view": [],
+          "send": [0], 
+          "interact": [4],
+          "moderate": [0],
+          "manage": [0]
+        }
+      },
+      {
+        "position": 1,
+        "name": "bill-discussion",
+        "description": "Channel for proposing bills.",
+        "disable": {
+          "isDD": true
+        },
+        "permissionOverwrites": {
+          "view": [],
+          "send": [4],
+          "interact": [4],
+          "moderate": [0],
+          "manage": [0]
+        }
+      }
+    ]
+  }, {
+    "name": "judicial",
+    "description": "Channel category for the judicial branch.",
+    "channels": [
+      {
+        "position": 0,
+        "name": "courtroom",
+        "description": "Channel for court cases.",
+        "chamberTypeIsLegislative": false,
+        "permissionOverwrites": {
+          "view": [],
+          "send": [5], 
+          "interact": [5],
+          "moderate": [0],
+          "manage": [0]
+        }
+      }
+    ]
+  }, {
+    "name": "others",
+    "description": "Channel category for other types of channels.",
+    "channels": [
+      {
+        "position": 0,
+        "name": "elections",
+        "description": "Channel for serverwide elections.",
+        "disable": {
+          "isDD": true
+        },
+        "permissionOverwrites": {
+          "view": [],
+          "send": [0],
+          "interact": [6],
+          "moderate": [0],
+          "manage": [0]
+        }
+      }, {
+        "position": 1,
+        "name": "support",
+        "description": "Channel for server support.",
+        "disable": {
+          "isDD": true,
+          "appointModerators": false,
+          "appointJudges": false
+        },
+        "permissionOverwrites": {
+          "view": [],
+          "send": [0],
+          "interact": [0], 
+          "moderate": [0],
+          "manage": [0]
+        }
+      }
+    ]
+  }
+]

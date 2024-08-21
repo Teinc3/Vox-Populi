@@ -1,7 +1,7 @@
-import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
+import { prop, getModelForClass, type Ref } from '@typegoose/typegoose';
 import { type Guild } from 'discord.js';
 
-import PoliticalRole, { VoxPopuli, President, PrimeMinister, HeadModerator, Senator, Judge, Moderator, Citizen, deletePoliticalRoleDocument, PoliticalRoleObjectList } from "./PoliticalRole.js";
+import PoliticalRole, { VoxPopuli, President, PrimeMinister, HeadModerator, Senator, Judge, Moderator, Citizen, Undocumented, deletePoliticalRoleDocument, PoliticalRoleObjectList } from "./PoliticalRole.js";
 
 class PoliticalRoleHolder {
     @prop({ required: true, ref: () => 'VoxPopuli' })
@@ -26,7 +26,10 @@ class PoliticalRoleHolder {
     Judge?: Ref<Judge>;
 
     @prop({ required: true, ref: () => 'Citizen' })
-    Citizen!: Ref<Citizen>; // Must have a citizen role
+    Citizen!: Ref<Citizen>;
+
+    @prop({ required: true, ref: () => 'Undocumented' })
+    Undocumented!: Ref<Undocumented>;
 }
 
 const PoliticalRoleHolderModel = getModelForClass(PoliticalRoleHolder);
@@ -41,13 +44,13 @@ async function deletePoliticalRoleHolderDocument(guild: Guild, _id: Ref<Politica
         return;
     }
 
-    await Promise.all(PoliticalRoleObjectList.map(async (PoliticalRoleObject) => {
-        const roleName = PoliticalRoleObject.name;
-        const role = politicalRoleHolder[roleName.replace(" ", "") as keyof PoliticalRoleHolder];
-        if (role) {
-            await deletePoliticalRoleDocument(guild, role as Ref<PoliticalRole>, reason);
-        }
-    }));
+    await Promise.all(
+        Object.values(politicalRoleHolder.toObject()).map(async (role) => {
+            if (role) {
+                await deletePoliticalRoleDocument(guild, role as Ref<PoliticalRole>, reason);
+            }
+        })
+    );
 }
 
 export default PoliticalRoleHolder;

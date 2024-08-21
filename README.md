@@ -23,9 +23,14 @@ Not checked for latest commit.
 
 ## TODO
 ### Active
-- Break down constants.json into smaller files
-- Add more JSDocs to schema files
+- Add emergency options
+- Ability to link an existing channel during setup
+- Rework positioning of roles and channels
 
 ### Future
 - Add logging and command to view logs
-- ~~ Simplify redundant code in Initialization Wizard~~
+- Add voting system
+
+### Wont Fix
+- Simplify redundant code in Initialization Wizard
+- Add more JSDocs to schema files

@@ -1,6 +1,6 @@
-import { PermissionFlagsBits, SlashCommandBuilder, type ChatInputCommandInteraction } from "discord.js";
+import { SlashCommandBuilder, type ChatInputCommandInteraction } from "discord.js";
 
-import constants from "../../data/constants.json" assert { type: "json" };
+import settings from "../../data/settings.json" assert { type: "json" };
 
 const data = new SlashCommandBuilder()
     .setName('eval')
@@ -23,7 +23,7 @@ async function execute(interaction: ChatInputCommandInteraction) {
     await interaction.deferReply({ ephemeral: true });
 
     const user = await interaction.client.users.fetch(interaction.user.id);
-    const isOwner = user.id === constants.discord.botOwnerID;
+    const isOwner = user.id === settings.discord.botOwnerID;
     
     const statement = interaction.options.get('statement')!.value as string;
     const ephemeral = interaction.options.get('silent')?.value as boolean || true;

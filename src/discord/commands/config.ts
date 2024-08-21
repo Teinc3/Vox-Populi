@@ -12,7 +12,7 @@ import execute_delete from "./subcommands/delete.js";
 
 import GuildModel from "../../schema/Guild.js";
 
-import constants from "../../data/constants.json" assert { type: 'json' };
+import settings from "../../data/settings.json" assert { type: 'json' };
 
 const data = new SlashCommandBuilder()
     .setName('config')
@@ -118,12 +118,12 @@ async function checkPermissions(interaction: ChatInputCommandInteraction, guild:
         return false;
     }
 
-    const isUserBotOwner = interaction.user.id === constants.discord.botOwnerID;
+    const isUserBotOwner = interaction.user.id === settings.discord.botOwnerID;
     const isServerOwner = guild.ownerId === interaction.user.id;
     const isAdmin = (interaction.member as GuildMember | null)?.permissions.has(PermissionsBitField.Flags.Administrator) ?? false;
     const memberCount = guild.memberCount;
 
-    if (!isUserBotOwner && !isServerOwner && !isAdmin && memberCount > constants.discord.maxMemberFreeConfigCount) {
+    if (!isUserBotOwner && !isServerOwner && !isAdmin && memberCount > settings.discord.maxMemberFreeConfigCount) {
         await interaction.reply({
             content: 'You do not have the necessary permissions to configure this server.',
             ephemeral: true

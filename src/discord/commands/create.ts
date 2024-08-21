@@ -1,6 +1,4 @@
 import { SlashCommandBuilder, type TextChannel, type ChatInputCommandInteraction, ChannelType } from "discord.js";
-import { progressivePermissionsAllocator } from "../../schema/roles/PoliticalRole.js";
-import { PermissionsLevel } from "../../types/permissions.js";
 
 const data = new SlashCommandBuilder()
     .setName('create')
@@ -33,12 +31,6 @@ async function execute(interaction: ChatInputCommandInteraction) {
         await guild.delete();
     } else {
         await interaction.followUp({ content: `Server created! Invite link: ${invite.url}`, ephemeral: true });
-
-        // Set everyone's permissions
-        const everyoneRole = guild.roles.cache.find(role => role.id === guild.id);
-        if (everyoneRole) {
-            await everyoneRole.setPermissions(progressivePermissionsAllocator(PermissionsLevel.Send));
-        }
     }
 }
 

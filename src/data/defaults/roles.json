@@ -1,0 +1,54 @@
+{
+  "VoxPopuli": {
+      "name": "Vox Populi",
+      "hierarchy": 0,
+      "color": "#FFFFFF",
+      "basePermissions": ["emergency"]
+  },
+  "President": {
+      "name": "President",
+      "hierarchy": 1,
+      "color": "#FF0000",
+      "basePermissions": ["manage", "moderate"]
+  },
+  "PrimeMinister": {
+      "name": "Prime Minister",
+      "hierarchy": 1,
+      "color": "#FF0000",
+      "basePermissions": ["manage", "moderate"]
+  },
+  "HeadModerator": {
+      "name": "Head Moderator",
+      "hierarchy": 2,
+      "color": "#FF8000",
+      "basePermissions": ["moderate"]
+  },
+  "Moderator": {
+      "name": "Moderator",
+      "hierarchy": 3,
+      "color": "#FFFF00",
+      "basePermissions": ["moderate"]
+  },
+  "Senator": {
+      "name": "Senator",
+      "hierarchy": 4,
+      "color": "#0000FF"
+  },
+  "Judge": {
+      "name": "Judge",
+      "hierarchy": 5,
+      "color": "#FF00FF"
+  },
+  "Citizen": {
+      "name": "Citizen",
+      "hierarchy": 6,
+      "color": "#00FF00",
+      "basePermissions": ["interact"]
+  },
+  "Undocumented": {
+      "name": "@everyone",
+      "hierarchy": 7,
+      "color": "#000000",
+      "basePermissions": ["view", "send"]
+  }
+}
