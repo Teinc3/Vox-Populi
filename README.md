@@ -23,8 +23,7 @@ Not checked for latest commit.
 
 ## TODO
 ### Active
-- Add emergency options
-- Ability to link an existing channel during setup
+- Ability to link an existing channel during setup (At the end of the wizard config we list out all channels and user can cursor over and select the channel, and decide to link it or create a new one. Also write in footer that can change name after setup)
 - Rework positioning of roles and channels
 
 ### Future

@@ -98,18 +98,29 @@ async function execute(interaction: ChatInputCommandInteraction) {
     }
 }
 
-/* Permissions Check for Config Command
-1. Must not be in DM
-2. Guild must not be configured before for subcommand "init", or must be configured otherwise.
-3. User must have the necessary permissions
-    1: Bot Owner
-    2: Server Owner
-    3: In server with ADMINISTRATOR permission
-    4: Less than 5 members in server (Does not include Bot)
-4. Bot must have the necessary ADMINISTRATOR permissions
-*/
+/**
+ * Permissions Check for Config Command
+ * 
+ * The user must satisfy the following conditions to configure the server:
+ * 
+ * - Must not be in DM
+ * - Guild must not be configured before for subcommand "init", or must be configured otherwise.
+ * - User must have be/done one of the following:
+     1. Bot Owner
+     2. Server Owner
+     3. Created the server configuration, AND allowed themself to reset server configuration whenever they want
+     4. In server with ADMINISTRATOR permission
+     5. Less than 5 members in server (Does not include Bot)
+ * - Bot must have the necessary ADMINISTRATOR permissions
+ * 
+ * @param interaction The interaction object
+ * @param guild The guild object, fetched from the interaction
+ * @returns {boolean} Whether the user has the necessary permissions to configure the server
+ */
 async function checkPermissions(interaction: ChatInputCommandInteraction, guild: Guild): Promise<boolean> {
-    const hasConfiguredGuild = await GuildModel.exists({ guildID: guild.id });
+    const guildConfiguration = await GuildModel.findOne({ guildID: guild.id });
+    const hasConfiguredGuild = guildConfiguration !== null;
+
     if (interaction.options.getSubcommand() === "init" && hasConfiguredGuild) {
         await interaction.reply({ content: 'This server has already been configured.', ephemeral: false });
         return false;
@@ -120,10 +131,11 @@ async function checkPermissions(interaction: ChatInputCommandInteraction, guild:
 
     const isUserBotOwner = interaction.user.id === settings.discord.botOwnerID;
     const isServerOwner = guild.ownerId === interaction.user.id;
+    const allowResetConfig = guildConfiguration?.emergencyOptions.allowResetConfig ?? false;
     const isAdmin = (interaction.member as GuildMember | null)?.permissions.has(PermissionsBitField.Flags.Administrator) ?? false;
     const memberCount = guild.memberCount;
 
-    if (!isUserBotOwner && !isServerOwner && !isAdmin && memberCount > settings.discord.maxMemberFreeConfigCount) {
+    if (!(isUserBotOwner || isServerOwner || allowResetConfig || isAdmin || memberCount <= settings.discord.maxMemberFreeConfigCount)) {
         await interaction.reply({
             content: 'You do not have the necessary permissions to configure this server.',
             ephemeral: true

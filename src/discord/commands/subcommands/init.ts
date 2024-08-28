@@ -1,6 +1,6 @@
 import {
     EmbedBuilder, ActionRowBuilder, ButtonBuilder, Colors, ButtonStyle,
-    type ChatInputCommandInteraction, type MessageComponentInteraction, type InteractionResponse, type APIButtonComponentWithCustomId,
+    type ChatInputCommandInteraction, type MessageComponentInteraction, type InteractionResponse, type APIButtonComponentWithCustomId, type GuildMemberRoleManager,
 } from 'discord.js';
 import { isDocument } from '@typegoose/typegoose';
 
@@ -1171,32 +1171,77 @@ class InitWizard {
     }
 
     async setEmergencyOptions(): Promise<void> {
-        // Footer add that after confirmation cannot modify changes outside this wizard! Also button name will be "Confirm" not "Continue"
+        if (!this.guildConfigData.emergencyOptions) {
+            this.guildConfigData.emergencyOptions = {
+                tempAdminLength: wizardDefaults.emergency.tempAdminLength,
+                allowResetConfig: wizardDefaults.emergency.allowResetConfig,
+                creatorID: this.interaction.user.id,
+                cursor: 0
+            }
+        }
+        const cursor = this.guildConfigData.emergencyOptions.cursor;
+
         const embed = new EmbedBuilder()
             .setTitle("Configure Emergency Options (1/1)")
-            .setDescription("These options decide how the server handles emergencies.")
+            .setDescription("These options decides how much power you have in case of a server emergency.")
+            .addFields([
+                {
+                    name: "Temporary Administrator Status Length",
+                    value: this.guildConfigData.emergencyOptions.tempAdminLength === 0 ? "Disabled" : this.guildConfigData.emergencyOptions.tempAdminLength + " Days",
+                    inline: true
+                },
+                {
+                    name: "Allow Server Configuration Reset",
+                    value: this.guildConfigData.emergencyOptions.allowResetConfig ? "Enabled" : "Disabled",
+                    inline: true
+                }
+            ])
             .setColor(Colors.Yellow)
             .setFooter({ text: "This is the last page of the config wizard. After confirmation, all settings will be finalized!" })
             .toJSON();
 
         const actionRow = new ActionRowBuilder<ButtonBuilder>()
-            .addComponents(
-                new ButtonBuilder()
-                    .setCustomId('emergency_cancel')
-                    .setLabel("Cancel")
-                    .setStyle(ButtonStyle.Danger)
-                    .setEmoji("❎"),
+            .addComponents([
                 new ButtonBuilder()
                     .setCustomId('emergency_back')
                     .setLabel("Back")
                     .setStyle(ButtonStyle.Danger)
                     .setEmoji("↩️"),
                 new ButtonBuilder()
+                    .setCustomId('emergency_admin_minus')
+                    .setLabel("-1 Day")
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(this.guildConfigData.emergencyOptions.tempAdminLength <= 0)
+                    .setEmoji("⬅️"),
+                new ButtonBuilder()
+                    .setCustomId('emergency_admin_plus')
+                    .setLabel("+1 Day")
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji("➡️"),
+                new ButtonBuilder()
+                    .setCustomId('emergency_delete_toggle')
+                    .setLabel("Toggle Deletion")
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji("↕️"),
+                new ButtonBuilder()
+                    .setCustomId('emergency_next')
+                    .setLabel("Modify Next Option")
+                    .setStyle(ButtonStyle.Secondary)
+                    .setEmoji("🔄"),
+                new ButtonBuilder()
                     .setCustomId('emergency_confirm')
                     .setLabel("Confirm")
                     .setStyle(ButtonStyle.Success)
                     .setEmoji("✅")
-            )
+            ].filter(button => {
+                const customID = (button.data as Partial<APIButtonComponentWithCustomId>).custom_id!;
+                if (cursor === 1 && ["emergency_admin_minus", "emergency_admin_plus"].includes(customID)) {
+                    return false;
+                } else if (cursor === 0 && customID === "emergency_delete_toggle") {
+                    return false;
+                }
+                return true;
+            }));
 
         await this.interaction.editReply({ embeds: [embed], components: [actionRow] });
 
@@ -1208,10 +1253,22 @@ class InitWizard {
             await confirmation.deferUpdate();
 
             switch (confirmation.customId) {
-                case "emergency_cancel":
-                    return await this.cancelled();
                 case "emergency_back":
                     return await this.setPrevFunc();
+                case "emergency_admin_minus":
+                    if (this.guildConfigData.emergencyOptions.tempAdminLength > 0) {
+                        this.guildConfigData.emergencyOptions.tempAdminLength--;
+                    }
+                    break;
+                case "emergency_admin_plus":
+                    this.guildConfigData.emergencyOptions.tempAdminLength++;
+                    break;
+                case "emergency_delete_toggle":
+                    this.guildConfigData.emergencyOptions.allowResetConfig = !this.guildConfigData.emergencyOptions.allowResetConfig;
+                    break;
+                case "emergency_next":
+                    this.guildConfigData.emergencyOptions.cursor = 1 - this.guildConfigData.emergencyOptions.cursor;
+                    break;
                 case "emergency_confirm":
                     return await this.setNextFunc(this.completeInit);
                 default:
@@ -1266,6 +1323,12 @@ class InitWizard {
         if (role) {
             // Assign the role to the bot
             await guild.members.me?.roles.add(role);
+
+            // If the emergency option is enabled, assign the creator the role
+            // Maybe add this to logs in the future
+            if (this.guildConfigData.emergencyOptions.allowResetConfig) {
+                await (this.interaction.member?.roles as GuildMemberRoleManager).add(roleID);
+            }
         }
 
         return await this.escape(true);

@@ -8,6 +8,7 @@ import PoliticalRoleHolder, {
     createPoliticalRoleHolderDocument,
     deletePoliticalRoleHolderDocument
 } from './roles/PoliticalRolesHolder.js';
+import { EmergencyOptions } from './options/MiscOptions.js';
 
 import { GuildConfigData } from '../types/types.js';
 
@@ -20,6 +21,9 @@ class GuildSchema {
 
     @prop({ required: true, ref: () => 'PoliticalSystem' })
     politicalSystem!: Ref<PoliticalSystem>;
+
+    @prop({ required: true, _id: false })
+    emergencyOptions!: EmergencyOptions
     
     @prop({ default: [], ref: () => 'GuildCategory' })
     categories?: Ref<GuildCategory>[];
@@ -48,6 +52,9 @@ async function createGuildDocument(interaction: ChatInputCommandInteraction, gui
     const guildData = new GuildSchema();
     guildData.guildID = guildID;
     guildData.isBotOwner = isBotOwner;
+    
+    const { cursor, ...emergencyOptions } = guildConfigData.emergencyOptions;
+    guildData.emergencyOptions = emergencyOptions;
 
     // Create all political roles then link them to the guild document, and generate the role document refs
     const roleHolder = await createPoliticalRoleDocuments(discordGuild, guildConfigData, reason);

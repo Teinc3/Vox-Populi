@@ -1,5 +1,6 @@
 import { SeatOptions, TermOptions, ThresholdOptions } from "../schema/options/RoleOptions";
 import { DDOptions } from "../schema/options/SystemOptions";
+import { EmergencyOptions } from "../schema/options/MiscOptions";
 
 export enum PoliticalSystemsType {
     Presidential = 0,
@@ -39,7 +40,7 @@ export interface GuildConfigData {
         seats: SeatOptions;
         threshold: ThresholdOptions; // Since only one threshold is needed, no need to store current rotation on cursor
     };
-    emergencyOptions: {}
+    emergencyOptions: ExtendedGuildConfigOptionsOption<EmergencyOptions>;
 }
 
 export interface DefaultChannelData {

@@ -152,7 +152,7 @@ async function deletePoliticalRoleDocument<T extends PoliticalRole>(guild: Guild
         return;
     }
 
-    await unlinkDiscordRole(guild, roleDocument.roleID, reason);
+    await deleteDiscordRole(guild, roleDocument.roleID, reason);
 }
 
 /**
@@ -169,38 +169,39 @@ async function linkDiscordRole<T extends PoliticalRole>(guild: Guild, roleObject
     }
     const name = roleObject.name;
     let discordRole: Role | null | undefined;
-    if (!roleObject.roleID) { // If roleID is undefined, search for role with same name in server. 
-        discordRole = guild.roles.cache.find(r => r.name === name);
-        if (discordRole) { // If it exists, Link it and pull it to the bottom of the hierarchy.
-            roleObject.roleID = discordRole.id;     
-        } else { // If not, create a new one.
-            try {
-                discordRole = await guild.roles.create({
-                    name: name,
-                    permissions: roleObject.permissions,
-                    hoist: true,
-                    color: roleObject.roleColor as ColorResolvable,
-                    reason
-                });
-                roleObject.roleID = discordRole.id;
-            } catch (error) {
-                console.error(`Failed to create role ${name} in server ${guild.name}`);
-            }
-        }
-    } else { // If roleID is defined and role with that ID doesn't exist, we change the roleID to the new one that we create.
+    if (roleObject.roleID) { // If roleID is undefined, search for role with same name in server. 
         discordRole = await guild.roles.fetch(roleObject.roleID);
-        if (!discordRole && roleObject.roleID !== guild.id) {
-            roleObject.roleID = undefined;
-            return await linkDiscordRole(guild, roleObject);
+        if (discordRole) {
+            // We found a role, now we set its permissions and position (later).
+            discordRole.setPermissions(roleObject.permissions);
+            return roleObject;
         }
+        // Else Fallback
     }
-    if (discordRole?.editable) {
-        await discordRole.setPermissions(roleObject.permissions);
+    // Search for a role with the same name in the server.
+    discordRole = guild.roles.cache.find(r => r.name === name);
+    if (discordRole) { // If it exists, Link it and set its new position (later)
+        roleObject.roleID = discordRole.id;
+        discordRole.setPermissions(roleObject.permissions);
+
+    } else { // If not, create a new one.
+        try {
+            discordRole = await guild.roles.create({
+                name: name,
+                permissions: roleObject.permissions,
+                hoist: true,
+                color: roleObject.roleColor as ColorResolvable,
+                reason
+            });
+            roleObject.roleID = discordRole.id;
+        } catch (error) {
+            console.error(`Failed to create role ${name} in server ${guild.name}`);
+        }
     }
     return roleObject;
 }
 
-async function unlinkDiscordRole(guild: Guild, roleID: string | undefined, reason?: string) {
+async function deleteDiscordRole(guild: Guild, roleID: string | undefined, reason?: string) {
     if (roleID && roleID !== guild.id) {
         await guild.roles.delete(roleID, reason);
     }

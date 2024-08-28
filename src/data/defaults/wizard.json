@@ -49,5 +49,9 @@
         "value": false
       }
     }
+  },
+  "emergency": {
+    "tempAdminLength": 1,
+    "allowResetConfig": false
   }
 }

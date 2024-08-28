@@ -1,12 +1,12 @@
 import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
-import { ChannelType, type CategoryChannel, type Guild } from 'discord.js';
+import { ChannelType, GuildBasedChannel, GuildChannel, TextChannel, ThreadChannel, type CategoryChannel, type Guild } from 'discord.js';
 
 import ChannelPermissions, { createChannelPermissionsOverwrite } from '../permissions/ChannelPermissions.js';
 
 /**
  * @see {@link https://discord.js.org/docs/packages/discord.js/main/GuildChannelCreateOptions:Interface#type}
  */
-type CreatableChannelType = Exclude<ChannelType, ChannelType.DM | ChannelType.GroupDM | ChannelType.PublicThread | ChannelType.AnnouncementThread | ChannelType.PrivateThread>;
+type CreatableChannelType = Exclude<ChannelType, ChannelType.DM | ChannelType.GroupDM | ChannelType.PublicThread | ChannelType.AnnouncementThread | ChannelType.PrivateThread | ChannelType.GuildCategory>;
 
 /**
  * Represents a Political channel in a guild.
@@ -50,28 +50,41 @@ async function linkDiscordChannel(guild: Guild, politicalChannel: PoliticalChann
     }
     
     const { name } = politicalChannel;
-    let discordChannelByID = politicalChannel.channelID ? guild.channels.cache.get(politicalChannel.channelID) : null;
-    let discordChannelsByName = guild.channels.cache.filter(channel => channel.name === name);
-    
-    if (discordChannelByID || discordChannelsByName.size > 0) {
-        if (discordChannelByID) {
-            // Add this channel to the list of channels with the same name, so it can be deleted
-            politicalChannel.channelID = undefined;
-            discordChannelsByName.set(discordChannelByID.id, discordChannelByID);
-        }
-        // Delete all channels with the same name
-        await Promise.all(discordChannelsByName.map(async (channel) => {
-            await unlinkDiscordChannel(guild, channel.id, reason);
-        }));
+    const permissionOverwrites = await createChannelPermissionsOverwrite(guild.id, politicalChannel.channelPermissions);
 
-        return await linkDiscordChannel(guild, politicalChannel, categoryChannel, reason);
+    let discordChannel: GuildBasedChannel | null | undefined;
+    if (politicalChannel.channelID) {
+        // If channelID is defined, fetch the channel
+        discordChannel = await guild.channels.fetch(politicalChannel.channelID);
+        // This is not the channel we are looking for.
+        if (discordChannel) {
+            if (discordChannel.type !== politicalChannel.channelType) {
+                await deleteDiscordChannel(guild, politicalChannel.channelID, reason);
+                politicalChannel.channelID = undefined;
+                return await linkDiscordChannel(guild, politicalChannel, categoryChannel, reason);
+            } else {
+                // Set parent and permissions
+                discordChannel.setParent(categoryChannel, { reason });
+                discordChannel.permissionOverwrites.set(permissionOverwrites, reason);
+                return politicalChannel
+            }
+        }
+        // Else: fallback to undefined channelID
+    }
+    // If channelID is undefined, search for a channel with same name in the server
+    discordChannel = guild.channels.cache.find(c => c.name === name && c.type === politicalChannel.channelType) as Extract<GuildBasedChannel, GuildChannel> | undefined;
+    if (discordChannel) {
+        // If the exact channel exists, Link it and set its parent to the category channel.
+        politicalChannel.channelID = discordChannel.id;
+        discordChannel.setParent(categoryChannel, { reason });
+        discordChannel.permissionOverwrites.set(permissionOverwrites, reason);
     } else {
-        // Create the channel if it DNE
-        const discordChannel = await guild.channels.create({
+        // Create a new channel
+        discordChannel = await guild.channels.create({
             name,
             type: politicalChannel.channelType as CreatableChannelType,
             parent: categoryChannel,
-            permissionOverwrites: await createChannelPermissionsOverwrite(guild.id, politicalChannel.channelPermissions),
+            permissionOverwrites: permissionOverwrites,
             reason
         });
         // Link the channel
@@ -85,10 +98,10 @@ async function deletePoliticalChannelDocument(guild: Guild, channelDocument: Ref
     if (!politicalChannel || !politicalChannel.channelID) {
         return;
     }
-    await unlinkDiscordChannel(guild, politicalChannel.channelID, reason);
+    await deleteDiscordChannel(guild, politicalChannel.channelID, reason);
 }
 
-async function unlinkDiscordChannel(guild: Guild, channelID: string, reason?: string) {
+async function deleteDiscordChannel(guild: Guild, channelID: string, reason?: string) {
     const discordChannel = await guild.channels.fetch(channelID);
     if (discordChannel) {
         await discordChannel.delete(reason);

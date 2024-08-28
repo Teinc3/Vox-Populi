@@ -67,7 +67,7 @@ async function createGuildCategoryDocument(guild: Guild, guildCategory: GuildCat
     // We funnel the appropriate roles (obtained from roleHolder) to these channels
     guildCategory.channels = await createPoliticalChannels(guild, roleHolder, categoryChannel, guildConfigData, defaultChannelsData, reason);
     if (guildCategory.channels.length === 0) {
-        await unlinkDiscordCategory(guild, guildCategory.categoryID, reason); // No channels in the category, delete it
+        await deleteDiscordCategory(guild, guildCategory.categoryID, reason); // No channels in the category, delete it
         return false;
     }
     return await GuildCategoryModel.create(guildCategory);
@@ -168,9 +168,9 @@ async function deleteGuildCategoryDocument(guild: Guild, categoryDocument: Ref<G
     }
 
     const deleteChannelPromises = (guildCategory.channels ?? []).map(channel => deletePoliticalChannelDocument(guild, channel, reason));
-    const unlinkCategoryPromise = unlinkDiscordCategory(guild, guildCategory.categoryID, reason);
+    const deleteCategoryPromise = deleteDiscordCategory(guild, guildCategory.categoryID, reason);
 
-    await Promise.all([...deleteChannelPromises, unlinkCategoryPromise]);
+    await Promise.all([...deleteChannelPromises, deleteCategoryPromise]);
 }
 
 async function linkDiscordCategory(guild: Guild, guildCategory: GuildCategory, reason?: string): Promise<GuildCategory> {
@@ -180,28 +180,37 @@ async function linkDiscordCategory(guild: Guild, guildCategory: GuildCategory, r
     if (guild.channels.cache.size === 0) {
         await guild.channels.fetch();
     }
-    // Find the category
-    let categoryChannel = guild.channels.cache.find(channel => channel.type === ChannelType.GuildCategory && channel.name === name) as CategoryChannel;
+    let categoryChannel: CategoryChannel | undefined;
 
-    // If the category does not exist, create it
-    if (!categoryChannel) {
-        // Create the category
-        categoryChannel = await guild.channels.create({ name, type: ChannelType.GuildCategory, reason });
+    // If the categoryID is not already defined, search for a channel with the same category name
+    if (!guildCategory.categoryID) {
+        categoryChannel = guild.channels.cache.find(channel => channel.type === ChannelType.GuildCategory && channel.name === name) as CategoryChannel;
 
+        // If the category does not exist, create it
         if (!categoryChannel) {
-            throw new Error("Failed to create category channel");
+            // Create the category
+            categoryChannel = await guild.channels.create({ name, type: ChannelType.GuildCategory, reason });
+
+            if (!categoryChannel) {
+                throw new Error("Failed to create category channel");
+            }
+            guildCategory.categoryID = categoryChannel.id;
+
+        } else { // If the category exists, just link it
+            guildCategory.categoryID = categoryChannel.id;
         }
-        guildCategory.categoryID = categoryChannel.id;
-
-    } else { // If the category exists, Delete the category and all its channels
-        await unlinkDiscordCategory(guild, categoryChannel.id, reason);
-        return await linkDiscordCategory(guild, guildCategory, reason);
-
+    } else {
+        categoryChannel = await guild.channels.fetch(guildCategory.categoryID) as CategoryChannel | undefined;
+        if (!categoryChannel || categoryChannel.type !== ChannelType.GuildCategory) {
+            guildCategory.categoryID = undefined;
+            return await linkDiscordCategory(guild, guildCategory, reason);
+        }
     }
+    
     return guildCategory;
 }
 
-async function unlinkDiscordCategory(guild: Guild, categoryID: string | undefined, reason?: string) {
+async function deleteDiscordCategory(guild: Guild, categoryID: string | undefined, reason?: string) {
     // Find the category
     if (!categoryID) {
         return;
