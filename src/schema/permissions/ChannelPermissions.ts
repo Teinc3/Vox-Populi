@@ -2,10 +2,11 @@ import { prop, Ref } from "@typegoose/typegoose";
 
 import type PoliticalRole from "../roles/PoliticalRole";
 import { OverwriteData, PermissionsBitField } from "discord.js";
-import { PoliticalRoleModel, VoxPopuli } from "../roles/PoliticalRole.js";
+import { PoliticalRoleModel } from "../roles/PoliticalRole.js";
 
 import { PermissionsCategories } from "../../types/permissions.js";
 import { CustomPermissionsOverwrite } from "../../types/types";
+import roleDefaults from "../../data/defaults/roles.json" assert { type: "json" };
 
 // If array is empty then everyone has that perm there (provided they can Access the channel)
 // but if it's [VoxPopuli] then nobody has that perm (apart from the bot)
@@ -116,7 +117,7 @@ async function createChannelPermissionsOverwrite(guildID: string, channelPermiss
                 const roleDocument = refRoleArray[0];
                 const politicalRoleObject = await PoliticalRoleModel.findOne({ _id: roleDocument });
 
-                if (politicalRoleObject?.name === new VoxPopuli().name) {
+                if (politicalRoleObject?.hierarchy === roleDefaults.VoxPopuli.hierarchy) {
                     everyonePermissionOverwrites.deny!.add(permissions);
                     hasOverwrites = true;
                     continue;

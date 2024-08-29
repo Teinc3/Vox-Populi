@@ -12,11 +12,12 @@ type CreatableChannelType = Exclude<ChannelType, ChannelType.DM | ChannelType.Gr
  * Represents a Political channel in a guild.
  */
 class PoliticalChannel {
-    constructor(name: string, channelType: CreatableChannelType, channelPermissions: ChannelPermissions, description?: string) {
+    constructor(name: string, channelType: CreatableChannelType, channelPermissions: ChannelPermissions, description: string, channelID?: string) {
         this.name = name;
         this.channelType = channelType;
         this.channelPermissions = channelPermissions;
-        this.description = description || "";
+        this.description = description;
+        this.channelID = channelID;
     }    
 
     @prop({ required: true })
@@ -56,40 +57,31 @@ async function linkDiscordChannel(guild: Guild, politicalChannel: PoliticalChann
     if (politicalChannel.channelID) {
         // If channelID is defined, fetch the channel
         discordChannel = await guild.channels.fetch(politicalChannel.channelID);
-        // This is not the channel we are looking for.
         if (discordChannel) {
+            // This is not the channel we are looking for.
             if (discordChannel.type !== politicalChannel.channelType) {
-                await deleteDiscordChannel(guild, politicalChannel.channelID, reason);
                 politicalChannel.channelID = undefined;
                 return await linkDiscordChannel(guild, politicalChannel, categoryChannel, reason);
             } else {
-                // Set parent and permissions
-                discordChannel.setParent(categoryChannel, { reason });
-                discordChannel.permissionOverwrites.set(permissionOverwrites, reason);
+                // Set Configs parallel to setup
+                discordChannel.edit({ parent: categoryChannel, topic: politicalChannel.description, permissionOverwrites, reason });
                 return politicalChannel
             }
         }
         // Else: fallback to undefined channelID
     }
-    // If channelID is undefined, search for a channel with same name in the server
-    discordChannel = guild.channels.cache.find(c => c.name === name && c.type === politicalChannel.channelType) as Extract<GuildBasedChannel, GuildChannel> | undefined;
-    if (discordChannel) {
-        // If the exact channel exists, Link it and set its parent to the category channel.
-        politicalChannel.channelID = discordChannel.id;
-        discordChannel.setParent(categoryChannel, { reason });
-        discordChannel.permissionOverwrites.set(permissionOverwrites, reason);
-    } else {
-        // Create a new channel
-        discordChannel = await guild.channels.create({
-            name,
-            type: politicalChannel.channelType as CreatableChannelType,
-            parent: categoryChannel,
-            permissionOverwrites: permissionOverwrites,
-            reason
-        });
-        // Link the channel
-        politicalChannel.channelID = discordChannel?.id;
-    }
+    // If channelID is undefined, we create a new one
+    discordChannel = await guild.channels.create({
+        name,
+        type: politicalChannel.channelType as CreatableChannelType,
+        parent: categoryChannel,
+        topic: politicalChannel.description,
+        permissionOverwrites: permissionOverwrites,
+        reason
+    });
+    // Link the channel
+    politicalChannel.channelID = discordChannel?.id;
+    
     return politicalChannel;
 }
 

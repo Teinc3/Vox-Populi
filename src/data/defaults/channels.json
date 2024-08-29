@@ -1,7 +1,6 @@
 [
   {
     "name": "executive",
-    "description": "Channel category for the executive branch.",
     "channels": [
       {
         "position": 0,
@@ -72,7 +71,6 @@
     ]
   }, {
     "name": "legislature",
-    "description": "Channel category for the legislative branch.",
     "channels": [
       {
         "position": 0,
@@ -105,7 +103,6 @@
     ]
   }, {
     "name": "judicial",
-    "description": "Channel category for the judicial branch.",
     "channels": [
       {
         "position": 0,
@@ -123,7 +120,6 @@
     ]
   }, {
     "name": "others",
-    "description": "Channel category for other types of channels.",
     "channels": [
       {
         "position": 0,

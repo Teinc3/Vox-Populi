@@ -22,6 +22,13 @@ class PoliticalRole {
 
     @prop({ type: () => [BigInt], required: true })
     permissions!: bigint[];
+
+    // These are user-customizable options
+    constructor(name: string, color: string, id?: string) {
+        this.name = name;
+        this.roleColor = color;
+        this.roleID = id;
+    }
 }
 
 /**
@@ -105,42 +112,33 @@ class Undocumented extends PoliticalRole {
     permissions = progressivePermissionsAllocator(PermissionsLevel.Send);
 }
 
-const PoliticalRoleObjectList: Array<new () => PoliticalRole> = [VoxPopuli, President, PrimeMinister, HeadModerator, Moderator, Senator, Judge, Citizen/*, Undocumented*/].sort((a, b) => a.prototype.hierarchy - b.prototype.hierarchy);
-
 const PoliticalRoleModel = getModelForClass(PoliticalRole);
 
 async function createPoliticalRoleDocuments(guild: Guild, guildConfigData: GuildConfigData, reason?: string): Promise<PoliticalRoleHolder> {
-
-    const politicalSystemType = guildConfigData.politicalSystem;
-
+    const { filteredRoles } = guildConfigData.discordOptions.roleOptions;
     const roleHolder = new PoliticalRoleHolder();
-    roleHolder.VoxPopuli = await PoliticalRoleModel.create(await linkDiscordRole(guild, new VoxPopuli(), reason));
 
-    if (politicalSystemType === PoliticalSystemsType.Presidential) {
-        roleHolder.President = await PoliticalRoleModel.create(await linkDiscordRole(guild, new President(), reason));
-    } else if (politicalSystemType === PoliticalSystemsType.Parliamentary) {
-        roleHolder.PrimeMinister = await PoliticalRoleModel.create(await linkDiscordRole(guild, new PrimeMinister(), reason));
+    roleHolder.VoxPopuli = await PoliticalRoleModel.create(await linkDiscordRole(guild, new VoxPopuli(filteredRoles.VoxPopuli.name, filteredRoles.VoxPopuli.color, filteredRoles.VoxPopuli.id), reason));
+    if (filteredRoles.President) {
+        roleHolder.President = await PoliticalRoleModel.create(await linkDiscordRole(guild, new President(filteredRoles.President.name, filteredRoles.President.color, filteredRoles.President.id), reason));
     }
-
-    // For Direct Democracy, citizens can choose to appoint judges and moderators through referendums
-    if (politicalSystemType !== PoliticalSystemsType.DirectDemocracy || guildConfigData.ddOptions!.appointModerators) {
-        roleHolder.HeadModerator = await PoliticalRoleModel.create(await linkDiscordRole(guild, new HeadModerator(), reason));
-        roleHolder.Moderator = await PoliticalRoleModel.create(await linkDiscordRole(guild, new Moderator(), reason));
+    if (filteredRoles.PrimeMinister) {
+        roleHolder.PrimeMinister = await PoliticalRoleModel.create(await linkDiscordRole(guild, new PrimeMinister(filteredRoles.PrimeMinister.name, filteredRoles.PrimeMinister.color, filteredRoles.PrimeMinister.id), reason));
     }
-
-    if (politicalSystemType !== PoliticalSystemsType.DirectDemocracy) {
-        roleHolder.Senator = await PoliticalRoleModel.create(await linkDiscordRole(guild, new Senator(), reason));
+    if (filteredRoles.HeadModerator) {
+        roleHolder.HeadModerator = await PoliticalRoleModel.create(await linkDiscordRole(guild, new HeadModerator(filteredRoles.HeadModerator.name, filteredRoles.HeadModerator.color, filteredRoles.HeadModerator.id), reason));
     }
-
-    if (politicalSystemType !== PoliticalSystemsType.DirectDemocracy || guildConfigData.ddOptions!.appointJudges) {
-        roleHolder.Judge = await PoliticalRoleModel.create(await linkDiscordRole(guild, new Judge(), reason));
+    if (filteredRoles.Moderator) {
+        roleHolder.Moderator = await PoliticalRoleModel.create(await linkDiscordRole(guild, new Moderator(filteredRoles.Moderator.name, filteredRoles.Moderator.color, filteredRoles.Moderator.id), reason));
     }
-
-    roleHolder.Citizen = await PoliticalRoleModel.create(await linkDiscordRole(guild, new Citizen(), reason));
-
-    const UndocumentedObject = new Undocumented();
-    UndocumentedObject.roleID = guild.id;
-    roleHolder.Undocumented = await PoliticalRoleModel.create(await linkDiscordRole(guild, UndocumentedObject, reason));
+    if (filteredRoles.Senator) {
+        roleHolder.Senator = await PoliticalRoleModel.create(await linkDiscordRole(guild, new Senator(filteredRoles.Senator.name, filteredRoles.Senator.color, filteredRoles.Senator.id), reason));
+    }
+    if (filteredRoles.Judge) {
+        roleHolder.Judge = await PoliticalRoleModel.create(await linkDiscordRole(guild, new Judge(filteredRoles.Judge.name, filteredRoles.Judge.color, filteredRoles.Judge.id), reason));
+    }
+    roleHolder.Citizen = await PoliticalRoleModel.create(await linkDiscordRole(guild, new Citizen(filteredRoles.Citizen.name, filteredRoles.Citizen.color, filteredRoles.Citizen.id), reason));
+    roleHolder.Undocumented = await PoliticalRoleModel.create(await linkDiscordRole(guild, new Undocumented(filteredRoles.Undocumented.name, filteredRoles.Undocumented.color, filteredRoles.Undocumented.id), reason));
 
     return roleHolder;
 }
@@ -208,5 +206,5 @@ async function deleteDiscordRole(guild: Guild, roleID: string | undefined, reaso
 }
 
 export default PoliticalRole;
-export { VoxPopuli, President, PrimeMinister, Senator, Judge, HeadModerator, Moderator, Citizen, Undocumented, PoliticalRoleObjectList, PoliticalRoleModel }
+export { VoxPopuli, President, PrimeMinister, Senator, Judge, HeadModerator, Moderator, Citizen, Undocumented, PoliticalRoleModel }
 export { createPoliticalRoleDocuments, deletePoliticalRoleDocument, progressivePermissionsAllocator }

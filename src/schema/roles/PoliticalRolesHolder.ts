@@ -1,9 +1,11 @@
 import { prop, getModelForClass, type Ref } from '@typegoose/typegoose';
 import { type Guild } from 'discord.js';
 
-import PoliticalRole, { VoxPopuli, President, PrimeMinister, HeadModerator, Senator, Judge, Moderator, Citizen, Undocumented, deletePoliticalRoleDocument, PoliticalRoleObjectList } from "./PoliticalRole.js";
+import PoliticalRole, { VoxPopuli, President, PrimeMinister, HeadModerator, Senator, Judge, Moderator, Citizen, Undocumented, deletePoliticalRoleDocument } from "./PoliticalRole.js";
 
-class PoliticalRoleHolder {
+import { PoliticalRoleHolderInterface } from '../../types/types.js';
+
+class PoliticalRoleHolder implements PoliticalRoleHolderInterface<Ref<PoliticalRole>> {
     @prop({ required: true, ref: () => 'VoxPopuli' })
     VoxPopuli!: Ref<VoxPopuli>;
 
@@ -54,5 +56,5 @@ async function deletePoliticalRoleHolderDocument(guild: Guild, _id: Ref<Politica
 }
 
 export default PoliticalRoleHolder;
-export { PoliticalRoleHolderModel };
+export { PoliticalRoleHolderModel, PoliticalRoleHolderInterface };
 export { createPoliticalRoleHolderDocument, deletePoliticalRoleHolderDocument };

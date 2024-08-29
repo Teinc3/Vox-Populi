@@ -6,8 +6,7 @@ import type PoliticalRoleHolder from '../roles/PoliticalRolesHolder.js';
 import ChannelPermissions, { filterRefRoleArray, type UnfilteredRefRoleArray } from '../permissions/ChannelPermissions.js';
 import { linkChamberChannelDocument } from '../Chamber.js';
 
-import { GuildConfigData, PoliticalBranchType, PoliticalSystemsType, DefaultChannelData, CustomPermissionsOverwrite } from '../../types/types.js';
-import channelDefaults from '../../data/defaults/channels.json' assert { type: "json" };
+import { GuildConfigData, PoliticalBranchType, PoliticalSystemsType, DefaultChannelData, CustomPermissionsOverwrite, DefaultCategoryData } from '../../types/types.js';
 
 /**
  * Represents a Category that contains Political Channels.
@@ -15,7 +14,6 @@ import channelDefaults from '../../data/defaults/channels.json' assert { type: "
  * A Discord CategoryChannel can be linked to a GuildCategory.
  * 
  * @property {string} name - The name of the category channel as shown in Discord
- * @property {string} description - The description of the category channel as shown in Discord
  * @property {string} [categoryID] - The ID of the Discord CategoryChannel
  * @property {Array} [channels] - The Political Channels that are linked to this category
  * 
@@ -24,16 +22,13 @@ import channelDefaults from '../../data/defaults/channels.json' assert { type: "
  * @see {@link https://discord.js.org/docs/packages/discord.js/main/CategoryChannel:Class}
  */
 class GuildCategory {
-    constructor(name: string, description?: string) {
+    constructor(name: string, categoryID?: string) {
         this.name = name;
-        this.description = description || "";
+        this.categoryID = categoryID
     }
 
     @prop({ required: true })
     name!: string;
-
-    @prop({ required: true })
-    description!: string;
 
     @prop()
     categoryID?: string;
@@ -46,8 +41,11 @@ const GuildCategoryModel = getModelForClass(GuildCategory);
 
 async function createGuildCategories(guild: Guild, roleHolder: PoliticalRoleHolder, guildConfigData: GuildConfigData, reason?: string): Promise<Ref<GuildCategory>[]> {
     const categoryDocuments = new Array<Ref<GuildCategory>>();    
-    for (const category of channelDefaults) {
-        const guildCategoryDocument = await createGuildCategoryDocument(guild, new GuildCategory(category.name, category.description), roleHolder, guildConfigData, category.channels, reason);
+    const { filteredCategoryChannels } = guildConfigData.discordOptions.discordChannelOptions;
+
+    for (const extendedCategoryChannelData of filteredCategoryChannels) {
+        const { cursor, id: categoryID, ...categoryChannelData } = extendedCategoryChannelData;
+        const guildCategoryDocument = await createGuildCategoryDocument(guild, new GuildCategory(categoryChannelData.name, categoryID), roleHolder, guildConfigData, categoryChannelData, reason);
         if (guildCategoryDocument) {
             categoryDocuments.push(guildCategoryDocument);
         }
@@ -55,7 +53,7 @@ async function createGuildCategories(guild: Guild, roleHolder: PoliticalRoleHold
     return categoryDocuments;
 }
 
-async function createGuildCategoryDocument(guild: Guild, guildCategory: GuildCategory, roleHolder: PoliticalRoleHolder, guildConfigData: GuildConfigData, defaultChannelsData: DefaultChannelData[], reason?: string): Promise<Ref<GuildCategory> | false> {
+async function createGuildCategoryDocument(guild: Guild, guildCategory: GuildCategory, roleHolder: PoliticalRoleHolder, guildConfigData: GuildConfigData, categoryChannelData: DefaultCategoryData, reason?: string): Promise<Ref<GuildCategory> | false> {
     // Create and link the category to the object first
     guildCategory = await linkDiscordCategory(guild, guildCategory, reason);
     const categoryChannel = await guild.channels.fetch(guildCategory.categoryID!);
@@ -65,7 +63,7 @@ async function createGuildCategoryDocument(guild: Guild, guildCategory: GuildCat
 
     // Triage channels for executive (moderation), legislative, and judicial
     // We funnel the appropriate roles (obtained from roleHolder) to these channels
-    guildCategory.channels = await createPoliticalChannels(guild, roleHolder, categoryChannel, guildConfigData, defaultChannelsData, reason);
+    guildCategory.channels = await createPoliticalChannels(guild, roleHolder, categoryChannel, guildConfigData, categoryChannelData, reason);
     if (guildCategory.channels.length === 0) {
         await deleteDiscordCategory(guild, guildCategory.categoryID, reason); // No channels in the category, delete it
         return false;
@@ -73,20 +71,12 @@ async function createGuildCategoryDocument(guild: Guild, guildCategory: GuildCat
     return await GuildCategoryModel.create(guildCategory);
 }
 
-async function createPoliticalChannels(guild: Guild, roleHolder: PoliticalRoleHolder, categoryChannel: CategoryChannel, guildConfigData: GuildConfigData, defaultChannelsData: DefaultChannelData[], reason?: string): Promise<Ref<PoliticalChannel>[]> {
+async function createPoliticalChannels(guild: Guild, roleHolder: PoliticalRoleHolder, categoryChannel: CategoryChannel, guildConfigData: GuildConfigData, categoryChannelData: DefaultCategoryData, reason?: string): Promise<Ref<PoliticalChannel>[]> {
     const newChannelDocuments = new Array<Ref<PoliticalChannel>>();
     const isDD = guildConfigData.politicalSystem === PoliticalSystemsType.DirectDemocracy; 
     
-    for (const defaultChannelData of defaultChannelsData) {
-        const { disable, permissionOverwrites } = defaultChannelData;
-
-        // Skip creating the channel if it is disabled by our config
-        const isDDMatch = disable?.isDD === isDD;
-        const appointJudgesMatch = disable?.appointJudges === undefined ? true : disable?.appointJudges === guildConfigData.ddOptions?.appointJudges;
-        const appointModeratorsMatch = disable?.appointModerators === undefined ? true : disable?.appointModerators === guildConfigData.ddOptions?.appointModerators;
-        if (disable && isDDMatch && appointJudgesMatch && appointModeratorsMatch) {
-            continue;
-        }
+    for (const defaultChannelData of categoryChannelData.channels) {
+        const { permissionOverwrites } = defaultChannelData;
 
         // Parse permissions
         const channelPermissions = new ChannelPermissions();
@@ -145,7 +135,7 @@ async function createPoliticalChannels(guild: Guild, roleHolder: PoliticalRoleHo
         }
 
         // Create the channel
-        const politicalChannelDocument = await createPoliticalChannelDocument(guild, new PoliticalChannel(defaultChannelData.name, ChannelType.GuildText, channelPermissions, defaultChannelData.description), categoryChannel, reason);
+        const politicalChannelDocument = await createPoliticalChannelDocument(guild, new PoliticalChannel(defaultChannelData.name, ChannelType.GuildText, channelPermissions, defaultChannelData.description, defaultChannelData.id), categoryChannel, reason);
         if (defaultChannelData.chamberTypeIsLegislative !== undefined) {
             if (defaultChannelData.chamberTypeIsLegislative === true) {
                 await linkChamberChannelDocument(guild.id, PoliticalBranchType.Legislative, politicalChannelDocument);
@@ -182,25 +172,13 @@ async function linkDiscordCategory(guild: Guild, guildCategory: GuildCategory, r
     }
     let categoryChannel: CategoryChannel | undefined;
 
-    // If the categoryID is not already defined, search for a channel with the same category name
+    // If the categoryID is not already defined, create a new category
     if (!guildCategory.categoryID) {
-        categoryChannel = guild.channels.cache.find(channel => channel.type === ChannelType.GuildCategory && channel.name === name) as CategoryChannel;
-
-        // If the category does not exist, create it
-        if (!categoryChannel) {
-            // Create the category
-            categoryChannel = await guild.channels.create({ name, type: ChannelType.GuildCategory, reason });
-
-            if (!categoryChannel) {
-                throw new Error("Failed to create category channel");
-            }
-            guildCategory.categoryID = categoryChannel.id;
-
-        } else { // If the category exists, just link it
-            guildCategory.categoryID = categoryChannel.id;
-        }
+        categoryChannel = await guild.channels.create({ name, type: ChannelType.GuildCategory, reason });
+        guildCategory.categoryID = categoryChannel.id;
     } else {
-        categoryChannel = await guild.channels.fetch(guildCategory.categoryID) as CategoryChannel | undefined;
+        categoryChannel = (await guild.channels.fetch(guildCategory.categoryID) ?? undefined) as CategoryChannel | undefined;
+        // If the channel doesn't exist, create a new one instead
         if (!categoryChannel || categoryChannel.type !== ChannelType.GuildCategory) {
             guildCategory.categoryID = undefined;
             return await linkDiscordCategory(guild, guildCategory, reason);

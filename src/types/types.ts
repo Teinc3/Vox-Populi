@@ -41,6 +41,41 @@ export interface GuildConfigData {
         threshold: ThresholdOptions; // Since only one threshold is needed, no need to store current rotation on cursor
     };
     emergencyOptions: ExtendedGuildConfigOptionsOption<EmergencyOptions>;
+    discordOptions: DiscordOptions;
+}
+
+export interface DiscordOptions {
+    roleOptions: DiscordRoleOptionsData;
+    discordChannelOptions: DiscordChannelOptionsData;
+}
+
+export type DiscordRoleHolderData = PoliticalRoleHolderInterface<ExtendedDefaultDiscordData<DefaultRoleData>>;
+
+export interface DiscordRoleOptionsData {
+    filteredRoles: DiscordRoleHolderData;
+    cursor: number;
+}
+
+type BasePermission = "view" | "send" | "interact" | "moderate" | "manage" | "emergency";
+
+export interface DefaultRoleData {
+    name: string;
+    hierarchy: number;
+    color: string;
+    basePermissions?: BasePermission[]
+}
+
+export interface DiscordChannelOptionsData {
+    baseCategoryChannels: ExtendedDefaultDiscordData<DefaultCategoryData>[];
+    filteredCategoryChannels: ExtendedDefaultDiscordData<DefaultCategoryData>[];
+    cursor: number;
+    isCursorOnCategory: boolean;
+}
+
+export interface DefaultCategoryData {
+    name: string;
+    // Add position?
+    channels: ExtendedDefaultDiscordData<DefaultChannelData>[];
 }
 
 export interface DefaultChannelData {
@@ -52,6 +87,22 @@ export interface DefaultChannelData {
     };
     chamberTypeIsLegislative?: boolean;
     permissionOverwrites: CustomPermissions<number>;
+}
+
+export type ExtendedDefaultDiscordData<T> = T & {
+    id?: string;
+} & (T extends DefaultCategoryData ? { cursor: number } : {})
+
+export interface PoliticalRoleHolderInterface<T> {
+    VoxPopuli: T;
+    President?: T;
+    PrimeMinister?: T;
+    HeadModerator?: T;
+    Moderator?: T;
+    Senator?: T;
+    Judge?: T;
+    Citizen: T;
+    Undocumented: T;
 }
 
 export interface CustomPermissions<T> {

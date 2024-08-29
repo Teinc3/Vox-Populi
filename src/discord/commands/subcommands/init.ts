@@ -1,15 +1,21 @@
 import {
     EmbedBuilder, ActionRowBuilder, ButtonBuilder, Colors, ButtonStyle,
-    type ChatInputCommandInteraction, type MessageComponentInteraction, type InteractionResponse, type APIButtonComponentWithCustomId, type GuildMemberRoleManager,
+    type ChatInputCommandInteraction, type MessageComponentInteraction, type InteractionResponse, type APIButtonComponentWithCustomId,
+    type GuildMemberRoleManager, type APIEmbedField,
+    ChannelSelectMenuBuilder,
+    ChannelType,
+    RoleSelectMenuBuilder,
 } from 'discord.js';
 import { isDocument } from '@typegoose/typegoose';
 
 import { createGuildDocument } from '../../../schema/Guild.js';
 import { PoliticalRoleModel } from '../../../schema/roles/PoliticalRole.js';
 
-import { GuildConfigData, PoliticalSystemsType } from '../../../types/types.js';
+import { DiscordRoleHolderData, GuildConfigData, PoliticalSystemsType, ExtendedDefaultDiscordData, DefaultRoleData } from '../../../types/types.js';
 import settings from '../../../data/settings.json' assert { type: 'json' };
 import wizardDefaults from '../../../data/defaults/wizard.json' assert { type: 'json' };
+import roleDefaults from '../../../data/defaults/roles.json' assert { type: 'json' };
+import categoryDefaults from '../../../data/defaults/channels.json' assert { type: "json" };
 
 export default async function init(interaction: ChatInputCommandInteraction): Promise<boolean> {
     const initWizard = new InitWizard(interaction);
@@ -922,7 +928,7 @@ class InitWizard {
                     break;
                 case "referendum_confirm":
                     this.prevFunctions.push(this.setReferendumOptions);
-                    return await this.setNextFunc(this.guildConfigData.ddOptions!.appointJudges ? this.setCourtGenericOptions : this.setEmergencyOptions);
+                    return await this.setNextFunc(this.guildConfigData.ddOptions!.appointJudges ? this.setCourtGenericOptions : this.linkDiscordRoles);
                 default:
                     return await this.escape();
             }
@@ -1161,7 +1167,317 @@ class InitWizard {
                     break;
                 case "court_term_confirm":
                     this.prevFunctions.push(this.setCourtThresholdOptions);
+                    return await this.setNextFunc(this.linkDiscordRoles);
+                default:
+                    return await this.escape();
+            }
+        } catch (e) {
+            return await this.timedOut();
+        }
+    }
+
+    async linkDiscordRoles(): Promise<void> {
+        if (!this.guildConfigData.discordOptions) {
+            this.guildConfigData.discordOptions = {
+                roleOptions: {
+                    filteredRoles: { ...roleDefaults } as DiscordRoleHolderData,
+                    cursor: 0
+                },
+                discordChannelOptions: {
+                    baseCategoryChannels: categoryDefaults.map(category => ({
+                        ...category,
+                        cursor: 0
+                    })),
+                    filteredCategoryChannels: [],
+                    cursor: 0,
+                    isCursorOnCategory: true
+                }
+            }
+            this.guildConfigData.discordOptions.roleOptions.filteredRoles.Undocumented.id = this.interaction.guildId ?? undefined;
+        }
+
+        const { roleOptions } = this.guildConfigData.discordOptions;
+        const { filteredRoles } = roleOptions;
+        // Filter out the roles that are not needed
+        if (this.guildConfigData.politicalSystem === PoliticalSystemsType.Parliamentary) {
+            delete filteredRoles.President;
+        } else if (this.guildConfigData.politicalSystem === PoliticalSystemsType.Presidential) {
+            delete filteredRoles.PrimeMinister;
+        } else {
+            delete filteredRoles.President;
+            delete filteredRoles.PrimeMinister;
+            delete filteredRoles.Senator;
+
+            if (!this.guildConfigData.ddOptions!.appointJudges) {
+                delete filteredRoles.Judge;
+            }
+            if (!this.guildConfigData.ddOptions!.appointModerators) {
+                delete filteredRoles.HeadModerator;
+                delete filteredRoles.Moderator;
+            }
+        }
+
+        // Clamp cursor back to 0 if it goes out of bounds
+        if (roleOptions.cursor >= Object.keys(filteredRoles).length - 1) {
+            roleOptions.cursor = 0;
+        }
+
+        const embed = new EmbedBuilder()
+            .setTitle("Link Discord Roles (1/2)")
+            .setDescription("The following roles will be created. You can either link them to existing roles or create a new one.\nYou can change the names of the roles later through the `/config edit` command.")
+            .setColor(Colors.Blurple)
+            .setFields(Object.entries(filteredRoles).map(([_key, role]: [string, ExtendedDefaultDiscordData<DefaultRoleData>], index) => {
+                return {
+                    name: role?.name + (roleOptions.cursor === index ? " (Selected)" : ""),
+                    value: role?.id ? `<@&${role.id}>` : "New Role",
+                    inline: false
+                }
+            }))
+            .setFooter({ text: "Page " + this.page })
+            .toJSON();
+
+        const actionRowUtilities = new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId("link_role_back")
+                    .setLabel("Back")
+                    .setStyle(ButtonStyle.Danger)
+                    .setEmoji("↩️"),
+                new ButtonBuilder()
+                    .setCustomId("link_role_prev")
+                    .setLabel("Previous Role")
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji("⬆️"),
+                new ButtonBuilder()
+                    .setCustomId("link_role_next")
+                    .setLabel("Next Role")
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji("⬇️"),
+                new ButtonBuilder()
+                    .setCustomId("link_role_confirm")
+                    .setLabel("Continue")
+                    .setStyle(ButtonStyle.Success)
+                    .setEmoji("✅")
+            )
+        
+        const actionRowRoleSelect = new ActionRowBuilder<RoleSelectMenuBuilder>()
+            .addComponents(
+                new RoleSelectMenuBuilder()
+                    .setCustomId("link_role_select")
+                    .setPlaceholder("Select a Role")
+                    .setMinValues(0)
+                    .setMaxValues(1)
+            )
+        
+        await this.interaction.editReply({ embeds: [embed], components: [actionRowUtilities, actionRowRoleSelect] });
+
+        try {
+            const confirmation = await this.response!.awaitMessageComponent({
+                filter: (i: MessageComponentInteraction) => (i.isButton() || i.isRoleSelectMenu()) && i.user.id === this.interaction.user.id,
+                time: settings.discord.interactionTimeout
+            });
+            await confirmation.deferUpdate();
+
+            switch (confirmation.customId) {
+                case "link_role_back":
+                    return await this.setPrevFunc();
+                case "link_role_prev":
+                    roleOptions.cursor--;
+                    if (roleOptions.cursor < 0) {
+                        // We also skip being able to cursor Undocumented role
+                        roleOptions.cursor = Object.keys(filteredRoles).length - 2;
+                    }
+                    break;
+                case "link_role_next":
+                    roleOptions.cursor++;
+                    if (roleOptions.cursor > Object.keys(filteredRoles).length - 2) {
+                        roleOptions.cursor = 0;
+                    }
+                    break;
+                case "link_role_confirm":
+                    this.prevFunctions.push(this.linkDiscordRoles);
+                    return await this.setNextFunc(this.linkDiscordChannels);
+                case "link_role_select":
+                    if (confirmation.isRoleSelectMenu()) {
+                        const role = confirmation.roles.first();
+                        const roleKey = Object.keys(filteredRoles)[roleOptions.cursor] as keyof DiscordRoleHolderData;
+                        if (filteredRoles[roleKey]) {
+                            if (role && Object.values(filteredRoles).some(r => r.id === role.id)) {
+                                await confirmation.followUp({ content: "This Discord Role is already linked to another Political Role!", ephemeral: true });
+                            } else {
+                                filteredRoles[roleKey]!.id = role ? role.id : undefined;
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    return await this.escape();
+            }
+        } catch (e) {
+            return await this.timedOut();
+        }
+    }
+
+    async linkDiscordChannels(): Promise<void> {
+        const { discordChannelOptions } = this.guildConfigData.discordOptions;
+        const { cursor: categoryCursor, isCursorOnCategory } = discordChannelOptions;
+
+        // Based on our configured settings, filter out the channels that are not needed. Then, if a category does not have any channels, delete it as well.
+        discordChannelOptions.filteredCategoryChannels = [...discordChannelOptions.baseCategoryChannels];
+        for (let i = 0; i < discordChannelOptions.filteredCategoryChannels.length; i++) {
+            const category = discordChannelOptions.filteredCategoryChannels[i];
+            category.channels = category.channels.filter(channel => {
+                const { disable } = channel;
+                const isDDMatch = disable?.isDD === (this.guildConfigData.politicalSystem === PoliticalSystemsType.DirectDemocracy);
+                const appointJudgesMatch = disable?.appointJudges === undefined ? true : disable?.appointJudges === this.guildConfigData.ddOptions?.appointJudges;
+                const appointModeratorsMatch = disable?.appointModerators === undefined ? true : disable?.appointModerators === this.guildConfigData.ddOptions?.appointModerators;
+                return !(disable && isDDMatch && appointJudgesMatch && appointModeratorsMatch)
+            });
+
+            if (category.channels.length === 0) {
+                discordChannelOptions.filteredCategoryChannels.splice(i, 1);
+                i--;
+                continue;
+            }
+        }
+
+        // Clamp cursor back to 0 if it goes out of bounds
+        if (discordChannelOptions.cursor >= discordChannelOptions.filteredCategoryChannels.length) {
+            discordChannelOptions.cursor = 0;
+        }
+        discordChannelOptions.filteredCategoryChannels.forEach(category => {
+            if (category.cursor! >= category.channels.length) {
+                category.cursor = 0;
+            }
+        });
+        
+        const embed = new EmbedBuilder()
+            .setTitle("Link Discord Channels (2/2)")
+            .setDescription("The following categories and channels will be created. You can either link them to existing channels or create a new one.\nYou can change the names of the channels later through the `/config edit` command.")
+            .setColor(Colors.Blurple)
+            .setFields(discordChannelOptions.filteredCategoryChannels.reduce((fields, category, index) => {
+                fields.push({
+                    name: category.name + (isCursorOnCategory && discordChannelOptions.cursor === index ? " (Selected)" : ""),
+                    value: category?.id ? `<#${category.id}>` : "New Category Channel",
+                    inline: false
+                });
+                
+                category.channels.forEach((channel, channelIndex) => {
+                    fields.push({
+                        name: channel.name + (isCursorOnCategory ? "" : (discordChannelOptions.cursor === index && category.cursor === channelIndex ? " (Selected)" : "")),
+                        value: channel?.id ? `<#${channel.id}>` : "New Channel",
+                        inline: true
+                    });
+                });
+
+                return fields;
+            }, [] as APIEmbedField[]))
+            .setFooter({ text: "Page " + this.page })
+            .toJSON();
+
+        const actionRowUtilities = new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId("link_channel_back")
+                    .setLabel("Back")
+                    .setStyle(ButtonStyle.Danger)
+                    .setEmoji("↩️"),
+                new ButtonBuilder()
+                    .setCustomId("link_channel_prev")
+                    .setLabel("Previous " + (isCursorOnCategory ? "Category" : "Channel"))
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji("⬆️"),
+                new ButtonBuilder()
+                    .setCustomId("link_channel_next")
+                    .setLabel("Next " + (isCursorOnCategory ? "Category" : "Channel"))
+                    .setStyle(ButtonStyle.Secondary)
+                    .setEmoji("⬇️"),
+                new ButtonBuilder()
+                    .setCustomId("link_channel_toggle")
+                    .setLabel(isCursorOnCategory ? "Modifying Categories" : "Modifying Channels")
+                    .setStyle(ButtonStyle.Secondary)
+                    .setEmoji("🔄"),
+                new ButtonBuilder()
+                    .setCustomId("link_channel_confirm")
+                    .setLabel("Continue")
+                    .setStyle(ButtonStyle.Success)
+                    .setEmoji("✅")
+            )
+        // If no Default allowed, maybe we need to work with string menus instead
+        const actionRowChannelSelect = new ActionRowBuilder<ChannelSelectMenuBuilder>()
+            .addComponents(
+                new ChannelSelectMenuBuilder()
+                    .setCustomId("link_channel_select")
+                    .setChannelTypes(isCursorOnCategory ? [ChannelType.GuildCategory] : [ChannelType.GuildText])
+                    .setPlaceholder("Select a Channel")
+                    .setMinValues(0)
+                    .setMaxValues(1)
+            )
+        
+        await this.interaction.editReply({ embeds: [embed], components: [actionRowUtilities, actionRowChannelSelect] });
+
+        try {
+            const confirmation = await this.response!.awaitMessageComponent({
+                filter: (i: MessageComponentInteraction) => (i.isButton() || i.isChannelSelectMenu()) && i.user.id === this.interaction.user.id,
+                time: settings.discord.interactionTimeout
+            });
+            await confirmation.deferUpdate();
+
+            const { filteredCategoryChannels } = discordChannelOptions;
+
+            switch (confirmation.customId) {
+                case "link_channel_back":
+                    return await this.setPrevFunc();
+                case "link_channel_prev":
+                    if (isCursorOnCategory) {
+                        discordChannelOptions.cursor -= 1;
+                        if (discordChannelOptions.cursor < 0) {
+                            discordChannelOptions.cursor = filteredCategoryChannels.length - 1;
+                        }
+                    } else {
+                        filteredCategoryChannels[categoryCursor].cursor! -= 1;
+                        if (filteredCategoryChannels[categoryCursor].cursor! < 0) {
+                            filteredCategoryChannels[categoryCursor].cursor = filteredCategoryChannels[categoryCursor].channels.length - 1;
+                        }
+                    }
+                    break;
+                case "link_channel_next":
+                    if (isCursorOnCategory) {
+                        discordChannelOptions.cursor += 1;
+                        if (discordChannelOptions.cursor >= filteredCategoryChannels.length) {
+                            discordChannelOptions.cursor = 0;
+                        }
+                    } else {
+                        filteredCategoryChannels[categoryCursor].cursor! += 1;
+                        if (filteredCategoryChannels[categoryCursor].cursor! >= filteredCategoryChannels[categoryCursor].channels.length) {
+                            filteredCategoryChannels[categoryCursor].cursor = 0;
+                        }
+                    }
+                    break;
+                case "link_channel_toggle":
+                    discordChannelOptions.isCursorOnCategory = !discordChannelOptions.isCursorOnCategory;
+                    break;
+                case "link_channel_confirm":
+                    this.prevFunctions.push(this.linkDiscordChannels);
                     return await this.setNextFunc(this.setEmergencyOptions);
+                case "link_channel_select":
+                    if (confirmation.isChannelSelectMenu()) {
+                        const discordChannel = confirmation.channels.first()
+                        if (isCursorOnCategory) {
+                            if (discordChannel && filteredCategoryChannels.some(category => category.id === discordChannel.id)) {
+                                await confirmation.followUp({ content: "This Discord Channel is already linked to another Category!", ephemeral: true });
+                            } else {
+                                discordChannelOptions.filteredCategoryChannels[discordChannelOptions.cursor].id = discordChannel ? discordChannel.id : undefined;
+                            }
+                        } else {
+                            if (discordChannel && filteredCategoryChannels.some(category => category.channels.some(channel => channel.id === discordChannel.id))) {
+                                await confirmation.followUp({ content: "This Discord Channel is already linked to another Channel!", ephemeral: true });
+                            } else {
+                                discordChannelOptions.filteredCategoryChannels[categoryCursor].channels[discordChannelOptions.filteredCategoryChannels[categoryCursor].cursor].id = discordChannel ? discordChannel.id : undefined;
+                            }
+                        }
+                    }
+                    break;
                 default:
                     return await this.escape();
             }
