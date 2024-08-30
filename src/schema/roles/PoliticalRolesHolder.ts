@@ -40,7 +40,7 @@ async function createPoliticalRoleHolderDocument(politicalRoleHolder: PoliticalR
     return await PoliticalRoleHolderModel.create(politicalRoleHolder);
 }
 
-async function deletePoliticalRoleHolderDocument(guild: Guild, _id: Ref<PoliticalRoleHolder>, reason?: string) {
+async function deletePoliticalRoleHolderDocument(guild: Guild, _id: Ref<PoliticalRoleHolder>, deleteObjects: boolean, reason?: string) {
     const politicalRoleHolder = await PoliticalRoleHolderModel.findOneAndDelete({ _id });
     if (!politicalRoleHolder) {
         return;
@@ -49,7 +49,7 @@ async function deletePoliticalRoleHolderDocument(guild: Guild, _id: Ref<Politica
     await Promise.all(
         Object.values(politicalRoleHolder.toObject()).map(async (role) => {
             if (role) {
-                await deletePoliticalRoleDocument(guild, role as Ref<PoliticalRole>, reason);
+                await deletePoliticalRoleDocument(guild, role as Ref<PoliticalRole>, deleteObjects, reason);
             }
         })
     );

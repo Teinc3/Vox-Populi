@@ -150,15 +150,15 @@ async function createPoliticalChannels(guild: Guild, roleHolder: PoliticalRoleHo
     return newChannelDocuments;
 }
 
-async function deleteGuildCategoryDocument(guild: Guild, categoryDocument: Ref<GuildCategory>, reason?: string) {
+async function deleteGuildCategoryDocument(guild: Guild, categoryDocument: Ref<GuildCategory>, deleteObjects: boolean, reason?: string) {
     // Find the guild category document
     const guildCategory = await GuildCategoryModel.findOneAndDelete({ _id: categoryDocument });
     if (!guildCategory) {
         return;
     }
 
-    const deleteChannelPromises = (guildCategory.channels ?? []).map(channel => deletePoliticalChannelDocument(guild, channel, reason));
-    const deleteCategoryPromise = deleteDiscordCategory(guild, guildCategory.categoryID, reason);
+    const deleteChannelPromises = (guildCategory.channels ?? []).map(channel => deletePoliticalChannelDocument(guild, channel, deleteObjects, reason));
+    const deleteCategoryPromise = deleteObjects ? deleteDiscordCategory(guild, guildCategory.categoryID, reason) : Promise.resolve();
 
     await Promise.all([...deleteChannelPromises, deleteCategoryPromise]);
 }

@@ -70,7 +70,7 @@ async function createGuildDocument(interaction: ChatInputCommandInteraction, gui
     return await GuildModel.create(guildData);
 }
 
-async function deleteGuildDocument(guild: Guild, reason?: string): Promise<boolean> {
+async function deleteGuildDocument(guild: Guild, deleteObjects: boolean, reason?: string): Promise<boolean> {
     const guildID = guild.id;
     const guildDocument = await GuildModel.findOneAndDelete({ guildID });
     if (!guildDocument) {
@@ -83,8 +83,8 @@ async function deleteGuildDocument(guild: Guild, reason?: string): Promise<boole
     const politicalSystem = guildDocument.politicalSystem;
     
     // Delete all categories, roles, and the political system concurrently
-    const categoryPromises = (categories ?? []).map(category => deleteGuildCategoryDocument(guild, category, reason));
-    const rolePromise = roles ? deletePoliticalRoleHolderDocument(guild, roles, reason) : Promise.resolve();
+    const categoryPromises = (categories ?? []).map(category => deleteGuildCategoryDocument(guild, category, deleteObjects, reason));
+    const rolePromise = roles ? deletePoliticalRoleHolderDocument(guild, roles, deleteObjects, reason) : Promise.resolve();
     const systemPromise = politicalSystem ? deletePoliticalSystemDocument(politicalSystem) : Promise.resolve();
 
     await Promise.all([...categoryPromises, rolePromise, systemPromise]);

@@ -8,9 +8,11 @@ import { deleteGuildDocument } from "../../../schema/Guild.js";
 import settings from "../../../data/settings.json" assert { type: "json" };
 
 export default async function execute_delete(interaction: ChatInputCommandInteraction, guild: Guild): Promise<boolean> {
+    const deleteObjects = interaction.options.getBoolean('removeobjects', true);
+
     const embed = new EmbedBuilder()
         .setTitle('Server Configuration Deletion')
-        .setDescription('Are you sure you want to delete the current server configuration? This will delete all data associated with this server from the database.')
+        .setDescription(`Are you sure you want to delete the current server configuration? This will delete all data associated with this server from the database.\n\nExisting roles and channels **will ${deleteObjects ? "" : "not "}**be deleted.`)
         .setColor(Colors.Yellow)
         .setFooter({ text: 'This action is irreversible!' });
 
@@ -36,15 +38,15 @@ export default async function execute_delete(interaction: ChatInputCommandIntera
         // Deferring the follow-up to prevent the interaction from timing out
         await collected.deferUpdate();
         
-        // Lock the buttons
-        confirm.setDisabled(true);
-        cancel.setDisabled(true);
-        const newRow = new ActionRowBuilder<ButtonBuilder>().addComponents(confirm, cancel);
-        await response.edit({ components: [newRow] });
+        const newEmbed = new EmbedBuilder()
+            .setTitle('Server Configuration Deletion')
+            .setDescription('Processing your request...')
+            .setColor(Colors.Yellow);
+        await collected.editReply({ embeds: [newEmbed], components: [] });
 
         if (collected.customId === 'delete_confirm') {
             // Proceed with deletion
-            const result = await deleteGuildDocument(guild, `Server configuration deletion requested by ${interaction.user.tag} (${interaction.user.id})`);
+            const result = await deleteGuildDocument(guild, deleteObjects, `Server configuration deletion requested by ${interaction.user.tag} (${interaction.user.id})`);
             if (result) {
                 const embed = new EmbedBuilder()
                     .setTitle('Server Configuration Deletion')

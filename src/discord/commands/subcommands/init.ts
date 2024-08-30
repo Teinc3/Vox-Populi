@@ -1,17 +1,15 @@
 import {
-    EmbedBuilder, ActionRowBuilder, ButtonBuilder, Colors, ButtonStyle,
-    type ChatInputCommandInteraction, type MessageComponentInteraction, type InteractionResponse, type APIButtonComponentWithCustomId,
-    type GuildMemberRoleManager, type APIEmbedField,
-    ChannelSelectMenuBuilder,
-    ChannelType,
-    RoleSelectMenuBuilder,
+    ButtonBuilder, Colors, ButtonStyle, ChannelType,
+    EmbedBuilder, ActionRowBuilder, ChannelSelectMenuBuilder, RoleSelectMenuBuilder,
+    type ChatInputCommandInteraction, type MessageComponentInteraction, type InteractionResponse,
+    type GuildMemberRoleManager, type APIEmbedField, type APIButtonComponentWithCustomId,
 } from 'discord.js';
 import { isDocument } from '@typegoose/typegoose';
 
 import { createGuildDocument } from '../../../schema/Guild.js';
 import { PoliticalRoleModel } from '../../../schema/roles/PoliticalRole.js';
 
-import { DiscordRoleHolderData, GuildConfigData, PoliticalSystemsType, ExtendedDefaultDiscordData, DefaultRoleData } from '../../../types/types.js';
+import { DiscordRoleHolderData, GuildConfigData, PoliticalSystemsType, ExtendedDefaultDiscordData, DefaultRoleData, NewCategoryChannelData } from '../../../types/types.js';
 import settings from '../../../data/settings.json' assert { type: 'json' };
 import wizardDefaults from '../../../data/defaults/wizard.json' assert { type: 'json' };
 import roleDefaults from '../../../data/defaults/roles.json' assert { type: 'json' };
@@ -112,10 +110,7 @@ class InitWizard {
         if (this.response) {
             await this.interaction.editReply({ embeds: [selectPoliticalSystemEmbed], components: [actionRow] });
         } else {
-            this.response = await this.interaction.reply({
-                embeds: [selectPoliticalSystemEmbed],
-                components: [actionRow]
-            });
+            this.response = await this.interaction.reply({ embeds: [selectPoliticalSystemEmbed], components: [actionRow] });
         }
 
         try {
@@ -1178,13 +1173,17 @@ class InitWizard {
 
     async linkDiscordRoles(): Promise<void> {
         if (!this.guildConfigData.discordOptions) {
+            const newRoleData: DiscordRoleHolderData = JSON.parse(JSON.stringify(roleDefaults));
+            const newCategoryData: NewCategoryChannelData = JSON.parse(JSON.stringify(categoryDefaults));
+
             this.guildConfigData.discordOptions = {
                 roleOptions: {
-                    filteredRoles: { ...roleDefaults } as DiscordRoleHolderData,
+                    baseRoles: newRoleData,
+                    filteredRoles: { ...newRoleData },
                     cursor: 0
                 },
                 discordChannelOptions: {
-                    baseCategoryChannels: categoryDefaults.map(category => ({
+                    baseCategoryChannels: newCategoryData.map(category => ({
                         ...category,
                         cursor: 0
                     })),
@@ -1355,7 +1354,7 @@ class InitWizard {
             .setTitle("Link Discord Channels (2/2)")
             .setDescription("The following categories and channels will be created. You can either link them to existing channels or create a new one.\nYou can change the names of the channels later through the `/config edit` command.")
             .setColor(Colors.Blurple)
-            .setFields(discordChannelOptions.filteredCategoryChannels.reduce((fields, category, index) => {
+            .setFields(discordChannelOptions.filteredCategoryChannels.reduce((fields, category, index, array) => {
                 fields.push({
                     name: category.name + (isCursorOnCategory && discordChannelOptions.cursor === index ? " (Selected)" : ""),
                     value: category?.id ? `<#${category.id}>` : "New Category Channel",
@@ -1369,6 +1368,11 @@ class InitWizard {
                         inline: true
                     });
                 });
+
+                // Separate categories with a blank field
+                if (index !== array.length - 1) {
+                    fields.push({ name: "\u200B", value: "\u200B", inline: false });
+                }
 
                 return fields;
             }, [] as APIEmbedField[]))
@@ -1428,6 +1432,7 @@ class InitWizard {
             switch (confirmation.customId) {
                 case "link_channel_back":
                     return await this.setPrevFunc();
+
                 case "link_channel_prev":
                     if (isCursorOnCategory) {
                         discordChannelOptions.cursor -= 1;
@@ -1441,6 +1446,7 @@ class InitWizard {
                         }
                     }
                     break;
+
                 case "link_channel_next":
                     if (isCursorOnCategory) {
                         discordChannelOptions.cursor += 1;
@@ -1454,30 +1460,36 @@ class InitWizard {
                         }
                     }
                     break;
+
                 case "link_channel_toggle":
                     discordChannelOptions.isCursorOnCategory = !discordChannelOptions.isCursorOnCategory;
                     break;
+
                 case "link_channel_confirm":
                     this.prevFunctions.push(this.linkDiscordChannels);
                     return await this.setNextFunc(this.setEmergencyOptions);
+
                 case "link_channel_select":
                     if (confirmation.isChannelSelectMenu()) {
                         const discordChannel = confirmation.channels.first()
                         if (isCursorOnCategory) {
-                            if (discordChannel && filteredCategoryChannels.some(category => category.id === discordChannel.id)) {
+                            const selectedCategory = discordChannelOptions.filteredCategoryChannels[discordChannelOptions.cursor];
+                            if (discordChannel && filteredCategoryChannels.some(category => category.id === discordChannel.id && category.id !== selectedCategory.id)) {
                                 await confirmation.followUp({ content: "This Discord Channel is already linked to another Category!", ephemeral: true });
                             } else {
-                                discordChannelOptions.filteredCategoryChannels[discordChannelOptions.cursor].id = discordChannel ? discordChannel.id : undefined;
+                                selectedCategory.id = discordChannel ? discordChannel.id : undefined;
                             }
                         } else {
-                            if (discordChannel && filteredCategoryChannels.some(category => category.channels.some(channel => channel.id === discordChannel.id))) {
+                            const selectedChannel = filteredCategoryChannels[categoryCursor].channels[filteredCategoryChannels[categoryCursor].cursor];
+                            if (discordChannel && filteredCategoryChannels.some(category => category.channels.some(channel => channel.id === discordChannel.id && channel.id !== selectedChannel.id))) {
                                 await confirmation.followUp({ content: "This Discord Channel is already linked to another Channel!", ephemeral: true });
                             } else {
-                                discordChannelOptions.filteredCategoryChannels[categoryCursor].channels[discordChannelOptions.filteredCategoryChannels[categoryCursor].cursor].id = discordChannel ? discordChannel.id : undefined;
+                                selectedChannel.id = discordChannel ? discordChannel.id : undefined;
                             }
                         }
                     }
                     break;
+
                 default:
                     return await this.escape();
             }
@@ -1536,7 +1548,7 @@ class InitWizard {
                     .setEmoji("➡️"),
                 new ButtonBuilder()
                     .setCustomId('emergency_delete_toggle')
-                    .setLabel("Toggle Deletion")
+                    .setLabel("Toggle Reset")
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji("↕️"),
                 new ButtonBuilder()

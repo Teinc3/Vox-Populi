@@ -23,7 +23,7 @@ Not checked for latest commit.
 
 ## TODO
 ### Active
-- Prevent deletion of roles and channels that the user linked to the config
+- Modularize init configuration command functions to increase readability
 - Rework positioning of roles and channels
 
 ### Future
@@ -31,5 +31,4 @@ Not checked for latest commit.
 - Add voting system
 
 ### Wont Fix
-- Simplify redundant code in Initialization Wizard
 - Add more JSDocs to schema files

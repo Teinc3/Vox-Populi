@@ -56,6 +56,7 @@ The bot's own set of permissions are simplified into the following categories:
 
 ### Manage
 #### Non-Overridable
+- Manage Server (1 << 5)
 - Manage Expressions (1 << 30)
 - Manage Events (1 << 33)
 - Manage Monetization (1 << 41)
@@ -71,7 +72,6 @@ The bot's own set of permissions are simplified into the following categories:
 
 ### Emergency (VoxPopuli) - Non-Overridable
 - Administrator (1 << 3)
-- Manage Server (1 << 5)
 
 ## Base Permissions
 

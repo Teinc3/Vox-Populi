@@ -52,11 +52,18 @@ export interface DiscordOptions {
 export type DiscordRoleHolderData = PoliticalRoleHolderInterface<ExtendedDefaultDiscordData<DefaultRoleData>>;
 
 export interface DiscordRoleOptionsData {
+    baseRoles: DiscordRoleHolderData; // This won't be accessed, just to hold the role data and prevent garbage collection
     filteredRoles: DiscordRoleHolderData;
     cursor: number;
 }
 
 type BasePermission = "view" | "send" | "interact" | "moderate" | "manage" | "emergency";
+
+export type CustomPermissionsOverwrite<T> = {
+    [key in Exclude<BasePermission, "emergency">]: T[];
+}
+
+export type CustomPermissions<T> = CustomPermissionsOverwrite<T> & Partial<Record<"emergency", T[]>>;
 
 export interface DefaultRoleData {
     name: string;
@@ -64,6 +71,8 @@ export interface DefaultRoleData {
     color: string;
     basePermissions?: BasePermission[]
 }
+
+export type NewCategoryChannelData = ExtendedDefaultDiscordData<DefaultCategoryData>[];
 
 export interface DiscordChannelOptionsData {
     baseCategoryChannels: ExtendedDefaultDiscordData<DefaultCategoryData>[];
@@ -93,25 +102,13 @@ export type ExtendedDefaultDiscordData<T> = T & {
     id?: string;
 } & (T extends DefaultCategoryData ? { cursor: number } : {})
 
-export interface PoliticalRoleHolderInterface<T> {
-    VoxPopuli: T;
-    President?: T;
-    PrimeMinister?: T;
-    HeadModerator?: T;
-    Moderator?: T;
-    Senator?: T;
-    Judge?: T;
-    Citizen: T;
-    Undocumented: T;
+type BaseRoles = {
+    required: "VoxPopuli" | "Citizen" | "Undocumented";
+    optional: "President" | "PrimeMinister" | "HeadModerator" | "Moderator" | "Senator" | "Judge";
 }
 
-export interface CustomPermissions<T> {
-    view: T[];
-    send: T[];
-    interact: T[];
-    moderate: T[];
-    manage: T[];
-    emergency?: T[];
-}
-
-export type CustomPermissionsOverwrite<T> = Omit<CustomPermissions<T>, "emergency">
+export type PoliticalRoleHolderInterface<T> = {
+    [key in BaseRoles["required"]]: T;
+} & Partial<{
+    [key in BaseRoles["optional"]]: T;
+}>

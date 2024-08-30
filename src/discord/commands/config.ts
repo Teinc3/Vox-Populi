@@ -42,6 +42,12 @@ const data = new SlashCommandBuilder()
     .addSubcommand((subcommand) => {
         subcommand.setName('delete');
         subcommand.setDescription('Deletes the server configuration.');
+        subcommand.addBooleanOption((option) => {
+            option.setName('removeobjects');
+            option.setDescription('Should all channels and roles associated with the server configuration be removed?');
+            option.setRequired(true);
+            return option;
+        });
         return subcommand;
     });
 

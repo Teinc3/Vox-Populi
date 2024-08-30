@@ -3,7 +3,7 @@ import { type ColorResolvable, type Guild, type Role } from 'discord.js';
 
 import PoliticalRoleHolder from './PoliticalRolesHolder.js';
 
-import { GuildConfigData, PoliticalSystemsType } from '../../types/types.js';
+import { GuildConfigData } from '../../types/types.js';
 import { PermissionsCategories, PermissionsLevel } from '../../types/permissions.js';
 import roleDefaults from '../../data/defaults/roles.json' assert { type: "json" };
 
@@ -143,14 +143,17 @@ async function createPoliticalRoleDocuments(guild: Guild, guildConfigData: Guild
     return roleHolder;
 }
 
-async function deletePoliticalRoleDocument<T extends PoliticalRole>(guild: Guild, politicalRoleDocument: Ref<T>, reason?: string) {
+async function deletePoliticalRoleDocument<T extends PoliticalRole>(guild: Guild, politicalRoleDocument: Ref<T>, deleteObjects: boolean, reason?: string) {
     // Find role document
     const roleDocument = await PoliticalRoleModel.findOneAndDelete({ _id: politicalRoleDocument });
     if (!roleDocument) {
         return;
     }
 
-    await deleteDiscordRole(guild, roleDocument.roleID, reason);
+    if (deleteObjects) {
+        // Delete the discord role
+        await deleteDiscordRole(guild, roleDocument.roleID, reason);
+    }
 }
 
 /**

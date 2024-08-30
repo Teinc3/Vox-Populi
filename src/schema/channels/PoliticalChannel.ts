@@ -85,12 +85,14 @@ async function linkDiscordChannel(guild: Guild, politicalChannel: PoliticalChann
     return politicalChannel;
 }
 
-async function deletePoliticalChannelDocument(guild: Guild, channelDocument: Ref<PoliticalChannel>, reason?: string) {
+async function deletePoliticalChannelDocument(guild: Guild, channelDocument: Ref<PoliticalChannel>, deleteObjects: boolean, reason?: string) {
     const politicalChannel = await PoliticalChannelModel.findOneAndDelete({ _id: channelDocument });
     if (!politicalChannel || !politicalChannel.channelID) {
         return;
     }
-    await deleteDiscordChannel(guild, politicalChannel.channelID, reason);
+    if (deleteObjects) {
+        await deleteDiscordChannel(guild, politicalChannel.channelID, reason);
+    }
 }
 
 async function deleteDiscordChannel(guild: Guild, channelID: string, reason?: string) {

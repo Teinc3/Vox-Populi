@@ -16,11 +16,11 @@ const {
 const PermissionsCategories = {
     "emergency": {
         overwrites: [],
-        static: [Administrator, ManageGuild]
+        static: [Administrator]
     },
     "manage": {
         overwrites: [ManageChannels, SendTTSMessages, MentionEveryone, ManageRoles, ManageWebhooks],
-        static: [ManageGuildExpressions, ManageEvents, ViewCreatorMonetizationAnalytics, CreateGuildExpressions, CreateEvents]
+        static: [ManageGuild, ManageGuildExpressions, ManageEvents, ViewCreatorMonetizationAnalytics, CreateGuildExpressions, CreateEvents]
     },
     "moderate": {
         overwrites: [ManageMessages, ManageThreads, MuteMembers, DeafenMembers, MoveMembers, PrioritySpeaker],
@@ -46,8 +46,7 @@ enum PermissionsLevel {
     Moderate,
     Interact,
     Send,
-    View,
-    NO_PERMISSIONS
+    View
 }
 
 interface PermissionsCategory {
