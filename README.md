@@ -23,12 +23,10 @@ Not checked for latest commit.
 
 ## TODO
 ### Active
-- Modularize init configuration command functions to increase readability
-- Rework positioning of roles and channels
+- Add voting system
 
 ### Future
 - Add logging and command to view logs
-- Add voting system
 
 ### Wont Fix
-- Add more JSDocs to schema files
+- Rework positioning of roles and channels (Can be changed by Executive Order)

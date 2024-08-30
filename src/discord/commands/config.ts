@@ -1,9 +1,6 @@
 import {
-    SlashCommandBuilder,
-    PermissionsBitField,
-    type ChatInputCommandInteraction,
-    type Guild,
-    type GuildMember
+    SlashCommandBuilder, PermissionsBitField,
+    type ChatInputCommandInteraction, type Guild, type GuildMember
 } from "discord.js";
 
 import init from "./subcommands/init.js";
