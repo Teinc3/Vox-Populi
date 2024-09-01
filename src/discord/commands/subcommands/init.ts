@@ -16,7 +16,6 @@ import DiscordWizard from './wizardfragments/discord.js';
 import { GuildConfigData } from '../../../types/types.js';
 import settings from '../../../data/settings.json' assert { type: 'json' };
 import wizardDefaults from '../../../data/defaults/wizard.json' assert { type: 'json' };
-import BaseWizard from './wizardfragments/BaseWizard.js';
 
 export default async function init(interaction: ChatInputCommandInteraction): Promise<boolean> {
     const initWizard = new InitWizard(interaction);

@@ -18,8 +18,8 @@ So we will have to think of a way to work around this.
 - MongoDB
 - Typegoose
 
-## Current Bugs
-Not checked for latest commit.
+## Existing Bugs
+None for now
 
 ## TODO
 ### Active
