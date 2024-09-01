@@ -11,6 +11,7 @@ import PoliticalRoleHolder, {
 import { EmergencyOptions } from './options/MiscOptions.js';
 
 import { GuildConfigData } from '../types/types.js';
+import { EventSchema } from './Event.js';
 
 class GuildSchema {
     @prop({ required: true, unique: true })
@@ -31,9 +32,8 @@ class GuildSchema {
     @prop({ required: true, ref: () => 'PoliticalRoleHolder' })
     roles!: Ref<PoliticalRoleHolder>;
 
-    /*
-    logs?: Ref<LogSchema>[];
-    */
+    @prop({ default: [], ref: () => 'EventSchema' })
+    events?: Ref<EventSchema>[];
 }
 
 const GuildModel = getModelForClass(GuildSchema);

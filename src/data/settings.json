@@ -7,6 +7,7 @@
     "devGuildID": "1242871324918022205",
     "botOwnerID": "420725289908174859",
     "maxMemberFreeConfigCount": 5,
-    "interactionTimeout": 60E3
+    "interactionTimeout": 60E3,
+    "eventLoopInterval": 60E3
   }
 }

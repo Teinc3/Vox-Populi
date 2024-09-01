@@ -46,6 +46,22 @@
       },
       {
         "position": 3,
+        "name": "support-tickets",
+        "description": "Channel for support tickets.",
+        "disable": {
+          "isDD": true,
+          "appointModerators": false
+        },
+        "permissionOverwrites": {
+          "view": [],
+          "send": [0],
+          "interact": [0],
+          "moderate": [0],
+          "manage": [0]
+        }
+      },
+      {
+        "position": 4,
         "name": "server-logs",
         "description": "Channel for server logs.",
         "permissionOverwrites": {
@@ -57,7 +73,7 @@
         }
       },
       {
-        "position": 4,
+        "position": 5,
         "name": "chat-logs",
         "description": "Channel for chat logs.",
         "permissionOverwrites": {
@@ -137,8 +153,8 @@
         }
       }, {
         "position": 1,
-        "name": "support",
-        "description": "Channel for server support.",
+        "name": "registration",
+        "description": "Channel to apply for citizenship and voting rights.",
         "disable": {
           "isDD": true,
           "appointModerators": false,
