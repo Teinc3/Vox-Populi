@@ -2,11 +2,12 @@ import { prop, getModelForClass, type Ref } from '@typegoose/typegoose';
 import { ChannelType, type CategoryChannel, type Guild } from 'discord.js';
 
 import PoliticalChannel from './PoliticalChannel.js';
-import type PoliticalRoleHolder from '../roles/PoliticalRolesHolder.js';
+import type PoliticalRoleHolder from '../roles/PoliticalRoleHolder.js';
 import ChannelPermissions, { ChannelPermissionsInterface, type UnfilteredRefRoleArray } from '../permissions/ChannelPermissions.js';
 import Chamber from '../Chamber.js';
 
-import { GuildConfigData, PoliticalBranchType, PoliticalSystemsType, DefaultCategoryData, PoliticalRoleHierarchy } from '../../types/types.js';
+import { PoliticalBranchType, PoliticalSystemsType, PoliticalRoleHierarchy } from '../../types/types.js';
+import { GuildConfigData, DefaultCategoryData } from '../../types/wizard.js';
 import { CustomPermissionsOverwrite } from '../../types/permissions.js';
 
 /**

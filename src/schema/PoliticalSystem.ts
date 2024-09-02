@@ -4,7 +4,8 @@ import { prop, getModelForClass, type Ref, Severity } from '@typegoose/typegoose
 import Chamber, { Legislature, Senate, Referendum, Court } from "./Chamber.js";
 import { PresidentialOptions, ParliamentaryOptions, DDOptions } from './options/SystemOptions.js';
 
-import { GuildConfigData, PoliticalBranchType, PoliticalSystemsType } from '../types/types.js';
+import { PoliticalBranchType, PoliticalSystemsType } from '../types/types.js';
+import { GuildConfigData } from '../types/wizard.js';
 
 class PoliticalSystem {
     @prop({ required: true })

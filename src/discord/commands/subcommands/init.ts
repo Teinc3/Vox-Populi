@@ -13,7 +13,7 @@ import DiscordWizard from './wizardfragments/discord.js';
 import PoliticalGuild from '../../../schema/PoliticalGuild.js';
 import { PoliticalRoleModel } from '../../../schema/roles/PoliticalRole.js';
 
-import { GuildConfigData } from '../../../types/types.js';
+import { GuildConfigData } from '../../../types/wizard.js';
 import settings from '../../../data/settings.json' assert { type: 'json' };
 import wizardDefaults from '../../../data/defaults/wizard.json' assert { type: 'json' };
 
@@ -76,22 +76,7 @@ export class InitWizard {
 
     buttonFilter = (i: MessageComponentInteraction) => i.isButton() && i.user.id === this.interaction.user.id;
 
-    /**
-     * Function to automatically bind all public methods in a fragment to the fragment itself.
-     * 
-     * @param fragment The fragment to bind the functions to
-     */
-    /* autoBind<T extends BaseWizard>(fragment: T) {
-        const fragmentKeys = Object.keys(fragment);
-        for (const key of fragmentKeys) {
-            const value = fragment[key as keyof T];
-            if (typeof value === 'function') {
-                fragment[key as keyof T] = value.bind(fragment);
-            }
-        }
-    } */
-
-    async setEmergencyOptions(): Promise<void> {
+    setEmergencyOptions = async (): Promise<void> => {
         if (!this.guildConfigData.emergencyOptions) {
             this.guildConfigData.emergencyOptions = {
                 tempAdminLength: wizardDefaults.emergency.tempAdminLength,
@@ -200,7 +185,7 @@ export class InitWizard {
         }
     }
 
-    async completeInit(): Promise<void> {
+    completeInit = async (): Promise<void> => {
         // Show "Configuring Server" message
         const configuringEmbed = new EmbedBuilder()
             .setTitle("Configuring Server")

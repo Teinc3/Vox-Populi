@@ -2,7 +2,7 @@ import { prop } from '@typegoose/typegoose';
 
 import { TermOptions } from './RoleOptions.js';
 
-import { GuildConfigOptionsOptionClass } from "../../types/types.js";
+import { GuildConfigOptionsOptionClass } from "../../types/wizard.js";
 
 class PresidentialOptions extends GuildConfigOptionsOptionClass {
     /**

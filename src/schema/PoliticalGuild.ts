@@ -4,10 +4,10 @@ import type { ChatInputCommandInteraction, Guild } from 'discord.js';
 import GuildCategory from './channels/GuildCategory.js';
 import PoliticalSystem from './PoliticalSystem.js';
 import PoliticalRole from './roles/PoliticalRole.js';
-import PoliticalRoleHolder from './roles/PoliticalRolesHolder.js';
+import PoliticalRoleHolder from './roles/PoliticalRoleHolder.js';
 import { EmergencyOptions } from './options/MiscOptions.js';
 
-import { GuildConfigData } from '../types/types.js';
+import { GuildConfigData } from '../types/wizard.js';
 
 class PoliticalGuild {
     @prop({ required: true, unique: true })

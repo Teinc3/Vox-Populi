@@ -12,7 +12,7 @@ class JudicialWizard extends BaseWizard {
      * 
      * Sets number of Judges and Threshold for Court Verdicts
      */
-    async setCourtGenericOptions(): Promise<void> {   
+    setCourtGenericOptions = async (): Promise<void> => {   
         // Initialize the Court Options if they don't exist
         if (!this.initWizard.guildConfigData.courtOptions) {
             this.initWizard.guildConfigData.courtOptions = {
@@ -135,8 +135,8 @@ class JudicialWizard extends BaseWizard {
                     courtOptions.threshold.simple += (courtOptions.threshold.simple >= 91 ? 0 : 10);
                     break;
                 case "court_generic_confirm":
-                    this.initWizard.prevFunctions.push(this.initWizard.fragments.judicial.setCourtGenericOptions);
-                    return await this.initWizard.setNextFunc(this.initWizard.fragments.judicial.setCourtThresholdOptions);
+                    this.initWizard.prevFunctions.push(this.setCourtGenericOptions);
+                    return await this.initWizard.setNextFunc(this.setCourtThresholdOptions);
                 default:
                     return await this.initWizard.escape();
             }
@@ -150,7 +150,7 @@ class JudicialWizard extends BaseWizard {
      * 
      * Sets Term Length, Term Limits and if Consecutive Terms are allowed for Court Judges
      */
-    async setCourtThresholdOptions(): Promise<void> {
+    setCourtThresholdOptions = async (): Promise<void> => {
         const courtOptions = this.initWizard.guildConfigData.courtOptions!;
         const cursor = courtOptions.terms.cursor;
 
@@ -236,7 +236,7 @@ class JudicialWizard extends BaseWizard {
                     courtOptions.terms.cursor = 1 - courtOptions.terms.cursor;
                     break;
                 case "court_term_confirm":
-                    this.initWizard.prevFunctions.push(this.initWizard.fragments.judicial.setCourtThresholdOptions);
+                    this.initWizard.prevFunctions.push(this.setCourtThresholdOptions);
                     return await this.initWizard.setNextFunc(this.initWizard.fragments.discord.linkDiscordRoles);
                 default:
                     return await this.initWizard.escape();

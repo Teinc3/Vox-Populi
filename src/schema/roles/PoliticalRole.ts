@@ -1,9 +1,10 @@
 import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
 import { type ColorResolvable, type Guild, type Role } from 'discord.js';
 
-import PoliticalRoleHolder from './PoliticalRolesHolder.js';
+import PoliticalRoleHolder from './PoliticalRoleHolder.js';
 
-import { GuildConfigData, PoliticalRoleHierarchy } from '../../types/types.js';
+import { PoliticalRoleHierarchy } from '../../types/types.js';
+import { GuildConfigData } from '../../types/wizard.js';
 import { BasePermissionsAggregate, getPermissionsLevelAggregate, progressivePermissionsAllocator } from '../../types/permissions.js';
 
 class PoliticalRole {

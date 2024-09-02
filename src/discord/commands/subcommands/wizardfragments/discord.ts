@@ -6,14 +6,15 @@ import {
 
 import BaseWizard from './BaseWizard.js';
 
-import { DiscordRoleHolderData, PoliticalSystemsType, ExtendedDefaultDiscordData, DefaultRoleData, NewCategoryChannelData, PoliticalRoleHierarchy } from '../../../../types/types.js';
+import { PoliticalSystemsType, PoliticalRoleHierarchy } from '../../../../types/types.js';
+import { DiscordRoleHolderData, ExtendedDefaultDiscordData, DefaultRoleData, NewCategoryChannelData } from '../../../../types/wizard.js';
 import settings from '../../../../data/settings.json' assert { type: 'json' };
 import roleDefaults from '../../../../data/defaults/roles.json' assert { type: 'json' };
 import categoryDefaults from '../../../../data/defaults/channels.json' assert { type: "json" };
 
 class DiscordWizard extends BaseWizard {
 
-    async linkDiscordRoles(): Promise<void> {
+    linkDiscordRoles = async (): Promise<void> => {
         if (!this.initWizard.guildConfigData.discordOptions) {
             const newRoleData: DiscordRoleHolderData = JSON.parse(JSON.stringify(roleDefaults));
             const newCategoryData: NewCategoryChannelData = JSON.parse(JSON.stringify(categoryDefaults));
@@ -142,8 +143,8 @@ class DiscordWizard extends BaseWizard {
                     }
                     break;
                 case "link_role_confirm":
-                    this.initWizard.prevFunctions.push(this.initWizard.fragments.discord.linkDiscordRoles);
-                    return await this.initWizard.setNextFunc(this.initWizard.fragments.discord.linkDiscordChannels);
+                    this.initWizard.prevFunctions.push(this.linkDiscordRoles);
+                    return await this.initWizard.setNextFunc(this.linkDiscordChannels);
                 case "link_role_select":
                     if (confirmation.isRoleSelectMenu()) {
                         const discordRole = confirmation.roles.first();
@@ -165,7 +166,7 @@ class DiscordWizard extends BaseWizard {
         }
     }
 
-    async linkDiscordChannels(): Promise<void> {
+    linkDiscordChannels = async (): Promise<void> => {
         const { discordChannelOptions } = this.initWizard.guildConfigData.discordOptions;
         const { cursor: categoryCursor, isCursorOnCategory } = discordChannelOptions;
 
@@ -313,7 +314,7 @@ class DiscordWizard extends BaseWizard {
                     break;
 
                 case "link_channel_confirm":
-                    this.initWizard.prevFunctions.push(this.initWizard.fragments.discord.linkDiscordChannels);
+                    this.initWizard.prevFunctions.push(this.linkDiscordChannels);
                     return await this.initWizard.setNextFunc(this.initWizard.setEmergencyOptions);
 
                 case "link_channel_select":

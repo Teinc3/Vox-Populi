@@ -4,7 +4,8 @@ import PoliticalChannel from './channels/PoliticalChannel.js';
 import GuildModel from './PoliticalGuild.js';
 import { ThresholdOptions, TermOptions, SeatOptions } from './options/RoleOptions.js';
 
-import { GuildConfigData, LegislativeChamberType, PoliticalBranchType, PoliticalSystemsType } from '../types/types.js';
+import { LegislativeChamberType, PoliticalBranchType, PoliticalSystemsType } from '../types/types.js';
+import { GuildConfigData } from '../types/wizard.js';
 
 /**
  * Represents a base Chamber document.
