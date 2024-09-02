@@ -12,7 +12,7 @@ import wizardDefaults from '../../../../data/defaults/wizard.json' assert { type
 
 class SystemWizard extends BaseWizard {
 
-    async selectPoliticalSystem(): Promise<void> {
+    selectPoliticalSystem = async (): Promise<void> => {
         // Send an embed to prompt the user to select a political system with 3 buttons
         const selectPoliticalSystemEmbed = new EmbedBuilder()
             .setTitle("Select a Political System")
@@ -82,18 +82,18 @@ class SystemWizard extends BaseWizard {
 
                 case "system_presidential":
                     this.initWizard.guildConfigData.politicalSystem = PoliticalSystemsType.Presidential;
-                    this.initWizard.prevFunctions = [this.initWizard.fragments.system.selectPoliticalSystem];
-                    return await this.initWizard.setNextFunc(this.initWizard.fragments.system.setPresidentialOptions);
+                    this.initWizard.prevFunctions = [this.selectPoliticalSystem];
+                    return await this.initWizard.setNextFunc(this.setPresidentialOptions);
 
                 case "system_parliamentary":
                     this.initWizard.guildConfigData.politicalSystem = PoliticalSystemsType.Parliamentary;
-                    this.initWizard.prevFunctions = [this.initWizard.fragments.system.selectPoliticalSystem];
+                    this.initWizard.prevFunctions = [this.selectPoliticalSystem];
                     return await this.initWizard.setNextFunc(this.initWizard.fragments.legislature.setSenateTermOptions);
 
                 case "system_dd":
                     this.initWizard.guildConfigData.politicalSystem = PoliticalSystemsType.DirectDemocracy;
-                    this.initWizard.prevFunctions = [this.initWizard.fragments.system.selectPoliticalSystem];
-                    return await this.initWizard.setNextFunc(this.initWizard.fragments.system.setDDOptions);
+                    this.initWizard.prevFunctions = [this.selectPoliticalSystem];
+                    return await this.initWizard.setNextFunc(this.setDDOptions);
 
                 default:
                     return await this.initWizard.escape();
@@ -103,7 +103,7 @@ class SystemWizard extends BaseWizard {
         }
     }
 
-    async setPresidentialOptions(): Promise<void> {
+    setPresidentialOptions = async (): Promise<void> => {
 
         if (!this.initWizard.guildConfigData.presidentialOptions) {
             this.initWizard.guildConfigData.presidentialOptions = {
@@ -227,7 +227,7 @@ class SystemWizard extends BaseWizard {
                     }
                     break;
                 case "presidential_options_confirm":
-                    this.initWizard.prevFunctions.push(this.initWizard.fragments.system.setPresidentialOptions);
+                    this.initWizard.prevFunctions.push(this.setPresidentialOptions);
                     return await this.initWizard.setNextFunc(this.initWizard.fragments.legislature.setSenateTermOptions);
                 default:
                     return await this.initWizard.escape();
@@ -237,7 +237,7 @@ class SystemWizard extends BaseWizard {
         }
     }
 
-    async setParliamentaryOptions(): Promise<void> {
+    setParliamentaryOptions = async (): Promise<void> => {
         // Basically just snap elections, coalitions/majorities, oppositions, etc.
         // Now we only do snap Elections
 
@@ -311,7 +311,7 @@ class SystemWizard extends BaseWizard {
                     this.initWizard.guildConfigData.parliamentaryOptions.snapElection += (this.initWizard.guildConfigData.parliamentaryOptions.snapElection >= this.initWizard.guildConfigData.senateOptions!.terms.termLength - 1 ? 0 : 1);
                     break;
                 case "parliamentary_options_confirm":
-                    this.initWizard.prevFunctions.push(this.initWizard.fragments.system.setParliamentaryOptions);
+                    this.initWizard.prevFunctions.push(this.setParliamentaryOptions);
                     return await this.initWizard.setNextFunc(this.initWizard.fragments.judicial.setCourtGenericOptions); // Since we first went to configure senate then came back
                 default:
                     return await this.initWizard.escape();
@@ -321,7 +321,7 @@ class SystemWizard extends BaseWizard {
         }
     }
 
-    async setDDOptions(): Promise<void> {
+    setDDOptions = async (): Promise<void> => {
         if (!this.initWizard.guildConfigData.ddOptions) {
             this.initWizard.guildConfigData.ddOptions = {
                 appointModerators: wizardDefaults.politicalSystem.directDemocracy.appointModerators.value,
@@ -390,7 +390,7 @@ class SystemWizard extends BaseWizard {
                     this.initWizard.guildConfigData.ddOptions.appointJudges = !this.initWizard.guildConfigData.ddOptions.appointJudges;
                     break;
                 case "dd_options_confirm":
-                    this.initWizard.prevFunctions.push(this.initWizard.fragments.system.setDDOptions);
+                    this.initWizard.prevFunctions.push(this.setDDOptions);
                     return await this.initWizard.setNextFunc(this.initWizard.fragments.legislature.setReferendumOptions);
                 default:
                     return await this.initWizard.escape();

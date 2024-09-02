@@ -7,7 +7,7 @@ import init from "./subcommands/init.js";
 //import view from "./subcommands/view.js"
 import execute_delete from "./subcommands/delete.js";
 
-import GuildModel from "../../schema/Guild.js";
+import GuildModel from "../../schema/PoliticalGuild.js";
 
 import settings from "../../data/settings.json" assert { type: 'json' };
 

@@ -8,7 +8,7 @@ import wizardDefaults from '../../../../data/defaults/wizard.json' assert { type
 
 class LegislatureWizard extends BaseWizard {
 
-    async setSenateTermOptions(): Promise<void> {
+    setSenateTermOptions = async (): Promise<void> => {
         if (!this.initWizard.guildConfigData.senateOptions) {
             this.initWizard.guildConfigData.senateOptions = {
                 terms: {
@@ -111,8 +111,8 @@ class LegislatureWizard extends BaseWizard {
                     termOptions.cursor = 1 - termOptions.cursor;
                     break;
                 case "senate_term_confirm":
-                    this.initWizard.prevFunctions.push(this.initWizard.fragments.legislature.setSenateTermOptions);
-                    return await this.initWizard.setNextFunc(this.initWizard.fragments.legislature.setSenateSeatOptions);
+                    this.initWizard.prevFunctions.push(this.setSenateTermOptions);
+                    return await this.initWizard.setNextFunc(this.setSenateSeatOptions);
                 default:
                     return await this.initWizard.escape();
             }
@@ -121,7 +121,7 @@ class LegislatureWizard extends BaseWizard {
         }
     }
 
-    async setSenateSeatOptions(): Promise<void> {
+    setSenateSeatOptions = async (): Promise<void> => {
         const seatsOptions = this.initWizard.guildConfigData.senateOptions!.seats;
 
         const embed = new EmbedBuilder()
@@ -195,8 +195,8 @@ class LegislatureWizard extends BaseWizard {
                     seatsOptions.value += 1;
                     break;
                 case "senate_seat_confirm":
-                    this.initWizard.prevFunctions.push(this.initWizard.fragments.legislature.setSenateSeatOptions);
-                    return await this.initWizard.setNextFunc(this.initWizard.fragments.legislature.setSenateThresholdOptions);
+                    this.initWizard.prevFunctions.push(this.setSenateSeatOptions);
+                    return await this.initWizard.setNextFunc(this.setSenateThresholdOptions);
                 default:
                     return await this.initWizard.escape();
             }
@@ -205,7 +205,7 @@ class LegislatureWizard extends BaseWizard {
         }
     }
 
-    async setSenateThresholdOptions(): Promise<void> {
+    setSenateThresholdOptions = async (): Promise<void> => {
         const thresholdOptions = this.initWizard.guildConfigData.senateOptions!.threshold;
         const cursor = thresholdOptions.cursor;
 
@@ -341,7 +341,7 @@ class LegislatureWizard extends BaseWizard {
                     thresholdOptions.cursor = 1 - thresholdOptions.cursor;
                     break;
                 case "senate_threshold_confirm":
-                    this.initWizard.prevFunctions.push(this.initWizard.fragments.legislature.setSenateThresholdOptions);
+                    this.initWizard.prevFunctions.push(this.setSenateThresholdOptions);
                     // For Parliamentary, we go to configure Parliamentary Options (since we skipped it first for snap elections which are more relevant after senate is set up)
                     // Since DD does not have Senate, and only DD has the option to disable Judges, we can still go to Court Options
                     return await this.initWizard.setNextFunc(this.initWizard.guildConfigData.politicalSystem === PoliticalSystemsType.Parliamentary ? this.initWizard.fragments.system.setParliamentaryOptions : this.initWizard.fragments.judicial.setCourtGenericOptions);
@@ -353,7 +353,7 @@ class LegislatureWizard extends BaseWizard {
         }
     }
 
-    async setReferendumOptions(): Promise<void> {
+    setReferendumOptions = async (): Promise<void> => {
         if (!this.initWizard.guildConfigData.referendumThresholds) {
             this.initWizard.guildConfigData.referendumThresholds = {
                 simple: wizardDefaults.thresholds.simple,
@@ -486,7 +486,7 @@ class LegislatureWizard extends BaseWizard {
                     referendumThresholds.cursor = 1 - referendumThresholds.cursor;
                     break;
                 case "referendum_confirm":
-                    this.initWizard.prevFunctions.push(this.initWizard.fragments.legislature.setReferendumOptions);
+                    this.initWizard.prevFunctions.push(this.setReferendumOptions);
                     return await this.initWizard.setNextFunc(this.initWizard.guildConfigData.ddOptions!.appointJudges ? this.initWizard.fragments.judicial.setCourtGenericOptions : this.initWizard.fragments.discord.linkDiscordRoles);
                 default:
                     return await this.initWizard.escape();

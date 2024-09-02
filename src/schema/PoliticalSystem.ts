@@ -1,11 +1,11 @@
-import { prop, getModelForClass, type Ref } from '@typegoose/typegoose';
+import mongoose from 'mongoose';
+import { prop, getModelForClass, type Ref, Severity } from '@typegoose/typegoose';
 
-import PoliticalRole, { President, PrimeMinister } from "./roles/PoliticalRole.js";
-import PoliticalRoleHolder from './roles/PoliticalRolesHolder.js';
-import Chamber, { Legislature, Senate, Referendum, createChamberDocument, deleteChamberDocument } from "./Chamber.js";
+import Chamber, { Legislature, Senate, Referendum, Court } from "./Chamber.js";
 import { PresidentialOptions, ParliamentaryOptions, DDOptions } from './options/SystemOptions.js';
 
-import { GuildConfigData, PoliticalBranchType, PoliticalSystemsType } from '../types/types.js';
+import { PoliticalBranchType, PoliticalSystemsType } from '../types/types.js';
+import { GuildConfigData } from '../types/wizard.js';
 
 class PoliticalSystem {
     @prop({ required: true })
@@ -14,134 +14,91 @@ class PoliticalSystem {
     @prop({ required: true, ref: () => 'Legislature' })
     legislature!: Ref<Legislature>;
 
-    @prop({ required: true, ref: () => 'Chamber' })
-    court!: Ref<Chamber>;
+    @prop({ required: true, ref: () => 'Court' })
+    court!: Ref<Court>;
 
-    // I'm not entirely sure what use this has, but I'll keep it for now
-    // Maybe shows up in server info or something like that
-    @prop({ ref: () => 'PoliticalRole' })
-    headOfState?: Ref<PoliticalRole>;
+    @prop({ _id: false, allowMixed: Severity.ALLOW, type: () => mongoose.Schema.Types.Mixed })
+    options!: PresidentialOptions | ParliamentaryOptions | DDOptions;
 
-    // Optional Presidential methods
-    @prop({ _id: false })
-    presidentialOptions?: PresidentialOptions;
-
-    // Optional Parliamentary methods
-    @prop({ _id: false })
-    parliamentaryOptions?: ParliamentaryOptions;
-
-    // Optional DD methods
-    @prop({ _id: false })
-    ddOptions?: DDOptions;
-}
-
-class Presidential extends PoliticalSystem {
-    id = PoliticalSystemsType.Presidential;
-    declare headOfState?: Ref<President>;
-    declare legislature: Ref<Senate>;
-    declare presidentialOptions: PresidentialOptions;
-
-    constructor() {
-        super();
-        this.presidentialOptions = new PresidentialOptions();
+    constructor(politicalSystemType: PoliticalSystemsType) {
+        this.id = politicalSystemType;
+        switch (politicalSystemType) {
+            case PoliticalSystemsType.Presidential:
+                this.options = new PresidentialOptions();
+                break;
+            case PoliticalSystemsType.Parliamentary:
+                this.options = new ParliamentaryOptions();
+                break;
+            case PoliticalSystemsType.DirectDemocracy:
+                this.options = new DDOptions();
+                break;
+        }
     }
-}
 
-class Parliamentary extends PoliticalSystem {
-    id = PoliticalSystemsType.Parliamentary;
-    declare headOfState?: Ref<PrimeMinister>;
-    declare legislature: Ref<Senate>;
-
-    constructor() {
-        super();
-        this.parliamentaryOptions = new ParliamentaryOptions();
+    // Type guards
+    isPresidential(): this is { options: PresidentialOptions, legislature: Ref<Senate> } {
+        return this.id === PoliticalSystemsType.Presidential;
     }
-}
 
-class DirectDemocracy extends PoliticalSystem {
-    id = PoliticalSystemsType.DirectDemocracy;
-    declare legislature: Ref<Referendum>;
-    declare ddOptions: DDOptions;
+    isParliamentary(): this is { options: ParliamentaryOptions, legislature: Ref<Senate> } {
+        return this.id === PoliticalSystemsType.Parliamentary;
+    }
 
-    constructor() {
-        super();
-        this.ddOptions = new DDOptions();
+    isDirectDemocracy(): this is { options: DDOptions, legislature: Ref<Referendum> } {
+        return this.id === PoliticalSystemsType.DirectDemocracy;
+    }
+
+    /**
+     * Creates a PoliticalSystem document based on the guildConfigData and the politicalRoleHolder.
+     * 
+     * @param guildConfigData 
+     * @param politicalRoleHolder 
+     * @return { Promise<Ref<PoliticalSystem>> } - The reference to the created PoliticalSystem document
+     * 
+     */
+    static async createPoliticalSystemDocument(guildConfigData: GuildConfigData): Promise<Ref<PoliticalSystem>> {
+        const { politicalSystem: politicalSystemType } = guildConfigData;
+        const politicalSystem = new PoliticalSystem(politicalSystemType);
+
+        if (politicalSystem.isPresidential()) {
+            const { cursor, ...gcTermOptions } = guildConfigData.presidentialOptions!;
+            politicalSystem.options.termOptions! = gcTermOptions;
+        } else if (politicalSystem.isParliamentary()) {
+            politicalSystem.options.snapElection = guildConfigData.parliamentaryOptions!.snapElection;
+        } else if (politicalSystem.isDirectDemocracy()) {
+            politicalSystem.options = guildConfigData.ddOptions!;
+        }
+
+        // Create Legislature document
+        politicalSystem.legislature = await Chamber.createChamberDocument(PoliticalBranchType.Legislative, guildConfigData);
+        politicalSystem.court = await Chamber.createChamberDocument(PoliticalBranchType.Judicial, guildConfigData);
+
+        // Save the political system document and return the reference
+        return await PoliticalSystemModel.create(politicalSystem);
+    }
+
+    static async deletePoliticalSystemDocument(_id: Ref<PoliticalSystem>) {
+        // Find the political system document
+        const politicalSystem = await PoliticalSystemModel.findOneAndDelete({ _id });
+        if (!politicalSystem) {
+            return;
+        }
+    
+        // Find documents: HoS, Legislature, Court
+        const legislatureDocument = politicalSystem.legislature;
+        const courtDocument = politicalSystem.court;
+    
+        // Delete legislature and court if still exist (not HOS, since deleted through political role)
+        if (legislatureDocument) {
+            await Chamber.deleteChamberDocument(legislatureDocument);
+        }
+        if (courtDocument) {
+            await Chamber.deleteChamberDocument(courtDocument);
+        }
     }
 }
 
 const PoliticalSystemModel = getModelForClass(PoliticalSystem);
 
-/**
- * Creates a PoliticalSystem document based on the guildConfigData and the politicalRoleHolder.
- * 
- * @param guildConfigData 
- * @param politicalRoleHolder 
- * @return { Promise<Ref<PoliticalSystem>> } - The reference to the created PoliticalSystem document
- * 
- */
-async function createPoliticalSystemDocument(guildConfigData: GuildConfigData, politicalRoleHolder: PoliticalRoleHolder): Promise<Ref<PoliticalSystem>> {
-
-    let politicalSystem: PoliticalSystem;
-    let headOfStateRole: Ref<PoliticalRole> | undefined;
-    const { politicalSystem: politicalSystemType } = guildConfigData;
-
-    switch (politicalSystemType) {
-        case PoliticalSystemsType.Presidential:
-            politicalSystem = new Presidential();
-            headOfStateRole = politicalRoleHolder.President!;
-
-            const { cursor, ...gcTermOptions } = guildConfigData.presidentialOptions!;
-            politicalSystem.presidentialOptions!.termOptions = gcTermOptions;
-            break;
-
-        case PoliticalSystemsType.Parliamentary:
-            politicalSystem = new Parliamentary();
-            headOfStateRole = politicalRoleHolder.PrimeMinister!;
-
-            politicalSystem.parliamentaryOptions!.snapElection = guildConfigData.parliamentaryOptions!.snapElection;
-            break;
-
-        case PoliticalSystemsType.DirectDemocracy:
-            politicalSystem = new DirectDemocracy();
-
-            politicalSystem.ddOptions! = guildConfigData.ddOptions!;
-            break;
-    }
-
-    // Add hos ref
-    if (headOfStateRole) {
-        politicalSystem.headOfState = headOfStateRole;
-    }
-
-    // Create Legislature document
-    // BTW Pass guildConfigData stuff there as well
-    politicalSystem.legislature = await createChamberDocument(PoliticalBranchType.Legislative, guildConfigData);
-    politicalSystem.court = await createChamberDocument(PoliticalBranchType.Judicial, guildConfigData);
-
-    // Save the political system document and return the reference
-    return await PoliticalSystemModel.create(politicalSystem);
-}
-
-async function deletePoliticalSystemDocument(_id: Ref<PoliticalSystem>) {
-    // Find the political system document
-    const politicalSystem = await PoliticalSystemModel.findOneAndDelete({ _id });
-    if (!politicalSystem) {
-        return;
-    }
-
-    // Find documents: HoS, Legislature, Court
-    const legislatureDocument = politicalSystem.legislature;
-    const courtDocument = politicalSystem.court;
-
-    // Delete legislature and court if still exist (not HOS, since deleted through political role)
-    if (legislatureDocument) {
-        await deleteChamberDocument(legislatureDocument);
-    }
-    if (courtDocument) {
-        await deleteChamberDocument(courtDocument);
-    }
-}
-
 export default PoliticalSystem;
-export { Presidential, Parliamentary, DirectDemocracy, PoliticalSystemModel };
-export { createPoliticalSystemDocument, deletePoliticalSystemDocument };
+export { PoliticalSystemModel };
