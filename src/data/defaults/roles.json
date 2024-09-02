@@ -1,54 +1,71 @@
-{
-  "VoxPopuli": {
-      "name": "Vox Populi",
-      "hierarchy": 0,
-      "color": "#FFFFFF",
-      "basePermissions": ["emergency"]
+[
+  {
+    "name": "Vox Populi",
+    "hierarchy": 0,
+    "color": "#FFFFFF",
+    "basePermissions": {
+      "start": "emergency"
+    }
   },
-  "President": {
-      "name": "President",
-      "hierarchy": 1,
-      "color": "#FF0000",
-      "basePermissions": ["manage", "moderate"]
+  {
+    "name": "President",
+    "hierarchy": 1,
+    "color": "#FF0000",
+    "basePermissions": {
+      "start": "manage",
+      "end": "moderate"
+    }
   },
-  "PrimeMinister": {
-      "name": "Prime Minister",
-      "hierarchy": 1,
-      "color": "#FF0000",
-      "basePermissions": ["manage", "moderate"]
+  {
+    "name": "Prime Minister",
+    "hierarchy": 2,
+    "color": "#FF0000",
+    "basePermissions": {
+      "start": "manage",
+      "end": "moderate"
+    }
   },
-  "HeadModerator": {
-      "name": "Head Moderator",
-      "hierarchy": 2,
-      "color": "#FF8000",
-      "basePermissions": ["moderate"]
+  {
+    "name": "Head Moderator",
+    "hierarchy": 3,
+    "color": "#FF8000",
+    "basePermissions": {
+      "start": "moderate"
+    }
   },
-  "Moderator": {
-      "name": "Moderator",
-      "hierarchy": 3,
-      "color": "#FFFF00",
-      "basePermissions": ["moderate"]
+  {
+    "name": "Moderator",
+    "hierarchy": 4,
+    "color": "#FFFF00",
+    "basePermissions": {
+      "start": "moderate"
+    }
   },
-  "Senator": {
-      "name": "Senator",
-      "hierarchy": 4,
-      "color": "#0000FF"
+  {
+    "name": "Senator",
+    "hierarchy": 5,
+    "color": "#0000FF"
   },
-  "Judge": {
-      "name": "Judge",
-      "hierarchy": 5,
-      "color": "#FF00FF"
+  {
+    "name": "Judge",
+    "hierarchy": 6,
+    "color": "#FF00FF"
   },
-  "Citizen": {
-      "name": "Citizen",
-      "hierarchy": 6,
-      "color": "#00FF00",
-      "basePermissions": ["interact"]
+  {
+    "name": "Citizen",
+    "hierarchy": 7,
+    "color": "#00FF00",
+    "basePermissions": {
+      "start": "interact"
+    }
   },
-  "Undocumented": {
-      "name": "@everyone",
-      "hierarchy": 7,
-      "color": "#000000",
-      "basePermissions": ["view", "send"]
+  {
+    "name": "@everyone",
+    "hierarchy": 8,
+    "color": "#000000",
+    "basePermissions": {
+      "start": "send", 
+      "end": "view"
+    }
   }
-}
+]

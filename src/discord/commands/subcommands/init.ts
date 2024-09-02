@@ -5,13 +5,13 @@ import {
 } from 'discord.js';
 import { isDocument } from '@typegoose/typegoose';
 
-import { createGuildDocument } from '../../../schema/Guild.js';
-import { PoliticalRoleModel } from '../../../schema/roles/PoliticalRole.js';
-
 import SystemWizard from './wizardfragments/system.js';
 import LegislatureWizard from './wizardfragments/legislature.js';
 import JudicialWizard from './wizardfragments/judicial.js';
 import DiscordWizard from './wizardfragments/discord.js';
+
+import PoliticalGuild from '../../../schema/PoliticalGuild.js';
+import { PoliticalRoleModel } from '../../../schema/roles/PoliticalRole.js';
 
 import { GuildConfigData } from '../../../types/types.js';
 import settings from '../../../data/settings.json' assert { type: 'json' };
@@ -63,10 +63,6 @@ export class InitWizard {
             judicial: new JudicialWizard(this),
             discord: new DiscordWizard(this)
         }
-
-        /* for (const fragment of Object.values(this.fragments)) {
-            this.autoBind(fragment);
-        } */
 
         this.initWizard = this;
 
@@ -214,7 +210,7 @@ export class InitWizard {
         await this.interaction.editReply({ embeds: [configuringEmbed], components: [] });
 
         // Update database with new guild object
-        const result = await createGuildDocument(this.interaction, this.guildConfigData, "Server Initialization");
+        const result = await PoliticalGuild.createGuildDocument(this.interaction, this.guildConfigData, "Server Initialization");
         if (!result) {
             return await this.escape();
         }

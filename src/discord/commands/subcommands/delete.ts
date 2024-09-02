@@ -3,7 +3,7 @@ import {
     type Guild, type ChatInputCommandInteraction, type MessageComponentInteraction,
 } from "discord.js";
 
-import { deleteGuildDocument } from "../../../schema/Guild.js";
+import PoliticalGuild from "../../../schema/PoliticalGuild.js";
 
 import settings from "../../../data/settings.json" assert { type: "json" };
 
@@ -46,7 +46,7 @@ export default async function execute_delete(interaction: ChatInputCommandIntera
 
         if (collected.customId === 'delete_confirm') {
             // Proceed with deletion
-            const result = await deleteGuildDocument(guild, deleteObjects, `Server configuration deletion requested by ${interaction.user.tag} (${interaction.user.id})`);
+            const result = await PoliticalGuild.deleteGuildDocument(guild, deleteObjects, `Server configuration deletion requested by ${interaction.user.tag} (${interaction.user.id})`);
             if (result) {
                 const embed = new EmbedBuilder()
                     .setTitle('Server Configuration Deletion')

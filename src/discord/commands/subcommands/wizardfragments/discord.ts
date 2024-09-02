@@ -3,9 +3,10 @@ import {
     EmbedBuilder, ActionRowBuilder, ChannelSelectMenuBuilder, RoleSelectMenuBuilder,
     type MessageComponentInteraction, type APIEmbedField,
 } from 'discord.js';
+
 import BaseWizard from './BaseWizard.js';
 
-import { DiscordRoleHolderData, PoliticalSystemsType, ExtendedDefaultDiscordData, DefaultRoleData, NewCategoryChannelData } from '../../../../types/types.js';
+import { DiscordRoleHolderData, PoliticalSystemsType, ExtendedDefaultDiscordData, DefaultRoleData, NewCategoryChannelData, PoliticalRoleHierarchy } from '../../../../types/types.js';
 import settings from '../../../../data/settings.json' assert { type: 'json' };
 import roleDefaults from '../../../../data/defaults/roles.json' assert { type: 'json' };
 import categoryDefaults from '../../../../data/defaults/channels.json' assert { type: "json" };
@@ -20,7 +21,7 @@ class DiscordWizard extends BaseWizard {
             this.initWizard.guildConfigData.discordOptions = {
                 roleOptions: {
                     baseRoles: newRoleData,
-                    filteredRoles: { ...newRoleData },
+                    filteredRoles: [...newRoleData],
                     cursor: 0
                 },
                 discordChannelOptions: {
@@ -33,32 +34,40 @@ class DiscordWizard extends BaseWizard {
                     isCursorOnCategory: true
                 }
             }
-            this.initWizard.guildConfigData.discordOptions.roleOptions.filteredRoles.Undocumented.id = this.initWizard.interaction.guildId ?? undefined;
+            this.initWizard.guildConfigData.discordOptions.roleOptions.filteredRoles.at(-1)!.id = this.initWizard.interaction.guildId ?? undefined;
         }
 
         const { roleOptions } = this.initWizard.guildConfigData.discordOptions;
         const { filteredRoles } = roleOptions;
+
         // Filter out the roles that are not needed
+        const discardedRoles: Array<PoliticalRoleHierarchy> = [];
+
         if (this.initWizard.guildConfigData.politicalSystem === PoliticalSystemsType.Parliamentary) {
-            delete filteredRoles.President;
+            discardedRoles.push(PoliticalRoleHierarchy.President);
         } else if (this.initWizard.guildConfigData.politicalSystem === PoliticalSystemsType.Presidential) {
-            delete filteredRoles.PrimeMinister;
+            discardedRoles.push(PoliticalRoleHierarchy.PrimeMinister);
         } else {
-            delete filteredRoles.President;
-            delete filteredRoles.PrimeMinister;
-            delete filteredRoles.Senator;
+            discardedRoles.push(PoliticalRoleHierarchy.President, PoliticalRoleHierarchy.PrimeMinister, PoliticalRoleHierarchy.Senator);
 
             if (!this.initWizard.guildConfigData.ddOptions!.appointJudges) {
-                delete filteredRoles.Judge;
+                discardedRoles.push(PoliticalRoleHierarchy.Judge);
             }
             if (!this.initWizard.guildConfigData.ddOptions!.appointModerators) {
-                delete filteredRoles.HeadModerator;
-                delete filteredRoles.Moderator;
+                discardedRoles.push(PoliticalRoleHierarchy.HeadModerator, PoliticalRoleHierarchy.Moderator);
+            }
+        }
+        
+        // Remove the roles that are not needed
+        for (let i = 0; i < filteredRoles.length; i++) {
+            if (discardedRoles.includes(filteredRoles[i].hierarchy as PoliticalRoleHierarchy)) {
+                filteredRoles.splice(i, 1);
+                i--;
             }
         }
 
         // Clamp cursor back to 0 if it goes out of bounds
-        if (roleOptions.cursor >= Object.keys(filteredRoles).length - 1) {
+        if (roleOptions.cursor >= filteredRoles.length - 1) {
             roleOptions.cursor = 0;
         }
 
@@ -66,13 +75,11 @@ class DiscordWizard extends BaseWizard {
             .setTitle("Link Discord Roles (1/2)")
             .setDescription("The following roles will be created. You can either link them to existing roles or create a new one.\nYou can change the names of the roles later through the `/config edit` command.")
             .setColor(Colors.Blurple)
-            .setFields(Object.entries(filteredRoles).map(([_key, role]: [string, ExtendedDefaultDiscordData<DefaultRoleData>], index) => {
-                return {
-                    name: role?.name + (roleOptions.cursor === index ? " (Selected)" : ""),
-                    value: role?.id ? `<@&${role.id}>` : "New Role",
-                    inline: false
-                }
-            }))
+            .setFields(filteredRoles.map((role: ExtendedDefaultDiscordData<DefaultRoleData>, index) => ({
+                name: role?.name + (roleOptions.cursor === index ? " (Selected)" : ""),
+                value: role?.id ? `<@&${role.id}>` : "New Role",
+                inline: false
+            })))
             .setFooter({ text: "Page " + this.initWizard.page })
             .toJSON();
 
@@ -125,12 +132,12 @@ class DiscordWizard extends BaseWizard {
                     roleOptions.cursor--;
                     if (roleOptions.cursor < 0) {
                         // We also skip being able to cursor Undocumented role
-                        roleOptions.cursor = Object.keys(filteredRoles).length - 2;
+                        roleOptions.cursor = filteredRoles.length - 2;
                     }
                     break;
                 case "link_role_next":
                     roleOptions.cursor++;
-                    if (roleOptions.cursor > Object.keys(filteredRoles).length - 2) {
+                    if (roleOptions.cursor > filteredRoles.length - 2) {
                         roleOptions.cursor = 0;
                     }
                     break;
@@ -139,13 +146,13 @@ class DiscordWizard extends BaseWizard {
                     return await this.initWizard.setNextFunc(this.initWizard.fragments.discord.linkDiscordChannels);
                 case "link_role_select":
                     if (confirmation.isRoleSelectMenu()) {
-                        const role = confirmation.roles.first();
-                        const roleKey = Object.keys(filteredRoles)[roleOptions.cursor] as keyof DiscordRoleHolderData;
-                        if (filteredRoles[roleKey]) {
-                            if (role && Object.values(filteredRoles).some(r => r.id === role.id)) {
+                        const discordRole = confirmation.roles.first();
+                        const selectedRole = filteredRoles[roleOptions.cursor];
+                        if (selectedRole) {
+                            if (discordRole && filteredRoles.some(r => r.id === discordRole.id)) {
                                 await confirmation.followUp({ content: "This Discord Role is already linked to another Political Role!", ephemeral: true });
                             } else {
-                                filteredRoles[roleKey]!.id = role ? role.id : undefined;
+                                selectedRole.id = discordRole?.id;
                             }
                         }
                     }
@@ -198,15 +205,17 @@ class DiscordWizard extends BaseWizard {
             .setFields(discordChannelOptions.filteredCategoryChannels.reduce((fields, category, index) => {
                 fields.push({ name: "\u200B", value: "\u200B", inline: false });
 
+                const isCategorySelected = isCursorOnCategory && discordChannelOptions.cursor === index;
                 fields.push({
-                    name: category.name + (isCursorOnCategory && discordChannelOptions.cursor === index ? " (Selected)" : ""),
+                    name: (isCategorySelected ? "➡️ " : "") + category.name + (isCategorySelected ? " ⬅️" : ""),
                     value: category?.id ? `<#${category.id}>` : "New Category Channel",
                     inline: false
                 });
                 
                 category.channels.forEach((channel, channelIndex) => {
+                    const isChannelSelected = !isCursorOnCategory && discordChannelOptions.cursor === index && category.cursor === channelIndex;
                     fields.push({
-                        name: channel.name + (isCursorOnCategory ? "" : (discordChannelOptions.cursor === index && category.cursor === channelIndex ? " (Selected)" : "")),
+                        name: (isChannelSelected ? "➡️ " : "") + channel.name + (isChannelSelected ? " ⬅️" : ""),
                         value: channel?.id ? `<#${channel.id}>` : "New Channel",
                         inline: true
                     });

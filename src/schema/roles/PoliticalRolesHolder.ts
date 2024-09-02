@@ -1,60 +1,65 @@
 import { prop, getModelForClass, type Ref } from '@typegoose/typegoose';
 import { type Guild } from 'discord.js';
 
-import PoliticalRole, { VoxPopuli, President, PrimeMinister, HeadModerator, Senator, Judge, Moderator, Citizen, Undocumented, deletePoliticalRoleDocument } from "./PoliticalRole.js";
+import PoliticalRole from "./PoliticalRole.js";
 
 import { PoliticalRoleHolderInterface } from '../../types/types.js';
 
+/**
+ * A class that holds Refs to all political role documents in a guild.
+ * 
+ * @class PoliticalRoleHolder
+ * @implements {PoliticalRoleHolderInterface<Ref<PoliticalRole>>}
+ */
 class PoliticalRoleHolder implements PoliticalRoleHolderInterface<Ref<PoliticalRole>> {
-    @prop({ required: true, ref: () => 'VoxPopuli' })
-    VoxPopuli!: Ref<VoxPopuli>;
+    @prop({ required: true, ref: () => 'PoliticalRole' })
+    VoxPopuli!: Ref<PoliticalRole>;
 
-    @prop({ ref: () => 'President' })
-    President?: Ref<President>;
+    @prop({ ref: () => 'PoliticalRole' })
+    President?: Ref<PoliticalRole>;
 
-    @prop({ ref: () => 'PrimeMinister' })
-    PrimeMinister?: Ref<PrimeMinister>;
+    @prop({ ref: () => 'PoliticalRole' })
+    PrimeMinister?: Ref<PoliticalRole>;
 
-    @prop({ ref: () => 'HeadModerator' })
-    HeadModerator?: Ref<HeadModerator>;
+    @prop({ ref: () => 'PoliticalRole' })
+    HeadModerator?: Ref<PoliticalRole>;
 
-    @prop({ ref: () => 'Moderator' })
-    Moderator?: Ref<Moderator>;
+    @prop({ ref: () => 'PoliticalRole' })
+    Moderator?: Ref<PoliticalRole>;
 
-    @prop({ ref: () => 'Senator' })
-    Senator?: Ref<Senator>;
+    @prop({ ref: () => 'PoliticalRole' })
+    Senator?: Ref<PoliticalRole>;
 
-    @prop({ ref: () => 'Judge' })
-    Judge?: Ref<Judge>;
+    @prop({ ref: () => 'PoliticalRole' })
+    Judge?: Ref<PoliticalRole>;
 
-    @prop({ required: true, ref: () => 'Citizen' })
-    Citizen!: Ref<Citizen>;
+    @prop({ required: true, ref: () => 'PoliticalRole' })
+    Citizen!: Ref<PoliticalRole>;
 
-    @prop({ required: true, ref: () => 'Undocumented' })
-    Undocumented!: Ref<Undocumented>;
+    @prop({ required: true, ref: () => 'PoliticalRole' })
+    Undocumented!: Ref<PoliticalRole>;
+
+    async createPoliticalRoleHolderDocument(): Promise<Ref<PoliticalRoleHolder>> {
+        return await PoliticalRoleHolderModel.create(this);
+    }
+
+    static async deletePoliticalRoleHolderDocument(guild: Guild, roleHolderDocumentRef: Ref<PoliticalRoleHolder>, deleteObjects: boolean, reason?: string) {
+        const politicalRoleHolder = await PoliticalRoleHolderModel.findOneAndDelete({ _id: roleHolderDocumentRef });
+        if (!politicalRoleHolder) {
+            return;
+        }
+    
+        await Promise.all(
+            Object.values(politicalRoleHolder.toObject()).map(async (role: Ref<PoliticalRole>) => {
+                if (role) {
+                    await PoliticalRole.deletePoliticalRoleDocument(guild, role, deleteObjects, reason);
+                }
+            })
+        );
+    }
 }
 
 const PoliticalRoleHolderModel = getModelForClass(PoliticalRoleHolder);
 
-async function createPoliticalRoleHolderDocument(politicalRoleHolder: PoliticalRoleHolder): Promise<Ref<PoliticalRoleHolder>> {
-    return await PoliticalRoleHolderModel.create(politicalRoleHolder);
-}
-
-async function deletePoliticalRoleHolderDocument(guild: Guild, _id: Ref<PoliticalRoleHolder>, deleteObjects: boolean, reason?: string) {
-    const politicalRoleHolder = await PoliticalRoleHolderModel.findOneAndDelete({ _id });
-    if (!politicalRoleHolder) {
-        return;
-    }
-
-    await Promise.all(
-        Object.values(politicalRoleHolder.toObject()).map(async (role) => {
-            if (role) {
-                await deletePoliticalRoleDocument(guild, role as Ref<PoliticalRole>, deleteObjects, reason);
-            }
-        })
-    );
-}
-
 export default PoliticalRoleHolder;
-export { PoliticalRoleHolderModel, PoliticalRoleHolderInterface };
-export { createPoliticalRoleHolderDocument, deletePoliticalRoleHolderDocument };
+export { PoliticalRoleHolderModel };

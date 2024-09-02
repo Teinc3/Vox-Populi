@@ -1,7 +1,7 @@
 import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
-import { ChannelType, GuildBasedChannel, GuildChannel, TextChannel, ThreadChannel, type CategoryChannel, type Guild } from 'discord.js';
+import { ChannelType, GuildBasedChannel, type CategoryChannel, type Guild } from 'discord.js';
 
-import ChannelPermissions, { createChannelPermissionsOverwrite } from '../permissions/ChannelPermissions.js';
+import ChannelPermissions from '../permissions/ChannelPermissions.js';
 
 /**
  * @see {@link https://discord.js.org/docs/packages/discord.js/main/GuildChannelCreateOptions:Interface#type}
@@ -34,74 +34,76 @@ class PoliticalChannel {
 
     @prop({ required: true, _id: false })
     channelPermissions!: ChannelPermissions
+
+    static async deletePoliticalChannelDocument(guild: Guild, channelDocument: Ref<PoliticalChannel>, deleteObjects: boolean, reason?: string) {
+        const politicalChannel = await PoliticalChannelModel.findOneAndDelete({ _id: channelDocument });
+        if (!politicalChannel || !politicalChannel.channelID) {
+            return;
+        }
+        if (deleteObjects) {
+            await politicalChannel.deleteDiscordChannel(guild, reason);
+        }
+    }
+
+    // For RefRoleArray, we need to filter out undefined values, so use the filter function if the role may be undefined
+    async createPoliticalChannelDocument(guild: Guild, categoryChannel: CategoryChannel, reason?: string): Promise<Ref<PoliticalChannel>> {
+        await this.linkDiscordChannel(guild, categoryChannel, reason);
+        return await PoliticalChannelModel.create(this);
+    }
+
+    async linkDiscordChannel(guild: Guild, categoryChannel: CategoryChannel, reason?: string) {
+        // Fetch cache
+        if (guild.channels.cache.size === 0) {
+            await guild.channels.fetch();
+        }
+        
+        const { name } = this;
+        const permissionOverwrites = await this.channelPermissions.createChannelPermissionsOverwrite(guild.id);
+    
+        let discordChannel: GuildBasedChannel | null | undefined;
+        if (this.channelID) {
+            // If channelID is defined, fetch the channel
+            discordChannel = await guild.channels.fetch(this.channelID);
+            if (discordChannel) {
+                // This is not the channel we are looking for.
+                if (discordChannel.type !== this.channelType) {
+                    this.channelID = undefined;
+                    await this.linkDiscordChannel(guild, categoryChannel, reason);
+                    return;
+                } else {
+                    // Set Configs parallel to setup
+                    discordChannel.edit({ parent: categoryChannel, topic: this.description, permissionOverwrites, reason });
+                    return;
+                }
+            }
+            // Else: fallback to undefined channelID
+        }
+        // If channelID is undefined, we create a new one
+        discordChannel = await guild.channels.create({
+            name,
+            type: this.channelType as CreatableChannelType,
+            parent: categoryChannel,
+            topic: this.description,
+            permissionOverwrites: permissionOverwrites,
+            reason
+        });
+        // Link the channel
+        this.channelID = discordChannel?.id;
+    }
+    
+    async deleteDiscordChannel(guild: Guild, reason?: string) {
+        if (!this.channelID) {
+            return;
+        }
+
+        const discordChannel = await guild.channels.fetch(this.channelID);
+        if (discordChannel) {
+            await discordChannel.delete(reason);
+        }
+    }
 }
 
 const PoliticalChannelModel = getModelForClass(PoliticalChannel);
 
-// For RefRoleArray, we need to filter out undefined values, so use the filter function if the role may be undefined
-async function createPoliticalChannelDocument(guild: Guild, politicalChannel: PoliticalChannel, categoryChannel: CategoryChannel, reason?: string): Promise<Ref<PoliticalChannel>> {
-    politicalChannel = await linkDiscordChannel(guild, politicalChannel, categoryChannel, reason);
-    return await PoliticalChannelModel.create(politicalChannel);
-}
-
-async function linkDiscordChannel(guild: Guild, politicalChannel: PoliticalChannel, categoryChannel: CategoryChannel, reason?: string): Promise<PoliticalChannel> {
-    // Fetch cache
-    if (guild.channels.cache.size === 0) {
-        await guild.channels.fetch();
-    }
-    
-    const { name } = politicalChannel;
-    const permissionOverwrites = await createChannelPermissionsOverwrite(guild.id, politicalChannel.channelPermissions);
-
-    let discordChannel: GuildBasedChannel | null | undefined;
-    if (politicalChannel.channelID) {
-        // If channelID is defined, fetch the channel
-        discordChannel = await guild.channels.fetch(politicalChannel.channelID);
-        if (discordChannel) {
-            // This is not the channel we are looking for.
-            if (discordChannel.type !== politicalChannel.channelType) {
-                politicalChannel.channelID = undefined;
-                return await linkDiscordChannel(guild, politicalChannel, categoryChannel, reason);
-            } else {
-                // Set Configs parallel to setup
-                discordChannel.edit({ parent: categoryChannel, topic: politicalChannel.description, permissionOverwrites, reason });
-                return politicalChannel
-            }
-        }
-        // Else: fallback to undefined channelID
-    }
-    // If channelID is undefined, we create a new one
-    discordChannel = await guild.channels.create({
-        name,
-        type: politicalChannel.channelType as CreatableChannelType,
-        parent: categoryChannel,
-        topic: politicalChannel.description,
-        permissionOverwrites: permissionOverwrites,
-        reason
-    });
-    // Link the channel
-    politicalChannel.channelID = discordChannel?.id;
-    
-    return politicalChannel;
-}
-
-async function deletePoliticalChannelDocument(guild: Guild, channelDocument: Ref<PoliticalChannel>, deleteObjects: boolean, reason?: string) {
-    const politicalChannel = await PoliticalChannelModel.findOneAndDelete({ _id: channelDocument });
-    if (!politicalChannel || !politicalChannel.channelID) {
-        return;
-    }
-    if (deleteObjects) {
-        await deleteDiscordChannel(guild, politicalChannel.channelID, reason);
-    }
-}
-
-async function deleteDiscordChannel(guild: Guild, channelID: string, reason?: string) {
-    const discordChannel = await guild.channels.fetch(channelID);
-    if (discordChannel) {
-        await discordChannel.delete(reason);
-    }
-}
-
 export default PoliticalChannel;
 export { PoliticalChannelModel };
-export { createPoliticalChannelDocument, deletePoliticalChannelDocument };

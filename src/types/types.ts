@@ -1,18 +1,25 @@
-import { SeatOptions, TermOptions, ThresholdOptions } from "../schema/options/RoleOptions";
-import { DDOptions } from "../schema/options/SystemOptions";
-import { EmergencyOptions } from "../schema/options/MiscOptions";
+import type { SeatOptions, TermOptions, ThresholdOptions } from "../schema/options/RoleOptions";
+import type { DDOptions } from "../schema/options/SystemOptions";
+import type { EmergencyOptions } from "../schema/options/MiscOptions";
+
+import type { BasePermissionsAggregate, CustomPermissions } from "./permissions.js";
 
 export enum PoliticalSystemsType {
-    Presidential = 0,
-    Parliamentary = 1,
-    DirectDemocracy = 2
+    Presidential,
+    Parliamentary,
+    DirectDemocracy
 }
 
 export enum PoliticalBranchType {
-    None = 0,
-    Legislative = 1,
-    Executive = 2,
-    Judicial = 3,
+    None,
+    Legislative,
+    Executive,
+    Judicial,
+}
+
+export enum LegislativeChamberType {
+    Senate,
+    Referendum
 }
 
 interface GuildConfigOptionsOption {}
@@ -49,7 +56,7 @@ export interface DiscordOptions {
     discordChannelOptions: DiscordChannelOptionsData;
 }
 
-export type DiscordRoleHolderData = PoliticalRoleHolderInterface<ExtendedDefaultDiscordData<DefaultRoleData>>;
+export type DiscordRoleHolderData = Array<ExtendedDefaultDiscordData<DefaultRoleData>>
 
 export interface DiscordRoleOptionsData {
     baseRoles: DiscordRoleHolderData; // This won't be accessed, just to hold the role data and prevent garbage collection
@@ -57,19 +64,11 @@ export interface DiscordRoleOptionsData {
     cursor: number;
 }
 
-type BasePermission = "view" | "send" | "interact" | "moderate" | "manage" | "emergency";
-
-export type CustomPermissionsOverwrite<T> = {
-    [key in Exclude<BasePermission, "emergency">]: T[];
-}
-
-export type CustomPermissions<T> = CustomPermissionsOverwrite<T> & Partial<Record<"emergency", T[]>>;
-
 export interface DefaultRoleData {
     name: string;
     hierarchy: number;
     color: string;
-    basePermissions?: BasePermission[]
+    basePermissions?: BasePermissionsAggregate;
 }
 
 export type NewCategoryChannelData = ExtendedDefaultDiscordData<DefaultCategoryData>[];
@@ -101,6 +100,18 @@ export interface DefaultChannelData {
 export type ExtendedDefaultDiscordData<T> = T & {
     id?: string;
 } & (T extends DefaultCategoryData ? { cursor: number } : {})
+
+export enum PoliticalRoleHierarchy {
+    VoxPopuli,
+    President,
+    PrimeMinister,
+    HeadModerator,
+    Moderator,
+    Senator,
+    Judge,
+    Citizen,
+    Undocumented
+}
 
 type BaseRoles = {
     required: "VoxPopuli" | "Citizen" | "Undocumented";
