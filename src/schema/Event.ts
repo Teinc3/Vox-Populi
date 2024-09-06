@@ -1,6 +1,8 @@
 import { prop, getModelForClass, type Ref } from '@typegoose/typegoose';
-import { PoliticalEventType } from '../types/types';
-import { type GuildSchema } from './Guild';
+
+import { type PoliticalGuild } from './PoliticalGuild.js';
+
+import { PoliticalEventType } from '../types/types.js';
 
 /**
  * Event schema for storing events
@@ -11,7 +13,7 @@ class EventSchema {
     @prop({ required: true })
     public name!: string;
     
-    @prop({ required: true, type: () => [Date] })
+    @prop({ required: true, type: () => Date })
     public date!: Date;
     
     @prop({ required: true, enum: () => PoliticalEventType })
@@ -24,9 +26,9 @@ class EventSchema {
     public dueDate?: Date;
 
     @prop({ required: true, ref: () => 'GuildSchema' })
-    public guild!: Ref<GuildSchema>;
+    public guild!: Ref<PoliticalGuild>;
 
-    constructor(name: string, type: PoliticalEventType, guildDocument: Ref<GuildSchema>, eventOptions: { dueDate?: Date, completed?: boolean }) {
+    constructor(name: string, type: PoliticalEventType, guildDocument: Ref<PoliticalGuild>, eventOptions: { dueDate?: Date, completed?: boolean }) {
         this.name = name;
         this.date = new Date();
         this.type = type;

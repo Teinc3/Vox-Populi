@@ -47,7 +47,8 @@ export default async function execute_delete(interaction: ChatInputCommandIntera
         if (collected.customId === 'delete_confirm') {
             // Proceed with deletion
             const result = await PoliticalGuild.deleteGuildDocument(guild, deleteObjects, `Server configuration deletion requested by ${interaction.user.tag} (${interaction.user.id})`);
-            if (result) {
+            const channelStillExists = interaction.channel?.fetch();
+            if (result && channelStillExists) {
                 const embed = new EmbedBuilder()
                     .setTitle('Server Configuration Deletion')
                     .setDescription('Server configuration has been successfully deleted.')

@@ -123,8 +123,8 @@ class GuildCategory {
             }
     
             // Create the channel
-            const politicalChannel = new PoliticalChannel(defaultChannelData.name, ChannelType.GuildText, channelPermissions, defaultChannelData.description, defaultChannelData.id);
-            const politicalChannelDocument = await politicalChannel.createPoliticalChannelDocument(guild, categoryChannel, reason);
+            const politicalChannel = new PoliticalChannel(defaultChannelData.name, channelPermissions, defaultChannelData.description, defaultChannelData.id);
+            const politicalChannelDocument = await politicalChannel.createPoliticalChannelDocument(guild, categoryChannel, { ticketData: defaultChannelData.tickets, reason });
             
             if (defaultChannelData.chamberTypeIsLegislative !== undefined) {
                 if (defaultChannelData.chamberTypeIsLegislative === true) {

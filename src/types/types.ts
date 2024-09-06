@@ -59,18 +59,43 @@ export enum PoliticalEventType {
 }
 
 /**
- * Type of message collector
- * 
- * - Ticket: Ticket system for support
- * - CourtCase: Court case system
- * - Proposal: Propose a bill to vote on
- * - Registration: Registration to become a citizen with voting rights
+ * Type of static ticket that can be opened
  * 
  * @enum
  */
-export enum MessageCollectorType {
-    Ticket,
-    CourtCase,
-    Proposal,
-    Registration
+export enum TicketType {
+    /**
+     * This will be used to open an inquiry ticket with the moderation team.
+     */
+    Inquiry = "ticket_inquiry",
+    /**
+     * This will be used to report a user to the moderation team.
+     */
+    Report = "ticket_report",
+    /**
+     * This will be used to open a court case.
+     */
+    CourtCase = "ticket_courtcase",
+    /**
+     * This will be used to apply for citizenship.
+     */
+    Registration = "ticket_registration",
+    /**
+     * This will be used to propose a new bill.
+     */
+    Proposal = "ticket_proposal",
+    /**
+     * This will be used to apply for candidacy in an upcoming Presidential election.
+     * 
+     * Note that this is a temporary ticket type. It will only be available during the candidacy period for the Presidential election, so it is not present by default.
+     * 
+     * Senate candidates will be nominated through party leaders instead through a separate command.
+     */
+    Candidate = "ticket_candidate",
+    /**
+     * This will be used by Citizens to petition either the moderation team or the Senate.
+     * 
+     * Currently not implemented.
+     */
+    //Petition = "ticket_petition"
 }

@@ -1,9 +1,10 @@
+import type { ButtonStyle, Colors } from "discord.js";
 import type { SeatOptions, TermOptions, ThresholdOptions } from "../schema/options/RoleOptions.js";
 import type { DDOptions } from "../schema/options/SystemOptions.js";
 import type { EmergencyOptions } from "../schema/options/MiscOptions.js";
 
 import type { BasePermissionsAggregate, CustomPermissions } from "./permissions.js";
-import { PoliticalSystemsType } from "./types.js";
+import type { PoliticalSystemsType, TicketType } from "./types.js";
 
 interface GuildConfigOptionsOption {}
 export class GuildConfigOptionsOptionClass implements GuildConfigOptionsOption {}
@@ -69,7 +70,6 @@ export interface DefaultCategoryData {
 }
 
 export interface DefaultChannelData {
-    position: number;
     name: string;
     description: string;
     disable?: Partial<DDOptions> & {
@@ -77,6 +77,21 @@ export interface DefaultChannelData {
     };
     chamberTypeIsLegislative?: boolean;
     permissionOverwrites: CustomPermissions<number>;
+    tickets?: DefaultTicketData;
+}
+
+export interface DefaultTicketData {
+    title: string;
+    description: string;
+    color?: keyof typeof Colors;
+    options: DefaultTicketOptionData[];
+}
+
+export interface DefaultTicketOptionData {
+    type: keyof typeof TicketType;
+    style: Exclude<keyof typeof ButtonStyle, "Link">;
+    label: string;
+    emoji: string;
 }
 
 export type ExtendedDefaultDiscordData<T> = T & {
