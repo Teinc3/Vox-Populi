@@ -6,12 +6,13 @@ import {
 
 import BaseWizard from './BaseWizard.js';
 
-import { PoliticalSystemsType, PoliticalRoleHierarchy } from '../../../../types/types.js';
-import { DiscordRoleHolderData, ExtendedDefaultDiscordData, DefaultRoleData, NewCategoryChannelData } from '../../../../types/wizard.js';
-
 import settings from '../../../../data/settings.json' assert { type: 'json' };
 import roleDefaults from '../../../../data/defaults/roles.json' assert { type: 'json' };
 import categoryDefaults from '../../../../data/defaults/channels.json' assert { type: "json" };
+
+import type { DefaultRoleData, DiscordRoleHolderData, ExtendedDefaultDiscordData, NewCategoryChannelData } from '../../../../types/wizard.js';
+import { PoliticalRoleHierarchy } from '../../../../types/permissions.js';
+import { PoliticalSystemType } from '../../../../types/types.js';
 
 class DiscordWizard extends BaseWizard {
 
@@ -45,9 +46,9 @@ class DiscordWizard extends BaseWizard {
         // Filter out the roles that are not needed
         const discardedRoles: Array<PoliticalRoleHierarchy> = [];
 
-        if (this.initWizard.guildConfigData.politicalSystem === PoliticalSystemsType.Parliamentary) {
+        if (this.initWizard.guildConfigData.politicalSystem === PoliticalSystemType.Parliamentary) {
             discardedRoles.push(PoliticalRoleHierarchy.President);
-        } else if (this.initWizard.guildConfigData.politicalSystem === PoliticalSystemsType.Presidential) {
+        } else if (this.initWizard.guildConfigData.politicalSystem === PoliticalSystemType.Presidential) {
             discardedRoles.push(PoliticalRoleHierarchy.PrimeMinister);
         } else {
             discardedRoles.push(PoliticalRoleHierarchy.President, PoliticalRoleHierarchy.PrimeMinister, PoliticalRoleHierarchy.Senator);
@@ -177,7 +178,7 @@ class DiscordWizard extends BaseWizard {
             const category = discordChannelOptions.filteredCategoryChannels[i];
             category.channels = category.channels.filter(channel => {
                 const { disable } = channel;
-                const isDDMatch = disable?.isDD === (this.initWizard.guildConfigData.politicalSystem === PoliticalSystemsType.DirectDemocracy);
+                const isDDMatch = disable?.isDD === (this.initWizard.guildConfigData.politicalSystem === PoliticalSystemType.DirectDemocracy);
                 const appointJudgesMatch = disable?.appointJudges === undefined ? true : disable?.appointJudges === this.initWizard.guildConfigData.ddOptions?.appointJudges;
                 const appointModeratorsMatch = disable?.appointModerators === undefined ? true : disable?.appointModerators === this.initWizard.guildConfigData.ddOptions?.appointModerators;
                 return !(disable && isDDMatch && appointJudgesMatch && appointModeratorsMatch)

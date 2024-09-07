@@ -1,14 +1,14 @@
 import { prop, getModelForClass, type Ref } from '@typegoose/typegoose';
 import { ChannelType, type CategoryChannel, type Guild } from 'discord.js';
 
+import Chamber from '../Chamber.js';
 import PoliticalChannel from './PoliticalChannel.js';
 import type PoliticalRoleHolder from '../roles/PoliticalRoleHolder.js';
 import ChannelPermissions, { ChannelPermissionsInterface, type UnfilteredRefRoleArray } from '../permissions/ChannelPermissions.js';
-import Chamber from '../Chamber.js';
 
-import { PoliticalBranchType, PoliticalSystemsType, PoliticalRoleHierarchy } from '../../types/types.js';
-import { GuildConfigData, DefaultCategoryData } from '../../types/wizard.js';
-import { PermissionsOverwriteEnumKeyHolder, PermissionsOverwriteHolder } from '../../types/permissions.js';
+import type { DefaultCategoryData, GuildConfigData } from '../../types/wizard.js';
+import { PoliticalSystemType, PoliticalBranchType } from '../../types/types.js';
+import { PoliticalRoleHierarchy, type PermissionsOverwriteEnumKeyHolder } from '../../types/permissions.js';
 
 /**
  * Represents a Category that contains Political Channels.
@@ -57,7 +57,7 @@ class GuildCategory {
 
     static async createPoliticalChannels(guild: Guild, roleHolder: PoliticalRoleHolder, categoryChannel: CategoryChannel, guildConfigData: GuildConfigData, categoryChannelData: DefaultCategoryData, reason?: string): Promise<Ref<PoliticalChannel>[]> {
         const newChannelDocuments = new Array<Ref<PoliticalChannel>>();
-        const isDD = guildConfigData.politicalSystem === PoliticalSystemsType.DirectDemocracy; 
+        const isDD = guildConfigData.politicalSystem === PoliticalSystemType.DirectDemocracy; 
         
         for (const defaultChannelData of categoryChannelData.channels) {
             const { permissionOverwrites } = defaultChannelData;

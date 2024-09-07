@@ -1,9 +1,9 @@
-import EventModel from '../schema/Event.js';
+import EventModel from '../schema/events/Event.js';
 
 import type DiscordManager from './DiscordManager.js';
+import TicketCollectorModel from '../schema/events/TicketCollector.js';
 
 import settings from '../data/settings.json' assert { type: "json" };
-import TicketCollectorModel from '../schema/TicketCollector.js';
 
 const { eventLoopInterval } = settings.discord;
 

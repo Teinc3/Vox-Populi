@@ -3,7 +3,7 @@ import { GatewayIntentBits, Events } from 'discord.js';
 import ExtendedClient from "./ExtendedClient.js";
 import EventHandler from './EventHandler.js';
 
-import TicketCollectorModel from '../schema/TicketCollector.js';
+import TicketCollectorModel from '../schema/events/TicketCollector.js';
 
 class DiscordManager {
     readonly client: ExtendedClient;

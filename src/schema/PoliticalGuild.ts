@@ -5,10 +5,10 @@ import GuildCategory from './channels/GuildCategory.js';
 import PoliticalSystem from './PoliticalSystem.js';
 import PoliticalRole from './roles/PoliticalRole.js';
 import PoliticalRoleHolder from './roles/PoliticalRoleHolder.js';
-import { EmergencyOptions } from './options/MiscOptions.js';
-import { EventSchema } from './Event.js';
+import type { EmergencyOptions } from './options/MiscOptions.js';
+import type { EventSchema } from './events/Event.js';
 
-import { GuildConfigData } from '../types/wizard.js';
+import type { GuildConfigData } from '../types/wizard.js';
 
 class PoliticalGuild {
     @prop({ required: true, unique: true })

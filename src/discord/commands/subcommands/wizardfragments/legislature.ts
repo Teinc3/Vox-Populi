@@ -2,9 +2,10 @@ import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, Colors, ButtonStyle } fr
 
 import BaseWizard from './BaseWizard.js';
 
-import { PoliticalSystemsType } from '../../../../types/types.js';
 import settings from '../../../../data/settings.json' assert { type: 'json' };
 import wizardDefaults from '../../../../data/defaults/wizard.json' assert { type: 'json' };
+
+import { PoliticalSystemType } from '../../../../types/types.js';
 
 class LegislatureWizard extends BaseWizard {
 
@@ -344,7 +345,7 @@ class LegislatureWizard extends BaseWizard {
                     this.initWizard.prevFunctions.push(this.setSenateThresholdOptions);
                     // For Parliamentary, we go to configure Parliamentary Options (since we skipped it first for snap elections which are more relevant after senate is set up)
                     // Since DD does not have Senate, and only DD has the option to disable Judges, we can still go to Court Options
-                    return await this.initWizard.setNextFunc(this.initWizard.guildConfigData.politicalSystem === PoliticalSystemsType.Parliamentary ? this.initWizard.fragments.system.setParliamentaryOptions : this.initWizard.fragments.judicial.setCourtGenericOptions);
+                    return await this.initWizard.setNextFunc(this.initWizard.guildConfigData.politicalSystem === PoliticalSystemType.Parliamentary ? this.initWizard.fragments.system.setParliamentaryOptions : this.initWizard.fragments.judicial.setCourtGenericOptions);
                 default:
                     return await this.initWizard.escape();
             }

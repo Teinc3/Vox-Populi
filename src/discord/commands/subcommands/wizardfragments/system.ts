@@ -6,9 +6,10 @@ import {
 
 import BaseWizard from './BaseWizard.js';
 
-import { PoliticalSystemsType } from '../../../../types/types.js';
 import settings from '../../../../data/settings.json' assert { type: 'json' };
 import wizardDefaults from '../../../../data/defaults/wizard.json' assert { type: 'json' };
+
+import { PoliticalSystemType } from '../../../../types/types.js';
 
 class SystemWizard extends BaseWizard {
 
@@ -81,17 +82,17 @@ class SystemWizard extends BaseWizard {
                     return await this.initWizard.cancelled();
 
                 case "system_presidential":
-                    this.initWizard.guildConfigData.politicalSystem = PoliticalSystemsType.Presidential;
+                    this.initWizard.guildConfigData.politicalSystem = PoliticalSystemType.Presidential;
                     this.initWizard.prevFunctions = [this.selectPoliticalSystem];
                     return await this.initWizard.setNextFunc(this.setPresidentialOptions);
 
                 case "system_parliamentary":
-                    this.initWizard.guildConfigData.politicalSystem = PoliticalSystemsType.Parliamentary;
+                    this.initWizard.guildConfigData.politicalSystem = PoliticalSystemType.Parliamentary;
                     this.initWizard.prevFunctions = [this.selectPoliticalSystem];
                     return await this.initWizard.setNextFunc(this.initWizard.fragments.legislature.setSenateTermOptions);
 
                 case "system_dd":
-                    this.initWizard.guildConfigData.politicalSystem = PoliticalSystemsType.DirectDemocracy;
+                    this.initWizard.guildConfigData.politicalSystem = PoliticalSystemType.DirectDemocracy;
                     this.initWizard.prevFunctions = [this.selectPoliticalSystem];
                     return await this.initWizard.setNextFunc(this.setDDOptions);
 

@@ -1,7 +1,7 @@
 import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
 import { ChannelType, GuildBasedChannel, TextChannel, type CategoryChannel, type Guild } from 'discord.js';
 
-import { TicketCollector } from '../TicketCollector.js';
+import { TicketCollector } from '../events/TicketCollector.js';
 
 import ChannelPermissions from '../permissions/ChannelPermissions.js';
 import { DefaultTicketData } from '../../types/wizard.js';

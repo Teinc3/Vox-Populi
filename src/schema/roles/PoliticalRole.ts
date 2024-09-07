@@ -3,9 +3,10 @@ import { type ColorResolvable, type Guild, type Role } from 'discord.js';
 
 import PoliticalRoleHolder from './PoliticalRoleHolder.js';
 
-import { PoliticalRoleHierarchy } from '../../types/types.js';
-import { GuildConfigData } from '../../types/wizard.js';
-import { BasePermissionsAggregate, parsePermissionsAggregate, progressivePermissionsAllocator } from '../../types/permissions.js';
+import { parsePermissionsAggregate, progressivePermissionsAllocator } from '../../utils/permissionsHelper.js';
+
+import type { GuildConfigData } from '../../types/wizard.js';
+import { PoliticalRoleHierarchy, type BasePermissionsAggregate } from '../../types/permissions.js';
 
 class PoliticalRole {
     @prop({ required: true })

@@ -2,9 +2,7 @@ import { prop } from '@typegoose/typegoose';
 
 import { TermOptions } from './RoleOptions.js';
 
-import { GuildConfigOptionsOptionClass } from "../../types/wizard.js";
-
-class PresidentialOptions extends GuildConfigOptionsOptionClass {
+class PresidentialOptions {
     /**
      * Can the President veto/override any legislation passed by the Legislature?
      */
@@ -17,12 +15,11 @@ class PresidentialOptions extends GuildConfigOptionsOptionClass {
     termOptions!: TermOptions;
 
     constructor() {
-        super();
         this.termOptions = new TermOptions();
     }
 }
 
-class ParliamentaryOptions extends GuildConfigOptionsOptionClass {
+class ParliamentaryOptions {
     /**
      * Number of months before a snap election can be called.
      * 
@@ -32,7 +29,7 @@ class ParliamentaryOptions extends GuildConfigOptionsOptionClass {
     snapElection!: number;
 }
 
-class DDOptions extends GuildConfigOptionsOptionClass {
+class DDOptions {
     /**
      * If true, Citizens can appoint moderators through referendums. If false, they collectively work as moderators.
      */

@@ -1,8 +1,6 @@
 import { prop } from '@typegoose/typegoose';
 
-import { GuildConfigOptionsOptionClass } from "../../types/wizard.js";
-
-class EmergencyOptions extends GuildConfigOptionsOptionClass {
+class EmergencyOptions {
     /**
      * Number of hours a temporary admin will have admin permissions for.
      */

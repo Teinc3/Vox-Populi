@@ -4,8 +4,9 @@ import { OverwriteData, PermissionsBitField } from "discord.js";
 import type PoliticalRole from "../roles/PoliticalRole";
 import { PoliticalRoleModel } from "../roles/PoliticalRole.js";
 
-import { PermissionsOverwriteHolder, discordPermissionOverwritesReference } from "../../types/permissions.js";
-import { PoliticalRoleHierarchy } from "../../types/types.js";
+import { discordPermissionOverwritesReference } from "../../utils/permissionsHelper.js";
+
+import { PoliticalRoleHierarchy, type PermissionsOverwriteHolder } from "../../types/permissions.js";
 
 // If array is empty then everyone has that perm there (provided they can Access the channel)
 // but if it's [VoxPopuli] then nobody has that perm (apart from the bot)
