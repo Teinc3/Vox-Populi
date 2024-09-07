@@ -14,7 +14,7 @@ class PoliticalRole {
     @prop({ required: true, enum: () => PoliticalRoleHierarchy })
     hierarchy!: PoliticalRoleHierarchy;
 
-    @prop()
+    @prop({ unique: true })
     roleID?: string;
 
     @prop({ required: true })

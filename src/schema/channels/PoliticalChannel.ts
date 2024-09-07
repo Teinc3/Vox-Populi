@@ -23,7 +23,7 @@ class PoliticalChannel {
     @prop({ required: true })
     description!: string;
 
-    @prop()
+    @prop({ unique: true })
     channelID?: string;
 
     @prop({ required: true, _id: false })

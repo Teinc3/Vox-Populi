@@ -21,7 +21,7 @@ class TicketCollector {
     public channel!: Ref<PoliticalChannel>;
 
     // May not exist when the object is first created
-    @prop()
+    @prop({ unique: true })
     public messageID?: string;
 
     @prop()
@@ -103,7 +103,11 @@ class TicketCollector {
 
         if (this.messageID) {
             // Fetch the message
-            discordMessage = await discordChannel.messages.fetch(this.messageID);
+            try {
+                discordMessage = await discordChannel.messages.fetch(this.messageID);
+            } catch (err) {
+                discordMessage = undefined;
+            }
         }
 
         const payload = this.deserializePayload();
@@ -111,7 +115,13 @@ class TicketCollector {
         // Fallback Options
         if (!discordMessage) {
             discordMessage = await discordChannel.send(payload)
+
+            // If it's already saved before (hence messageID is present), then we update it in the document.
+            if (this.messageID) {
+                await TicketCollectorModel.findOneAndUpdate({ messageID: this.messageID }, { messageID: discordMessage.id });
+            }
             this.messageID = discordMessage.id;
+            
         }
         if (discordMessage.flags.has('SuppressEmbeds')) {
             discordMessage.suppressEmbeds(false);
@@ -123,11 +133,12 @@ class TicketCollector {
             discordChannel.awaitMessages({
                 filter: (m: Message) => m.type === MessageType.ChannelPinnedMessage && m.reference!.messageId === discordMessage.id,
                 max: 1,
-                time: 10E3
+                time: 60E3
             })
                 .then(pinnedMessages => pinnedMessages.first()?.delete())
-                .catch(err => console.error(err));
+                .catch();
         }
+
         return true;
     }
 

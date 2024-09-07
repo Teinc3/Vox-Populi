@@ -32,7 +32,7 @@ class GuildCategory {
     @prop({ required: true })
     name!: string;
 
-    @prop()
+    @prop({ unique: true })
     categoryID?: string;
 
     @prop({ ref: () => 'PoliticalChannel' })
