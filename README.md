@@ -24,6 +24,7 @@ None for now
 ## TODO
 ### Active
 - Add voting system
+- Protect Categories permissions
 
 ### Future
 - Add logging and command to view logs

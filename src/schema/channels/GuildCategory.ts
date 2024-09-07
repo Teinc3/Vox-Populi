@@ -8,7 +8,7 @@ import Chamber from '../Chamber.js';
 
 import { PoliticalBranchType, PoliticalSystemsType, PoliticalRoleHierarchy } from '../../types/types.js';
 import { GuildConfigData, DefaultCategoryData } from '../../types/wizard.js';
-import { CustomPermissionsOverwrite } from '../../types/permissions.js';
+import { PermissionsOverwriteEnumKeyHolder, PermissionsOverwriteHolder } from '../../types/permissions.js';
 
 /**
  * Represents a Category that contains Political Channels.
@@ -67,11 +67,11 @@ class GuildCategory {
             for (const key in permissionOverwrites) {
     
                 const refRoleArray: UnfilteredRefRoleArray = [];
-                for (const roleHierarchy of permissionOverwrites[key as keyof CustomPermissionsOverwrite<number>]) {
+                for (const roleHierarchy of permissionOverwrites[key as keyof PermissionsOverwriteEnumKeyHolder]) {
     
                     // Obtain role from roleHolder
                     // We can push Undefined roles, as if its undefined, it will be filtered out later
-                    switch (roleHierarchy) {
+                    switch (PoliticalRoleHierarchy[roleHierarchy]) {
                         case PoliticalRoleHierarchy.VoxPopuli:
                             refRoleArray.push(roleHolder.VoxPopuli);
                             break;
@@ -115,7 +115,10 @@ class GuildCategory {
                                 refRoleArray.push(roleHolder.Citizen);
                             }
                             break;
-                    }                
+                        case PoliticalRoleHierarchy.Undocumented:
+                            refRoleArray.push(roleHolder.Undocumented);
+                            break;
+                    }
                 }
     
                 // Finally run the filter function to remove undefined values

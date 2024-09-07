@@ -28,10 +28,21 @@ export enum PoliticalRoleHierarchy {
     Undocumented
 }
 
+export type KeysMap<T> = {
+    [key in keyof T]: key
+};
+
+type HierarchyKeysMap = KeysMap<typeof PoliticalRoleHierarchy>;
+
+/*
+ * Now you might ask, why not just use the strings directly? This just seems like overkill and messy.
+ * But if you replace any of the the keys below with another string, the compiler will throw an error.
+ * This ensures that the keys are always mapped with the enum's, so you can't accidentally use the wrong key by writing down the wrong string.
+ */
 type BaseRoles = {
-    required: "VoxPopuli" | "Citizen" | "Undocumented";
-    optional: "President" | "PrimeMinister" | "HeadModerator" | "Moderator" | "Senator" | "Judge";
-}
+    required: HierarchyKeysMap["VoxPopuli"] | HierarchyKeysMap["Citizen"] | HierarchyKeysMap["Undocumented"];
+    optional: HierarchyKeysMap["President"] | HierarchyKeysMap["PrimeMinister"] | HierarchyKeysMap["HeadModerator"] | HierarchyKeysMap["Moderator"] | HierarchyKeysMap["Senator"] | HierarchyKeysMap["Judge"];
+};
 
 export type PoliticalRoleHolderInterface<T> = {
     [key in BaseRoles["required"]]: T;

@@ -34,7 +34,7 @@ async function execute(interaction: ChatInputCommandInteraction) {
 
     const newChannel = await guild.channels.create({ name: 'general', type: ChannelType.GuildText });
     if (newChannel) {
-        await newChannel.send("Server has been nuked. Please setup the server again.");
+        await newChannel.send("Server has been nuked. You can now setup the server again.");
     }
 }
 

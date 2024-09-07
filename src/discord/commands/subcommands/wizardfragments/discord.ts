@@ -8,6 +8,7 @@ import BaseWizard from './BaseWizard.js';
 
 import { PoliticalSystemsType, PoliticalRoleHierarchy } from '../../../../types/types.js';
 import { DiscordRoleHolderData, ExtendedDefaultDiscordData, DefaultRoleData, NewCategoryChannelData } from '../../../../types/wizard.js';
+
 import settings from '../../../../data/settings.json' assert { type: 'json' };
 import roleDefaults from '../../../../data/defaults/roles.json' assert { type: 'json' };
 import categoryDefaults from '../../../../data/defaults/channels.json' assert { type: "json" };

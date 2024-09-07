@@ -4,17 +4,17 @@ import { OverwriteData, PermissionsBitField } from "discord.js";
 import type PoliticalRole from "../roles/PoliticalRole";
 import { PoliticalRoleModel } from "../roles/PoliticalRole.js";
 
-import { CustomPermissionsOverwrite, discordPermissionOverwritesReference } from "../../types/permissions.js";
+import { PermissionsOverwriteHolder, discordPermissionOverwritesReference } from "../../types/permissions.js";
 import { PoliticalRoleHierarchy } from "../../types/types.js";
 
 // If array is empty then everyone has that perm there (provided they can Access the channel)
 // but if it's [VoxPopuli] then nobody has that perm (apart from the bot)
 export type RefRoleArray = Ref<PoliticalRole>[];
 export type UnfilteredRefRoleArray = Array<Ref<PoliticalRole> | undefined>;
-export type ChannelPermissionsInterface = CustomPermissionsOverwrite<Ref<PoliticalRole>>;
+export type ChannelPermissionsInterface = PermissionsOverwriteHolder<Ref<PoliticalRole>>;
 
 interface RolePopulated {
-    roleID: string;
+    roleObject: PoliticalRole;
     roleDocument: Ref<PoliticalRole>;
     permissionOverwrites: {
         id: string;
@@ -27,9 +27,11 @@ interface RolePopulated {
  * Represents simplified permissions for a Discord channel.
  * 
  * Scenarios:
- * - Array is non-empty: All roles in the arrays have the permission allowed, while `@everyone` has the permission denied.
- * - Array is empty: follow default Discord permissions.
- * - Array contains only Vox Populi (0): `@everyone` has the permission denied.
+ * 1. Array is non-empty - Two Cases:
+ *   - If `PoliticalRoleHierarchy.Undocumented` (*@everyone*) is present in the array, then all roles in the array (with the exception of *@everyone*, which follows default perms) have the permission denied
+ *   - Otherwise, all roles in the arrays have the permission allowed, while *@everyone* has the permission denied.
+ * 2. Array is empty: follow default Discord permissions.
+ * 3. Array contains only `PoliticalRoleHierarchy.VoxPopuli`: *@everyone* has the permission denied.
  * 
  * @class
  */
@@ -47,7 +49,13 @@ class ChannelPermissions implements ChannelPermissionsInterface {
     send!: RefRoleArray;
 
     /**
-     * Who can interact with the channel
+     * Who can interact with the channel.
+     * 
+     * Note:
+     * - This does not include interacting with the Bot's messages.
+     * For example, a Citizen may not be able to react emojis to the election collector, but still be able to vote through the Bot's functionality.
+     * 
+     * - This is a catch-all for all interactions that are not covered by the lower permissions (view, send).
      */
     @prop({ required: true, default: new Array<Ref<PoliticalRole>>(), ref: () => 'PoliticalRole' })
     interact!: RefRoleArray;
@@ -81,10 +89,10 @@ class ChannelPermissions implements ChannelPermissionsInterface {
     
         const allRoles: Array<RolePopulated> = [];
         const rolePromises = Array.from(allRoleDocuments).map(async roleDocument => {
-            const roleObject = await PoliticalRoleModel.findOne({ _id: roleDocument });
+            const roleObject = await PoliticalRoleModel.findById(roleDocument);
             if (roleObject && roleObject.roleID) {
                 return {
-                    roleID: roleObject.roleID,
+                    roleObject,
                     roleDocument,
                     permissionOverwrites: {
                         id: roleObject.roleID,
@@ -122,7 +130,7 @@ class ChannelPermissions implements ChannelPermissionsInterface {
             if (refRoleArray.length !== 0) {
                 if (refRoleArray.length === 1) {
                     const roleDocument = refRoleArray[0];
-                    const politicalRoleObject = await PoliticalRoleModel.findOne({ _id: roleDocument });
+                    const politicalRoleObject = allRoles.find(role => role.roleDocument === roleDocument)?.roleObject;
     
                     if (politicalRoleObject?.hierarchy === PoliticalRoleHierarchy.VoxPopuli) {
                         everyonePermissionOverwrites.deny!.add(permissions);
@@ -130,7 +138,10 @@ class ChannelPermissions implements ChannelPermissionsInterface {
                         continue;
                     }
                 }
-    
+
+                // Search refRoleArray for any document that has hierarchy of Undocumented
+                const hasUndocumented = allRoles.some(role => refRoleArray.includes(role.roleDocument) && role.roleObject.hierarchy === PoliticalRoleHierarchy.Undocumented);
+                
                 for (const roleDocument of refRoleArray) {
                     const rolePopulated = allRoles.find(role => role.roleDocument === roleDocument);
                     if (!rolePopulated) {
@@ -138,10 +149,16 @@ class ChannelPermissions implements ChannelPermissionsInterface {
                     }
     
                     const { permissionOverwrites } = rolePopulated;
-                    permissionOverwrites.allow.add(permissions);
-                    everyonePermissionOverwrites.deny!.add(permissions);
+                    if (hasUndocumented) {
+                        if (rolePopulated.roleObject.hierarchy !== PoliticalRoleHierarchy.Undocumented) {
+                            permissionOverwrites.deny.add(permissions);
+                        }
+                    } else {
+                        permissionOverwrites.allow.add(permissions);
+                        everyonePermissionOverwrites.deny.add(permissions);
+                    }
+
                     hasOverwrites = true;
-                    
                     permissionOverwritesArray.push(permissionOverwrites);
                 }
             }

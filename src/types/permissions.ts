@@ -1,4 +1,6 @@
 import { PermissionFlagsBits } from "discord.js";
+import { KeysMap, PoliticalRoleHierarchy } from "./types.js";
+
 const { 
     Administrator, ManageGuild,
     ManageGuildExpressions, ManageEvents, ViewCreatorMonetizationAnalytics, CreateGuildExpressions, CreateEvents, ManageChannels, SendTTSMessages, MentionEveryone, ManageRoles, ManageWebhooks,
@@ -8,39 +10,71 @@ const {
     CreateInstantInvite, ViewAuditLog, ViewGuildInsights, ChangeNickname, ViewChannel, ReadMessageHistory, Connect 
 } = PermissionFlagsBits;
 
+export enum PermissionsLevel {
+    emergency,
+    manage,
+    moderate,
+    interact,
+    send,
+    view
+}
+
+type BasePermission = keyof KeysMap<typeof PermissionsLevel>;
+
+type PermissionsHolderInterface<T, Optional extends boolean = false> = {
+    [key in BasePermission as key extends "emergency" ? (Optional extends false ? never : key) : key]: T;
+};
+
+export interface PermissionsCategory {
+    overwrites: bigint[];
+    static: bigint[];
+}
+
+export type PermissionsHolder<T> = PermissionsHolderInterface<Array<T>, true>;
+
+export type PermissionsOverwriteHolder<T> = PermissionsHolderInterface<Array<T>, false>;
+
+export type PermissionsOverwriteEnumKeyHolder = PermissionsOverwriteHolder<keyof typeof PoliticalRoleHierarchy>;
+
+type PermissionsAggregate<T> = Partial<{ start: T, end: T }>;
+
+export type BasePermissionsAggregate = PermissionsAggregate<BasePermission>;
+
+export type PermissionsLevelAggregate = PermissionsAggregate<PermissionsLevel>;
+
 /**
  * Permissions categories for the bot
  * 
  * Refer to `/docs/permissions.md` for more information
  */
-export const PermissionsCategories = {
-    "emergency": {
+export const PermissionsCategories: PermissionsHolderInterface<PermissionsCategory, true> = {
+    emergency: {
         overwrites: [],
         static: [Administrator]
     },
-    "manage": {
+    manage: {
         overwrites: [ManageChannels, SendTTSMessages, MentionEveryone, ManageRoles, ManageWebhooks],
         static: [ManageGuild, ManageGuildExpressions, ManageEvents, ViewCreatorMonetizationAnalytics, CreateGuildExpressions, CreateEvents]
     },
-    "moderate": {
+    moderate: {
         overwrites: [ManageMessages, ManageThreads, MuteMembers, DeafenMembers, MoveMembers, PrioritySpeaker],
         static: [KickMembers, BanMembers, ManageNicknames, ModerateMembers]
     },
-    "interact": {
+    interact: {
         overwrites: [AddReactions, Stream, EmbedLinks, AttachFiles, UseExternalEmojis, UseVAD, UseApplicationCommands, RequestToSpeak, CreatePublicThreads, CreatePrivateThreads, UseExternalStickers, SendMessagesInThreads, UseEmbeddedActivities, UseSoundboard, UseExternalSounds, SendVoiceMessages, SendPolls],
         static: []
     },
-    "send": {
+    send: {
         overwrites: [SendMessages, Speak],
         static: []
     },
-    "view": {
+    view: {
         overwrites: [ViewChannel, ReadMessageHistory, Connect],
         static: [CreateInstantInvite, ViewAuditLog, ViewGuildInsights, ChangeNickname]
     }
 }
 
-export const discordPermissionOverwritesReference = {
+export const discordPermissionOverwritesReference: PermissionsOverwriteHolder<bigint> = {
     view: PermissionsCategories.view.overwrites,
     send: PermissionsCategories.send.overwrites,
     interact: PermissionsCategories.interact.overwrites,
@@ -48,66 +82,20 @@ export const discordPermissionOverwritesReference = {
     manage: PermissionsCategories.manage.overwrites
 };
 
-export type BasePermission = keyof typeof PermissionsCategories;
-
-export enum PermissionsLevel {
-    Emergency,
-    Manage,
-    Moderate,
-    Interact,
-    Send,
-    View
-}
-
-export type PermissionsAggregate<T> = Partial<{ start: T, end: T }>;
-
-export type BasePermissionsAggregate = PermissionsAggregate<BasePermission>;
-
-export type PermissionsLevelAggregate = PermissionsAggregate<PermissionsLevel>;
-
-const basePermissionToPermissionsLevel: Record<BasePermission, PermissionsLevel> = {
-    "emergency": PermissionsLevel.Emergency,
-    "manage": PermissionsLevel.Manage,
-    "moderate": PermissionsLevel.Moderate,
-    "interact": PermissionsLevel.Interact,
-    "send": PermissionsLevel.Send,
-    "view": PermissionsLevel.View
-}
-
-/**
- * Converts a base permission string to a permissions level enum
- * @param permission 
- * @returns The permissions level enum
- */
-export function getPermissionsLevel(permission: BasePermission): PermissionsLevel {
-    return basePermissionToPermissionsLevel[permission]
-}
-
-export function getPermissionsLevelAggregate(permissions?: BasePermissionsAggregate): PermissionsLevelAggregate {
+export function parsePermissionsAggregate(permissions?: BasePermissionsAggregate): PermissionsLevelAggregate {
     if (!permissions) {
         return {};
     }
     
     const permissionsLevelAggregate: PermissionsLevelAggregate = {};
     if (permissions.start) {
-        permissionsLevelAggregate.start = getPermissionsLevel(permissions.start);
+        permissionsLevelAggregate.start = PermissionsLevel[permissions.start];
     }
     if (permissions.end) {
-        permissionsLevelAggregate.end = getPermissionsLevel(permissions.end);
+        permissionsLevelAggregate.end = PermissionsLevel[permissions.end];
     }
     return permissionsLevelAggregate;
 }
-
-export interface PermissionsCategory {
-    "overwrites": bigint[];
-    "static": bigint[];
-}
-
-export type CustomPermissionsOverwrite<T> = {
-    [key in Exclude<BasePermission, "emergency">]: T[];
-}
-
-export type CustomPermissions<T> = CustomPermissionsOverwrite<T> & Partial<Record<"emergency", T[]>>;
 
 /**
  * Automatically assigns all permissions from the highest permission level the role has to the lowest
@@ -126,7 +114,7 @@ export function progressivePermissionsAllocator(permissionsLevelAggregate: Permi
     if (start === undefined) {
         return new Array<bigint>();
     }
-    for (let i = start; i <= (end ?? categoriesArray.length - 1); i++) {
+    for (let i = start; i <= (end ?? start); i++) {
         permissions.push(...categoriesArray[i].static, ...categoriesArray[i].overwrites);
     }
     return permissions;

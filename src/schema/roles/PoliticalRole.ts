@@ -5,7 +5,7 @@ import PoliticalRoleHolder from './PoliticalRoleHolder.js';
 
 import { PoliticalRoleHierarchy } from '../../types/types.js';
 import { GuildConfigData } from '../../types/wizard.js';
-import { BasePermissionsAggregate, getPermissionsLevelAggregate, progressivePermissionsAllocator } from '../../types/permissions.js';
+import { BasePermissionsAggregate, parsePermissionsAggregate, progressivePermissionsAllocator } from '../../types/permissions.js';
 
 class PoliticalRole {
     @prop({ required: true })
@@ -33,7 +33,7 @@ class PoliticalRole {
             this.roleID = id;
         }
 
-        this.permissions = progressivePermissionsAllocator(getPermissionsLevelAggregate(basePermissionsAggregate));
+        this.permissions = progressivePermissionsAllocator(parsePermissionsAggregate(basePermissionsAggregate));
     }
 
     static async createPoliticalRoleDocuments(guild: Guild, guildConfigData: GuildConfigData, reason?: string): Promise<PoliticalRoleHolder> {

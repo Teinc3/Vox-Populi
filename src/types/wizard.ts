@@ -3,8 +3,8 @@ import type { SeatOptions, TermOptions, ThresholdOptions } from "../schema/optio
 import type { DDOptions } from "../schema/options/SystemOptions.js";
 import type { EmergencyOptions } from "../schema/options/MiscOptions.js";
 
-import type { BasePermissionsAggregate, CustomPermissions } from "./permissions.js";
-import type { PoliticalSystemsType, TicketType } from "./types.js";
+import type { BasePermissionsAggregate, PermissionsOverwriteEnumKeyHolder, PermissionsOverwriteHolder } from "./permissions.js";
+import { PoliticalRoleHierarchy, PoliticalSystemsType, TicketType } from "./types.js";
 
 interface GuildConfigOptionsOption {}
 export class GuildConfigOptionsOptionClass implements GuildConfigOptionsOption {}
@@ -50,7 +50,7 @@ export interface DiscordRoleOptionsData {
 
 export interface DefaultRoleData {
     name: string;
-    hierarchy: number;
+    hierarchy: PoliticalRoleHierarchy;
     color: string;
     basePermissions?: BasePermissionsAggregate;
 }
@@ -76,7 +76,7 @@ export interface DefaultChannelData {
         isDD?: boolean;
     };
     chamberTypeIsLegislative?: boolean;
-    permissionOverwrites: CustomPermissions<number>;
+    permissionOverwrites: PermissionsOverwriteEnumKeyHolder;
     tickets?: DefaultTicketData;
 }
 

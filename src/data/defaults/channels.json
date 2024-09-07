@@ -10,9 +10,9 @@
         },
         "permissionOverwrites": {
           "view": [],
-          "send": [1, 2],
+          "send": ["President", "PrimeMinister", "HeadModerator"],
           "interact": [],
-          "moderate": [1, 2],
+          "moderate": ["President", "PrimeMinister", "HeadModerator"],
           "manage": []
         }
       },
@@ -23,7 +23,7 @@
           "isDD": true
         },
         "permissionOverwrites": {
-          "view": [1, 2],
+          "view": ["President", "PrimeMinister", "HeadModerator"],
           "send": [],
           "interact": [],
           "moderate": [],
@@ -34,10 +34,10 @@
         "name": "server-moderation",
         "description": "Channel for server moderation.",
         "permissionOverwrites": {
-          "view": [1, 2, 3],
+          "view": ["President", "PrimeMinister", "HeadModerator", "Moderator"],
           "send": [],
           "interact": [],
-          "moderate": [1, 2, 3],
+          "moderate": [],
           "manage": []
         }
       },
@@ -50,10 +50,10 @@
         },
         "permissionOverwrites": {
           "view": [],
-          "send": [0],
-          "interact": [0],
-          "moderate": [0],
-          "manage": [0]
+          "send": ["VoxPopuli"],
+          "interact": ["VoxPopuli"],
+          "moderate": ["VoxPopuli"],
+          "manage": ["VoxPopuli"]
         },
         "tickets": {
           "title": "Support Tickets",
@@ -79,21 +79,21 @@
         "description": "Channel for server logs.",
         "permissionOverwrites": {
           "view": [],
-          "send": [0],
+          "send": ["VoxPopuli"],
           "interact": [],
-          "moderate": [0],
-          "manage": [0]
+          "moderate": ["VoxPopuli"],
+          "manage": ["VoxPopuli"]
         }
       },
       {
         "name": "chat-logs",
         "description": "Channel for chat logs.",
         "permissionOverwrites": {
-          "view": [1, 2, 3, 5],
-          "send": [0],
+          "view": ["President", "PrimeMinister", "HeadModerator", "Moderator", "Judge"],
+          "send": ["VoxPopuli"],
           "interact": [],
-          "moderate": [0],
-          "manage": [0]
+          "moderate": ["VoxPopuli"],
+          "manage": ["VoxPopuli"]
         }
       }
     ]
@@ -106,10 +106,10 @@
         "chamberTypeIsLegislative": true,
         "permissionOverwrites": {
           "view": [],
-          "send": [0], 
-          "interact": [4],
-          "moderate": [0],
-          "manage": [0]
+          "send": ["VoxPopuli"], 
+          "interact": ["VoxPopuli"],
+          "moderate": ["VoxPopuli"],
+          "manage": ["VoxPopuli"]
         }
       },
       {
@@ -120,10 +120,10 @@
         },
         "permissionOverwrites": {
           "view": [],
-          "send": [4],
-          "interact": [4],
-          "moderate": [0],
-          "manage": [0]
+          "send": ["Senator"],
+          "interact": ["Senator"],
+          "moderate": ["VoxPopuli"],
+          "manage": ["VoxPopuli"]
         },
         "tickets": {
           "title": "Bill Proposals",
@@ -148,10 +148,10 @@
         "chamberTypeIsLegislative": false,
         "permissionOverwrites": {
           "view": [],
-          "send": [5], 
-          "interact": [5],
-          "moderate": [0],
-          "manage": [0]
+          "send": ["Judge"], 
+          "interact": ["Judge"],
+          "moderate": ["VoxPopuli"],
+          "manage": ["VoxPopuli"]
         },
         "tickets": {
           "title": "Court Cases",
@@ -178,25 +178,20 @@
         },
         "permissionOverwrites": {
           "view": [],
-          "send": [0],
-          "interact": [6],
-          "moderate": [0],
-          "manage": [0]
+          "send": ["VoxPopuli"],
+          "interact": ["VoxPopuli"],
+          "moderate": ["VoxPopuli"],
+          "manage": ["VoxPopuli"]
         }
       }, {
         "name": "registration",
         "description": "Channel to apply for citizenship and voting rights.",
-        "disable": {
-          "isDD": true,
-          "appointModerators": false,
-          "appointJudges": false
-        },
         "permissionOverwrites": {
-          "view": [],
-          "send": [0],
-          "interact": [0], 
-          "moderate": [0],
-          "manage": [0]
+          "view": ["Undocumented", "Citizen"],
+          "send": ["VoxPopuli"],
+          "interact": ["VoxPopuli"], 
+          "moderate": ["VoxPopuli"],
+          "manage": ["VoxPopuli"]
         },
         "tickets": {
           "title": "Citizenship Application",
