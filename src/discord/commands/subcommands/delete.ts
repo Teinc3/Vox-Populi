@@ -3,7 +3,7 @@ import {
     type Guild, type ChatInputCommandInteraction, type MessageComponentInteraction,
 } from "discord.js";
 
-import PoliticalGuild from "../../../schema/PoliticalGuild.js";
+import PoliticalGuild from "../../../schema/main/PoliticalGuild.js";
 
 import settings from "../../../data/settings.json" assert { type: "json" };
 

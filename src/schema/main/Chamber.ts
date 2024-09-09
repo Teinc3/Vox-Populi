@@ -1,11 +1,11 @@
 import { prop, type Ref, getModelForClass, isDocument } from '@typegoose/typegoose';
 
-import type PoliticalChannel from './channels/PoliticalChannel.js';
+import type PoliticalChannel from '../channels/PoliticalChannel.js';
 import GuildModel from './PoliticalGuild.js';
-import { ThresholdOptions, TermOptions, SeatOptions } from './options/RoleOptions.js';
+import { ThresholdOptions, TermOptions, SeatOptions } from '../options/RoleOptions.js';
 
-import type { GuildConfigData } from '../types/wizard.js';
-import { PoliticalBranchType, LegislativeChamberType, PoliticalSystemType } from '../types/types.js';
+import type { GuildConfigData } from '../../types/wizard.js';
+import { PoliticalBranchType, LegislativeChamberType, PoliticalSystemType } from '../../types/systems.js';
 
 /**
  * Represents a base Chamber document.

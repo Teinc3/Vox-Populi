@@ -1,17 +1,3 @@
-export enum PoliticalSystemType {
-    Presidential,
-    Parliamentary,
-    DirectDemocracy
-}
-
-export enum PoliticalBranchType {
-    None,
-    Legislative,
-    Executive,
-    Judicial,
-}
-
-export enum LegislativeChamberType {
-    Senate,
-    Referendum
-}
+export type KeysMap<T> = {
+    [key in keyof T]: key
+};

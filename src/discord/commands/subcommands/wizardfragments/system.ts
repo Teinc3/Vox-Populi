@@ -9,7 +9,7 @@ import BaseWizard from './BaseWizard.js';
 import settings from '../../../../data/settings.json' assert { type: 'json' };
 import wizardDefaults from '../../../../data/defaults/wizard.json' assert { type: 'json' };
 
-import { PoliticalSystemType } from '../../../../types/types.js';
+import { PoliticalSystemType } from '../../../../types/systems.js';
 
 class SystemWizard extends BaseWizard {
 

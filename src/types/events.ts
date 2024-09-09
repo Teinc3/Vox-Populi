@@ -1,3 +1,5 @@
+import { KeysMap } from "./types";
+
 /**
  * Type of political event that can be created
  * 
@@ -7,23 +9,23 @@ export enum PoliticalEventType {
     /**
      * Vote: For all types of political votes, including Presidential elections, Senate elections, and referendums.
      */
-    Vote,
+    Vote = "Vote",
     /**
      * CourtCase: When a new court case is created
      */
-    CourtCase,
+    CourtCase = "Court",
     /**
      * Proposal: When a senator proposes a new bill. (Should this also include the voting process later on?)
      */
-    Proposal,
+    Proposal = "Proposal",
     /**
      * Appointment: When a new role appointment is made, or someone is removed from a role.
      */
-    Appointment,
+    Appointment = "Role Change",
     /**
      * ExecutiveOrder: When an executive order is made. Temporary permissions can be given to officers executing the order.
      */
-    ExecutiveOrder,
+    ExecutiveOrder = "Executive Order",
 }
 
 /**
@@ -126,3 +128,12 @@ export enum AppointmentDetails {
      */
     Resigned
 }
+
+export enum LogChannelType {
+    Server,
+    Chat
+}
+
+type LogChannelTypeKeysMap = KeysMap<typeof LogChannelType>
+
+export type LogChannelTypeKeys = LogChannelTypeKeysMap[keyof LogChannelTypeKeysMap];

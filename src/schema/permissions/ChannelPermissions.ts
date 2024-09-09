@@ -29,7 +29,9 @@ interface RolePopulated {
  * 
  * Scenarios:
  * 1. Array is non-empty - Two Cases:
- *   - If `PoliticalRoleHierarchy.Undocumented` (*@everyone*) is present in the array, then all roles in the array (with the exception of *@everyone*, which follows default perms) have the permission denied
+ *   - If `PoliticalRoleHierarchy.Undocumented` (*@everyone*) is present in the array,
+ * then all roles in the array that are listed before Undocumented have the permission allowed,
+ * and the roles after Undocumented have the permission denied. Undocumented stays neutral.
  *   - Otherwise, all roles in the arrays have the permission allowed, while *@everyone* has the permission denied.
  * 2. Array is empty: follow default Discord permissions.
  * 3. Array contains only `PoliticalRoleHierarchy.VoxPopuli`: *@everyone* has the permission denied.
@@ -142,7 +144,8 @@ class ChannelPermissions implements ChannelPermissionsInterface {
 
                 // Search refRoleArray for any document that has hierarchy of Undocumented
                 const hasUndocumented = allRoles.some(role => refRoleArray.includes(role.roleDocument) && role.roleObject.hierarchy === PoliticalRoleHierarchy.Undocumented);
-                
+                let beforeUndocumented = true;
+
                 for (const roleDocument of refRoleArray) {
                     const rolePopulated = allRoles.find(role => role.roleDocument === roleDocument);
                     if (!rolePopulated) {
@@ -152,7 +155,14 @@ class ChannelPermissions implements ChannelPermissionsInterface {
                     const { permissionOverwrites } = rolePopulated;
                     if (hasUndocumented) {
                         if (rolePopulated.roleObject.hierarchy !== PoliticalRoleHierarchy.Undocumented) {
-                            permissionOverwrites.deny.add(permissions);
+                            if (beforeUndocumented) {
+                                permissionOverwrites.allow.add(permissions);
+                            } else {
+                                permissionOverwrites.deny.add(permissions);
+                            }
+                        } else {
+                            beforeUndocumented = false;
+                            continue;
                         }
                     } else {
                         permissionOverwrites.allow.add(permissions);

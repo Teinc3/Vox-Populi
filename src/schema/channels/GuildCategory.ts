@@ -1,13 +1,13 @@
 import { prop, getModelForClass, type Ref } from '@typegoose/typegoose';
 import { ChannelType, type CategoryChannel, type Guild } from 'discord.js';
 
-import Chamber from '../Chamber.js';
+import Chamber from '../main/Chamber.js';
 import PoliticalChannel from './PoliticalChannel.js';
 import type PoliticalRoleHolder from '../roles/PoliticalRoleHolder.js';
 import ChannelPermissions, { ChannelPermissionsInterface, type UnfilteredRefRoleArray } from '../permissions/ChannelPermissions.js';
 
 import type { DefaultCategoryData, GuildConfigData } from '../../types/wizard.js';
-import { PoliticalSystemType, PoliticalBranchType } from '../../types/types.js';
+import { PoliticalSystemType, PoliticalBranchType } from '../../types/systems.js';
 import { PoliticalRoleHierarchy, type PermissionsOverwriteEnumKeyHolder } from '../../types/permissions.js';
 
 /**
@@ -126,7 +126,7 @@ class GuildCategory {
             }
     
             // Create the channel
-            const politicalChannel = new PoliticalChannel(defaultChannelData.name, channelPermissions, defaultChannelData.description, defaultChannelData.id);
+            const politicalChannel = new PoliticalChannel(defaultChannelData.name, channelPermissions, defaultChannelData.description, { channelID: defaultChannelData.id, logChannel: defaultChannelData.logChannel });
             const politicalChannelDocument = await politicalChannel.createPoliticalChannelDocument(guild, categoryChannel, { ticketData: defaultChannelData.tickets, reason });
             
             if (defaultChannelData.chamberTypeIsLegislative !== undefined) {

@@ -1,4 +1,4 @@
-import EventModel from '../schema/events/Event.js';
+import EventModel, { EventSchema } from '../schema/events/Event.js';
 
 import type DiscordManager from './DiscordManager.js';
 import TicketCollectorModel from '../schema/events/TicketCollector.js';
@@ -14,8 +14,9 @@ class EventHandler {
         this.discordManager = discordManager;
     }
 
-    public initiateEventLoop() {
-        this.checkEvents();
+    public init() {
+        // Start EventLoop
+        setTimeout(() => this.checkEvents(), 0);
         setInterval(() => this.checkEvents(), eventLoopInterval);
     }
 

@@ -10,7 +10,7 @@ import ExtendedClient from '../../discord/ExtendedClient.js';
 import PoliticalChannel, { PoliticalChannelModel } from '../channels/PoliticalChannel.js';
 import EventModel, { EventSchema } from './Event.js';
 
-import GuildModel from '../PoliticalGuild.js';
+import GuildModel from '../main/PoliticalGuild.js';
 
 import type { DefaultTicketData } from '../../types/wizard.js';
 import { TicketType, PoliticalEventType, AppointmentDetails } from '../../types/events.js';
@@ -181,7 +181,7 @@ class TicketCollector {
         }
 
         // Handle Registration: For now we admit all registrations, so completed is true
-        const event = new EventSchema(`${interaction.user.username}'s Citizenship Application`, PoliticalEventType.Appointment, interaction.guildId, { completed: true });
+        const event = new EventSchema(`<@!${interaction.user.id}>(${interaction.user.username})'s Citizenship Application`, PoliticalEventType.Appointment, interaction.guildId, { completed: true });
         if (!event.isAppointment()) {
             return; // Another typeguard
         }
@@ -225,22 +225,24 @@ class TicketCollector {
         }
 
         if (member.roles.cache.some(r => r.id === roleID)) {
-            await interaction.followUp({ content: 'You already have the role!', ephemeral: true });
+            await interaction.followUp({ content: 'You already have the Citizen Role!', ephemeral: true });
             return;
         }
 
         await member.roles.add(role, event.options.reason);
     
-        await EventModel.create(event);
+        await new EventModel(event).save();
 
         const embed = new EmbedBuilder()
             .setTitle('Application Outcome')
-            .setDescription(`Congratulations! Your application for Citizenship has been **accepted**.\n\nYou now have the <@&${roleID}> Role.`)
+            .setDescription(`Congratulations! Your application for Citizenship has been **accepted**.\n\nYou now have the Citizen Role.`)
             .setColor(Colors.Green)
             .setFooter({ text: `Reason: ${event.options.reason ?? "No reason provided"}` })
             .setTimestamp();
 
-        await interaction.followUp({ embeds: [embed], ephemeral: true });
+        // Create a DM Channel
+        const dmChannel = await member.createDM();
+        dmChannel.send({ embeds: [embed] });
     }
 }
 

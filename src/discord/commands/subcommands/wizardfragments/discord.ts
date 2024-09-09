@@ -12,7 +12,7 @@ import categoryDefaults from '../../../../data/defaults/channels.json' assert { 
 
 import type { DefaultRoleData, DiscordRoleHolderData, ExtendedDefaultDiscordData, NewCategoryChannelData } from '../../../../types/wizard.js';
 import { PoliticalRoleHierarchy } from '../../../../types/permissions.js';
-import { PoliticalSystemType } from '../../../../types/types.js';
+import { PoliticalSystemType } from '../../../../types/systems.js';
 
 class DiscordWizard extends BaseWizard {
 

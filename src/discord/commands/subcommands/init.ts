@@ -10,7 +10,7 @@ import LegislatureWizard from './wizardfragments/legislature.js';
 import JudicialWizard from './wizardfragments/judicial.js';
 import DiscordWizard from './wizardfragments/discord.js';
 
-import PoliticalGuild from '../../../schema/PoliticalGuild.js';
+import PoliticalGuild from '../../../schema/main/PoliticalGuild.js';
 import { PoliticalRoleModel } from '../../../schema/roles/PoliticalRole.js';
 
 import settings from '../../../data/settings.json' assert { type: 'json' };

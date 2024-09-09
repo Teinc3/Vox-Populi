@@ -83,7 +83,8 @@
           "interact": [],
           "moderate": ["VoxPopuli"],
           "manage": ["VoxPopuli"]
-        }
+        },
+        "logChannel": "Server"
       },
       {
         "name": "chat-logs",
@@ -94,7 +95,8 @@
           "interact": [],
           "moderate": ["VoxPopuli"],
           "manage": ["VoxPopuli"]
-        }
+        },
+        "logChannel": "Chat"
       }
     ]
   }, {
@@ -187,10 +189,10 @@
         "name": "registration",
         "description": "Channel to apply for citizenship and voting rights.",
         "permissionOverwrites": {
-          "view": ["Undocumented", "Citizen"],
+          "view": ["President", "PrimeMinister", "HeadModerator", "Moderator", "Undocumented", "Citizen"],
           "send": ["VoxPopuli"],
-          "interact": ["VoxPopuli"], 
-          "moderate": ["VoxPopuli"],
+          "interact": [], 
+          "moderate": [],
           "manage": ["VoxPopuli"]
         },
         "tickets": {

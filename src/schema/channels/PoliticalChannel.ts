@@ -4,17 +4,23 @@ import { ChannelType, GuildBasedChannel, TextChannel, type CategoryChannel, type
 import { TicketCollector } from '../events/TicketCollector.js';
 
 import ChannelPermissions from '../permissions/ChannelPermissions.js';
-import { DefaultTicketData } from '../../types/wizard.js';
+import type { DefaultTicketData } from '../../types/wizard.js';
+import { LogChannelType, type LogChannelTypeKeys } from '../../types/events.js';
 
 /**
  * Represents a Political channel in a guild.
  */
 class PoliticalChannel {
-    constructor(name: string, channelPermissions: ChannelPermissions, description: string, channelID?: string) {
+    constructor(name: string, channelPermissions: ChannelPermissions, description: string, options?: { channelID?: string, logChannel?: LogChannelTypeKeys }) {
         this.name = name;
         this.channelPermissions = channelPermissions;
         this.description = description;
-        this.channelID = channelID;
+        if (options?.channelID) {
+            this.channelID = options.channelID;
+        }
+        if (options?.logChannel) {
+            this.logChannelType = LogChannelType[options.logChannel];
+        }
     }    
 
     @prop({ required: true })
@@ -25,6 +31,9 @@ class PoliticalChannel {
 
     @prop({ unique: true })
     channelID?: string;
+
+    @prop({ enum: () => LogChannelType })
+    logChannelType?: LogChannelType;
 
     @prop({ required: true, _id: false })
     channelPermissions!: ChannelPermissions

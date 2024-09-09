@@ -4,9 +4,9 @@ import type { SeatOptions, TermOptions, ThresholdOptions } from "../schema/optio
 import type { DDOptions } from "../schema/options/SystemOptions.js";
 import type { EmergencyOptions } from "../schema/options/MiscOptions.js";
 
-import { PoliticalSystemType } from "./types.js";
+import { PoliticalSystemType } from "./systems.js";
 import { PoliticalRoleHierarchy, type BasePermissionsAggregate, type PermissionsOverwriteEnumKeyHolder } from "./permissions.js";
-import { TicketType } from "./events.js";
+import { type LogChannelTypeKeys, TicketType } from "./events.js";
 
 interface CursorOption { cursor: number };
 
@@ -67,12 +67,13 @@ export interface DefaultCategoryData {
 interface DefaultChannelData {
     name: string;
     description: string;
+    permissionOverwrites: PermissionsOverwriteEnumKeyHolder;
     disable?: Partial<DDOptions> & {
         isDD?: boolean;
     };
     chamberTypeIsLegislative?: boolean;
-    permissionOverwrites: PermissionsOverwriteEnumKeyHolder;
     tickets?: DefaultTicketData;
+    logChannel?: LogChannelTypeKeys;
 }
 
 export interface DefaultTicketData {

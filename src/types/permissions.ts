@@ -1,3 +1,5 @@
+import type { KeysMap } from "./types.js";
+
 export enum PoliticalRoleHierarchy {
     VoxPopuli,
     President,
@@ -9,10 +11,6 @@ export enum PoliticalRoleHierarchy {
     Citizen,
     Undocumented
 }
-
-type KeysMap<T> = {
-    [key in keyof T]: key
-};
 
 type HierarchyKeysMap = KeysMap<typeof PoliticalRoleHierarchy>;
 

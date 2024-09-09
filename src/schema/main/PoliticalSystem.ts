@@ -2,10 +2,10 @@ import mongoose from 'mongoose';
 import { prop, getModelForClass, type Ref, Severity } from '@typegoose/typegoose';
 
 import Chamber, { type Legislature, type Senate, type Referendum, type Court } from "./Chamber.js";
-import { PresidentialOptions, ParliamentaryOptions, DDOptions } from './options/SystemOptions.js';
+import { PresidentialOptions, ParliamentaryOptions, DDOptions } from '../options/SystemOptions.js';
 
-import type { GuildConfigData } from '../types/wizard.js';
-import { PoliticalSystemType, PoliticalBranchType } from '../types/types.js';
+import type { GuildConfigData } from '../../types/wizard.js';
+import { PoliticalSystemType, PoliticalBranchType } from '../../types/systems.js';
 
 class PoliticalSystem {
     @prop({ required: true })
