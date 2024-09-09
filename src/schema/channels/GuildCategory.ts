@@ -1,14 +1,14 @@
 import { prop, getModelForClass, type Ref } from '@typegoose/typegoose';
 import { ChannelType, type CategoryChannel, type Guild } from 'discord.js';
 
+import Chamber from '../main/Chamber.js';
 import PoliticalChannel from './PoliticalChannel.js';
 import type PoliticalRoleHolder from '../roles/PoliticalRoleHolder.js';
 import ChannelPermissions, { ChannelPermissionsInterface, type UnfilteredRefRoleArray } from '../permissions/ChannelPermissions.js';
-import Chamber from '../Chamber.js';
 
-import { PoliticalBranchType, PoliticalSystemsType, PoliticalRoleHierarchy } from '../../types/types.js';
-import { GuildConfigData, DefaultCategoryData } from '../../types/wizard.js';
-import { CustomPermissionsOverwrite } from '../../types/permissions.js';
+import type { DefaultCategoryData, GuildConfigData } from '../../types/wizard.js';
+import { PoliticalSystemType, PoliticalBranchType } from '../../types/systems.js';
+import { PoliticalRoleHierarchy, type PermissionsOverwriteEnumKeyHolder } from '../../types/permissions.js';
 
 /**
  * Represents a Category that contains Political Channels.
@@ -32,7 +32,7 @@ class GuildCategory {
     @prop({ required: true })
     name!: string;
 
-    @prop()
+    @prop({ unique: true })
     categoryID?: string;
 
     @prop({ ref: () => 'PoliticalChannel' })
@@ -57,7 +57,7 @@ class GuildCategory {
 
     static async createPoliticalChannels(guild: Guild, roleHolder: PoliticalRoleHolder, categoryChannel: CategoryChannel, guildConfigData: GuildConfigData, categoryChannelData: DefaultCategoryData, reason?: string): Promise<Ref<PoliticalChannel>[]> {
         const newChannelDocuments = new Array<Ref<PoliticalChannel>>();
-        const isDD = guildConfigData.politicalSystem === PoliticalSystemsType.DirectDemocracy; 
+        const isDD = guildConfigData.politicalSystem === PoliticalSystemType.DirectDemocracy; 
         
         for (const defaultChannelData of categoryChannelData.channels) {
             const { permissionOverwrites } = defaultChannelData;
@@ -67,11 +67,11 @@ class GuildCategory {
             for (const key in permissionOverwrites) {
     
                 const refRoleArray: UnfilteredRefRoleArray = [];
-                for (const roleHierarchy of permissionOverwrites[key as keyof CustomPermissionsOverwrite<number>]) {
+                for (const roleHierarchy of permissionOverwrites[key as keyof PermissionsOverwriteEnumKeyHolder]) {
     
                     // Obtain role from roleHolder
                     // We can push Undefined roles, as if its undefined, it will be filtered out later
-                    switch (roleHierarchy) {
+                    switch (PoliticalRoleHierarchy[roleHierarchy]) {
                         case PoliticalRoleHierarchy.VoxPopuli:
                             refRoleArray.push(roleHolder.VoxPopuli);
                             break;
@@ -115,7 +115,10 @@ class GuildCategory {
                                 refRoleArray.push(roleHolder.Citizen);
                             }
                             break;
-                    }                
+                        case PoliticalRoleHierarchy.Undocumented:
+                            refRoleArray.push(roleHolder.Undocumented);
+                            break;
+                    }
                 }
     
                 // Finally run the filter function to remove undefined values
@@ -123,8 +126,8 @@ class GuildCategory {
             }
     
             // Create the channel
-            const politicalChannel = new PoliticalChannel(defaultChannelData.name, ChannelType.GuildText, channelPermissions, defaultChannelData.description, defaultChannelData.id);
-            const politicalChannelDocument = await politicalChannel.createPoliticalChannelDocument(guild, categoryChannel, reason);
+            const politicalChannel = new PoliticalChannel(defaultChannelData.name, channelPermissions, defaultChannelData.description, { channelID: defaultChannelData.id, logChannel: defaultChannelData.logChannel });
+            const politicalChannelDocument = await politicalChannel.createPoliticalChannelDocument(guild, categoryChannel, { ticketData: defaultChannelData.tickets, reason });
             
             if (defaultChannelData.chamberTypeIsLegislative !== undefined) {
                 if (defaultChannelData.chamberTypeIsLegislative === true) {

@@ -1,11 +1,11 @@
 import { prop, type Ref, getModelForClass, isDocument } from '@typegoose/typegoose';
 
-import PoliticalChannel from './channels/PoliticalChannel.js';
+import type PoliticalChannel from '../channels/PoliticalChannel.js';
 import GuildModel from './PoliticalGuild.js';
-import { ThresholdOptions, TermOptions, SeatOptions } from './options/RoleOptions.js';
+import { ThresholdOptions, TermOptions, SeatOptions } from '../options/RoleOptions.js';
 
-import { LegislativeChamberType, PoliticalBranchType, PoliticalSystemsType } from '../types/types.js';
-import { GuildConfigData } from '../types/wizard.js';
+import type { GuildConfigData } from '../../types/wizard.js';
+import { PoliticalBranchType, LegislativeChamberType, PoliticalSystemType } from '../../types/systems.js';
 
 /**
  * Represents a base Chamber document.
@@ -65,7 +65,7 @@ class Chamber {
         if (politicalBranchType !== PoliticalBranchType.Legislative) {
             chamber = new Court(guildConfigData) as T;
         } else {
-            if (guildConfigData.politicalSystem === PoliticalSystemsType.DirectDemocracy) {
+            if (guildConfigData.politicalSystem === PoliticalSystemType.DirectDemocracy) {
                 chamber = new Referendum(guildConfigData) as T;
             } else {
                 chamber = new Senate(guildConfigData) as T;
@@ -178,7 +178,7 @@ class Court extends Chamber {
         this.seatOptions = new SeatOptions();
         this.seatOptions.scalable = false; // Court seats are fixed
 
-        if (guildConfigData.politicalSystem === PoliticalSystemsType.DirectDemocracy && guildConfigData.ddOptions!.appointJudges === false) {
+        if (guildConfigData.politicalSystem === PoliticalSystemType.DirectDemocracy && guildConfigData.ddOptions!.appointJudges === false) {
             this.seatOptions.value = 0;
             this.thresholds = guildConfigData.referendumThresholds!;
         } else {

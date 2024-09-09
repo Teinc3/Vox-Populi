@@ -23,10 +23,12 @@ None for now
 
 ## TODO
 ### Active
-- Add voting system
+- Expand TicketCollector functionality and events
 
 ### Future
-- Add logging and command to view logs
+- Add voting system
+- Protect Categories permissions
+- Add command to view logs
 
 ### Wont Fix
 - Rework positioning of roles and channels (Can be changed by Executive Order)

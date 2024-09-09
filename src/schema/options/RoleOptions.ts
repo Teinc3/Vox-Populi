@@ -1,8 +1,6 @@
 import { prop } from '@typegoose/typegoose';
 
-import { GuildConfigOptionsOptionClass } from "../../types/wizard.js";
-
-class ThresholdOptions extends GuildConfigOptionsOptionClass {
+class ThresholdOptions {
     /**
      * Percentage of votes needed to pass a normal resolution
      */
@@ -17,7 +15,7 @@ class ThresholdOptions extends GuildConfigOptionsOptionClass {
     super!: number;
 }
 
-class TermOptions extends GuildConfigOptionsOptionClass {
+class TermOptions {
     /**
      * Maximum length of each term in months
      */
@@ -37,7 +35,7 @@ class TermOptions extends GuildConfigOptionsOptionClass {
     consecutive!: boolean;
 }
 
-class SeatOptions extends GuildConfigOptionsOptionClass {
+class SeatOptions {
     /**
      * True if the number of seats scale with the number of Citizens. False if the number of seats is fixed.
      */

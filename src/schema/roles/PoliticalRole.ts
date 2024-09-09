@@ -3,9 +3,10 @@ import { type ColorResolvable, type Guild, type Role } from 'discord.js';
 
 import PoliticalRoleHolder from './PoliticalRoleHolder.js';
 
-import { PoliticalRoleHierarchy } from '../../types/types.js';
-import { GuildConfigData } from '../../types/wizard.js';
-import { BasePermissionsAggregate, getPermissionsLevelAggregate, progressivePermissionsAllocator } from '../../types/permissions.js';
+import { parsePermissionsAggregate, progressivePermissionsAllocator } from '../../utils/permissionsHelper.js';
+
+import type { GuildConfigData } from '../../types/wizard.js';
+import { PoliticalRoleHierarchy, type BasePermissionsAggregate } from '../../types/permissions.js';
 
 class PoliticalRole {
     @prop({ required: true })
@@ -14,7 +15,7 @@ class PoliticalRole {
     @prop({ required: true, enum: () => PoliticalRoleHierarchy })
     hierarchy!: PoliticalRoleHierarchy;
 
-    @prop()
+    @prop({ unique: true })
     roleID?: string;
 
     @prop({ required: true })
@@ -33,7 +34,7 @@ class PoliticalRole {
             this.roleID = id;
         }
 
-        this.permissions = progressivePermissionsAllocator(getPermissionsLevelAggregate(basePermissionsAggregate));
+        this.permissions = progressivePermissionsAllocator(parsePermissionsAggregate(basePermissionsAggregate));
     }
 
     static async createPoliticalRoleDocuments(guild: Guild, guildConfigData: GuildConfigData, reason?: string): Promise<PoliticalRoleHolder> {

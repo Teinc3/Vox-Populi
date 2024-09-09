@@ -1,13 +1,15 @@
 import { getModelForClass, prop, type Ref } from '@typegoose/typegoose';
 import type { ChatInputCommandInteraction, Guild } from 'discord.js';
 
-import GuildCategory from './channels/GuildCategory.js';
+import GuildCategory from '../channels/GuildCategory.js';
 import PoliticalSystem from './PoliticalSystem.js';
-import PoliticalRole from './roles/PoliticalRole.js';
-import PoliticalRoleHolder from './roles/PoliticalRoleHolder.js';
-import { EmergencyOptions } from './options/MiscOptions.js';
+import PoliticalRole from '../roles/PoliticalRole.js';
+import PoliticalRoleHolder from '../roles/PoliticalRoleHolder.js';
+import LogChannelHolder from '../channels/LogChannelHolder.js';
+import type { EmergencyOptions } from '../options/MiscOptions.js';
+import type { EventSchema } from '../events/Event.js';
 
-import { GuildConfigData } from '../types/wizard.js';
+import type { GuildConfigData } from '../../types/wizard.js';
 
 class PoliticalGuild {
     @prop({ required: true, unique: true })
@@ -27,6 +29,12 @@ class PoliticalGuild {
 
     @prop({ required: true, ref: () => 'PoliticalRoleHolder' })
     roles!: Ref<PoliticalRoleHolder>;
+
+    @prop({ default: [], ref: () => 'EventSchema' })
+    events?: Ref<EventSchema>[];
+
+    @prop({ _id: false })
+    logChannels?: LogChannelHolder;
 
     constructor(discordGuild: Guild, interaction: ChatInputCommandInteraction, guildConfigData: GuildConfigData) {
         const guildID = discordGuild.id;
@@ -86,6 +94,9 @@ class PoliticalGuild {
     
         // Create Political System then link them to the guild document
         this.politicalSystem = await PoliticalSystem.createPoliticalSystemDocument(guildConfigData);
+
+        // Create Log Channels then link them to the guild document
+        this.logChannels = await LogChannelHolder.createLogChannelHolderDocument(this.categories);
     }
 }
 

@@ -3,7 +3,6 @@
     "name": "executive",
     "channels": [
       {
-        "position": 0,
         "name": "announcements",
         "description": "Channel for official announcements.",
         "disable": {
@@ -11,21 +10,20 @@
         },
         "permissionOverwrites": {
           "view": [],
-          "send": [1, 2],
+          "send": ["President", "PrimeMinister", "HeadModerator"],
           "interact": [],
-          "moderate": [1, 2],
+          "moderate": ["President", "PrimeMinister", "HeadModerator"],
           "manage": []
         }
       },
       {
-        "position": 1,
         "name": "admin-office",
         "description": "Channel for administrative purposes.",
         "disable": {
           "isDD": true
         },
         "permissionOverwrites": {
-          "view": [1, 2],
+          "view": ["President", "PrimeMinister", "HeadModerator"],
           "send": [],
           "interact": [],
           "moderate": [],
@@ -33,60 +31,90 @@
         }
       },
       {
-        "position": 2,
         "name": "server-moderation",
         "description": "Channel for server moderation.",
         "permissionOverwrites": {
-          "view": [1, 2, 3],
+          "view": ["President", "PrimeMinister", "HeadModerator", "Moderator"],
           "send": [],
           "interact": [],
-          "moderate": [1, 2, 3],
+          "moderate": [],
           "manage": []
         }
       },
       {
-        "position": 3,
+        "name": "support-tickets",
+        "description": "Channel for support tickets regarding server moderation and affairs.",
+        "disable": {
+          "isDD": true,
+          "appointModerators": false
+        },
+        "permissionOverwrites": {
+          "view": [],
+          "send": ["VoxPopuli"],
+          "interact": ["VoxPopuli"],
+          "moderate": ["VoxPopuli"],
+          "manage": ["VoxPopuli"]
+        },
+        "tickets": {
+          "title": "Support Tickets",
+          "description": "Choose the type of ticket you want to open.\n- **Inquiry**: For general inquiries with the moderation team.\n- **Report**: Report a user for misconducts, rule violations etc.",
+          "options": [
+            {
+              "type": "Inquiry",
+              "label": "General Inquiry",
+              "style": "Primary",
+              "emoji": "❓"
+            },
+            {
+              "type": "Report",
+              "label": "Report a User",
+              "style": "Danger",
+              "emoji": "🚨"
+            }
+          ]
+        }
+      },
+      {
         "name": "server-logs",
         "description": "Channel for server logs.",
         "permissionOverwrites": {
           "view": [],
-          "send": [0],
+          "send": ["VoxPopuli"],
           "interact": [],
-          "moderate": [0],
-          "manage": [0]
-        }
+          "moderate": ["VoxPopuli"],
+          "manage": ["VoxPopuli"]
+        },
+        "logChannel": "Server"
       },
       {
-        "position": 4,
         "name": "chat-logs",
         "description": "Channel for chat logs.",
         "permissionOverwrites": {
-          "view": [1, 2, 3, 5],
-          "send": [0],
+          "view": ["President", "PrimeMinister", "HeadModerator", "Moderator", "Judge"],
+          "send": ["VoxPopuli"],
           "interact": [],
-          "moderate": [0],
-          "manage": [0]
-        }
+          "moderate": ["VoxPopuli"],
+          "manage": ["VoxPopuli"]
+        },
+        "logChannel": "Chat"
       }
     ]
   }, {
     "name": "legislature",
     "channels": [
       {
-        "position": 0,
         "name": "voting-chamber",
         "description": "Channel for voting on bills.",
         "chamberTypeIsLegislative": true,
         "permissionOverwrites": {
           "view": [],
-          "send": [0], 
-          "interact": [4],
-          "moderate": [0],
-          "manage": [0]
+          "send": ["VoxPopuli"], 
+          "interact": ["VoxPopuli"],
+          "moderate": ["VoxPopuli"],
+          "manage": ["VoxPopuli"]
         }
       },
       {
-        "position": 1,
         "name": "bill-discussion",
         "description": "Channel for proposing bills.",
         "disable": {
@@ -94,10 +122,22 @@
         },
         "permissionOverwrites": {
           "view": [],
-          "send": [4],
-          "interact": [4],
-          "moderate": [0],
-          "manage": [0]
+          "send": ["Senator"],
+          "interact": ["Senator"],
+          "moderate": ["VoxPopuli"],
+          "manage": ["VoxPopuli"]
+        },
+        "tickets": {
+          "title": "Bill Proposals",
+          "description": "Click the button below to start the process of proposing a new bill.",
+          "options": [
+            {
+              "type": "Proposal",
+              "label": "Propose a Bill",
+              "style": "Primary",
+              "emoji": "📜"
+            }
+          ]
         }
       }
     ]
@@ -105,16 +145,27 @@
     "name": "judicial",
     "channels": [
       {
-        "position": 0,
         "name": "courtroom",
         "description": "Channel for court cases.",
         "chamberTypeIsLegislative": false,
         "permissionOverwrites": {
           "view": [],
-          "send": [5], 
-          "interact": [5],
-          "moderate": [0],
-          "manage": [0]
+          "send": ["Judge"], 
+          "interact": ["Judge"],
+          "moderate": ["VoxPopuli"],
+          "manage": ["VoxPopuli"]
+        },
+        "tickets": {
+          "title": "Court Cases",
+          "description": "Click the button below to start the process of filing a new court case.",
+          "options": [
+            {
+              "type": "CourtCase",
+              "label": "File a Court Case",
+              "style": "Primary",
+              "emoji": "⚖️"
+            }
+          ]
         }
       }
     ]
@@ -122,7 +173,6 @@
     "name": "others",
     "channels": [
       {
-        "position": 0,
         "name": "elections",
         "description": "Channel for serverwide elections.",
         "disable": {
@@ -130,26 +180,32 @@
         },
         "permissionOverwrites": {
           "view": [],
-          "send": [0],
-          "interact": [6],
-          "moderate": [0],
-          "manage": [0]
+          "send": ["VoxPopuli"],
+          "interact": ["VoxPopuli"],
+          "moderate": ["VoxPopuli"],
+          "manage": ["VoxPopuli"]
         }
       }, {
-        "position": 1,
-        "name": "support",
-        "description": "Channel for server support.",
-        "disable": {
-          "isDD": true,
-          "appointModerators": false,
-          "appointJudges": false
-        },
+        "name": "registration",
+        "description": "Channel to apply for citizenship and voting rights.",
         "permissionOverwrites": {
-          "view": [],
-          "send": [0],
-          "interact": [0], 
-          "moderate": [0],
-          "manage": [0]
+          "view": ["President", "PrimeMinister", "HeadModerator", "Moderator", "Undocumented", "Citizen"],
+          "send": ["VoxPopuli"],
+          "interact": [], 
+          "moderate": [],
+          "manage": ["VoxPopuli"]
+        },
+        "tickets": {
+          "title": "Citizenship Application",
+          "description": "Click the button below to apply for citizenship.",
+          "options": [
+            {
+              "type": "Registration",
+              "label": "Apply for Citizenship",
+              "style": "Primary",
+              "emoji": "📝"
+            }
+          ]
         }
       }
     ]

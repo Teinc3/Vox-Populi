@@ -10,12 +10,13 @@ import LegislatureWizard from './wizardfragments/legislature.js';
 import JudicialWizard from './wizardfragments/judicial.js';
 import DiscordWizard from './wizardfragments/discord.js';
 
-import PoliticalGuild from '../../../schema/PoliticalGuild.js';
+import PoliticalGuild from '../../../schema/main/PoliticalGuild.js';
 import { PoliticalRoleModel } from '../../../schema/roles/PoliticalRole.js';
 
-import { GuildConfigData } from '../../../types/wizard.js';
 import settings from '../../../data/settings.json' assert { type: 'json' };
 import wizardDefaults from '../../../data/defaults/wizard.json' assert { type: 'json' };
+
+import type { GuildConfigData } from '../../../types/wizard.js';
 
 export default async function init(interaction: ChatInputCommandInteraction): Promise<boolean> {
     const initWizard = new InitWizard(interaction);

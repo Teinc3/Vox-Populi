@@ -1,9 +1,9 @@
 import { prop, getModelForClass, type Ref } from '@typegoose/typegoose';
-import { type Guild } from 'discord.js';
+import type { Guild } from 'discord.js';
 
 import PoliticalRole from "./PoliticalRole.js";
 
-import { PoliticalRoleHolderInterface } from '../../types/types.js';
+import type { PoliticalRoleHolderInterface } from "../../types/permissions.js";
 
 /**
  * A class that holds Refs to all political role documents in a guild.
