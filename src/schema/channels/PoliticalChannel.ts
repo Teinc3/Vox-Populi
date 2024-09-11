@@ -5,24 +5,12 @@ import { TicketCollector } from '../events/TicketCollector.js';
 
 import ChannelPermissions from '../permissions/ChannelPermissions.js';
 import type { DefaultTicketData } from '../../types/wizard.js';
-import { LogChannelType, type LogChannelTypeKeys } from '../../types/events.js';
+import { PoliticalChannelType, type LogChannelTypeKeys } from '../../types/events.js';
 
 /**
  * Represents a Political channel in a guild.
  */
 class PoliticalChannel {
-    constructor(name: string, channelPermissions: ChannelPermissions, description: string, options?: { channelID?: string, logChannel?: LogChannelTypeKeys }) {
-        this.name = name;
-        this.channelPermissions = channelPermissions;
-        this.description = description;
-        if (options?.channelID) {
-            this.channelID = options.channelID;
-        }
-        if (options?.logChannel) {
-            this.logChannelType = LogChannelType[options.logChannel];
-        }
-    }    
-
     @prop({ required: true })
     name!: string;
 
@@ -32,14 +20,26 @@ class PoliticalChannel {
     @prop({ unique: true })
     channelID?: string;
 
-    @prop({ enum: () => LogChannelType })
-    logChannelType?: LogChannelType;
+    @prop({ enum: () => PoliticalChannelType })
+    logChannelType?: PoliticalChannelType;
 
     @prop({ required: true, _id: false })
     channelPermissions!: ChannelPermissions
 
     @prop({ default: [], required: true, ref: () => 'TicketCollector' })
     ticketCollectors!: Ref<TicketCollector>[];
+
+    constructor(name: string, channelPermissions: ChannelPermissions, description: string, options?: { channelID?: string, logChannel?: LogChannelTypeKeys }) {
+        this.name = name;
+        this.channelPermissions = channelPermissions;
+        this.description = description;
+        if (options?.channelID) {
+            this.channelID = options.channelID;
+        }
+        if (options?.logChannel) {
+            this.logChannelType = PoliticalChannelType[options.logChannel];
+        }
+    }  
 
     static async deletePoliticalChannelDocument(guild: Guild, channelDocument: Ref<PoliticalChannel>, deleteObjects: boolean, reason?: string) {
         const politicalChannel = await PoliticalChannelModel.findOneAndDelete({ _id: channelDocument });

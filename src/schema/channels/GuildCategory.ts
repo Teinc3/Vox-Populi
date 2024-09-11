@@ -182,14 +182,13 @@ class GuildCategory {
         if (guild.channels.cache.size === 0) {
             await guild.channels.fetch();
         }
-        let categoryChannel: CategoryChannel | undefined;
     
         // If the categoryID is not already defined, create a new category
         if (!this.categoryID) {
-            categoryChannel = await guild.channels.create({ name, type: ChannelType.GuildCategory, reason });
+            const categoryChannel = await guild.channels.create({ name, type: ChannelType.GuildCategory, reason });
             this.categoryID = categoryChannel.id;
         } else {
-            categoryChannel = (await guild.channels.fetch(this.categoryID) ?? undefined) as CategoryChannel | undefined;
+            const categoryChannel = await guild.channels.fetch(this.categoryID);
             // If the channel doesn't exist, create a new one instead
             if (!categoryChannel || categoryChannel.type !== ChannelType.GuildCategory) {
                 this.categoryID = undefined;
@@ -203,8 +202,8 @@ class GuildCategory {
         if (!this.categoryID) {
             return;
         }
-        const categoryChannel = await guild.channels.fetch(this.categoryID) as CategoryChannel | null;
-        if (categoryChannel) {
+        const categoryChannel = await guild.channels.fetch(this.categoryID);
+        if (categoryChannel && categoryChannel.type === ChannelType.GuildCategory) {
             await categoryChannel.delete(reason);
         }
     }

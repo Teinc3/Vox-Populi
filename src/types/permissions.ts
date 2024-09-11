@@ -50,7 +50,7 @@ export interface PermissionsCategory {
     static: bigint[];
 }
 
-type PermissionsHolder<T> = PermissionsHolderInterface<Array<T>, true>;
+//type PermissionsHolder<T> = PermissionsHolderInterface<Array<T>, true>;
 
 export type PermissionsOverwriteHolder<T> = PermissionsHolderInterface<Array<T>, false>;
 
