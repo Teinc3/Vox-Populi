@@ -7,7 +7,6 @@ import GuildModel from '../main/PoliticalGuild.js';
 
 import { PoliticalEventType } from '../../types/events.js';
 
-
 /**
  * Event schema for storing events
  * 
@@ -86,14 +85,17 @@ class EventSchema {
 
             // Form the the Embed (We will branch this out later depending on the type)
             const embed = new EmbedBuilder()
-                .setTitle(`New ${doc.type} Event`)
-                .setDescription(`A new event has been created: \n\n*${doc.name}*`)
+                .setTitle('New Event Created')
+                .setDescription(doc.name + "\n")
                 .setFields([
+                    { name: 'Event Type', value: doc.type, inline: true },
                     { name: 'Completion Status', value: doc.completed ? 'Completed' : 'Pending', inline: true },
-                    { name: 'Due Date', value: doc.dueDate?.toDateString() ?? 'N/A', inline: true }
                 ])
                 .setTimestamp(doc.date);
-
+            
+            if (doc.dueDate !== undefined) {
+                embed.addFields([{ name: 'Due Date', value: `<t:${doc.dueDate.toDateString()}:F>`, inline: true }]);
+            }
             // Send the Embed
             await channel.send({ embeds: [embed] });
         }

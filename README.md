@@ -23,7 +23,9 @@ None for now
 
 ## TODO
 ### Active
-- Expand TicketCollector functionality and events
+- Refactor extended schemas using mongoose discriminators (for options, maybe we can implement multiple interfaces which include the corresponding properties?)
+  - Ticket Collector, Vote Collector extends Base Collector?
+  - Ticket Channel, Political Channel extends Generic channel?
 
 ### Future
 - Add voting system

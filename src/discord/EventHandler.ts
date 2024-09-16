@@ -1,4 +1,4 @@
-import EventModel, { EventSchema } from '../schema/events/Event.js';
+import EventModel from '../schema/events/Event.js';
 
 import type DiscordManager from './DiscordManager.js';
 import TicketCollectorModel from '../schema/events/TicketCollector.js';

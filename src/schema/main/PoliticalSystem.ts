@@ -1,51 +1,33 @@
-import mongoose from 'mongoose';
-import { prop, getModelForClass, type Ref, Severity } from '@typegoose/typegoose';
+import { prop, getModelForClass, type Ref, modelOptions, getDiscriminatorModelForClass } from '@typegoose/typegoose';
 
 import Chamber, { type Legislature, type Senate, type Referendum, type Court } from "./Chamber.js";
-import { PresidentialOptions, ParliamentaryOptions, DDOptions } from '../options/SystemOptions.js';
 
 import type { GuildConfigData } from '../../types/wizard.js';
-import { PoliticalSystemType, PoliticalBranchType } from '../../types/systems.js';
+import { PoliticalSystemType, PoliticalBranchType, type DDOptions } from '../../types/systems.js';
+import { TermOptions } from '../options/RoleOptions.js';
 
-class PoliticalSystem {
+@modelOptions({ schemaOptions: { collection: "politicalsystems" } })
+class PoliticalSystem<LegislatureType extends Legislature = Legislature> {
     @prop({ required: true })
-    id!: PoliticalSystemType;
+    type!: PoliticalSystemType;
 
     @prop({ required: true, ref: () => 'Legislature' })
-    legislature!: Ref<Legislature>;
+    legislature!: Ref<LegislatureType>;
 
     @prop({ required: true, ref: () => 'Court' })
     court!: Ref<Court>;
 
-    @prop({ _id: false, allowMixed: Severity.ALLOW, type: () => mongoose.Schema.Types.Mixed })
-    options!: PresidentialOptions | ParliamentaryOptions | DDOptions;
-
-    constructor(politicalSystemType: PoliticalSystemType) {
-        this.id = politicalSystemType;
-        switch (politicalSystemType) {
-            case PoliticalSystemType.Presidential:
-                this.options = new PresidentialOptions();
-                break;
-            case PoliticalSystemType.Parliamentary:
-                this.options = new ParliamentaryOptions();
-                break;
-            case PoliticalSystemType.DirectDemocracy:
-                this.options = new DDOptions();
-                break;
-        }
-    }
-
     // Type guards
-    isPresidential(): this is { options: PresidentialOptions, legislature: Ref<Senate> } {
-        return this.id === PoliticalSystemType.Presidential;
+    isPresidential(): this is Presidential {
+        return this.type === PoliticalSystemType.Presidential;
     }
 
-    isParliamentary(): this is { options: ParliamentaryOptions, legislature: Ref<Senate> } {
-        return this.id === PoliticalSystemType.Parliamentary;
+    isParliamentary(): this is Parliamentary {
+        return this.type === PoliticalSystemType.Parliamentary;
     }
 
-    isDirectDemocracy(): this is { options: DDOptions, legislature: Ref<Referendum> } {
-        return this.id === PoliticalSystemType.DirectDemocracy;
+    isDirectDemocracy(): this is DirectDemocracy {
+        return this.type === PoliticalSystemType.DirectDemocracy;
     }
 
     /**
@@ -58,15 +40,18 @@ class PoliticalSystem {
      */
     static async createPoliticalSystemDocument(guildConfigData: GuildConfigData): Promise<Ref<PoliticalSystem>> {
         const { politicalSystem: politicalSystemType } = guildConfigData;
-        const politicalSystem = new PoliticalSystem(politicalSystemType);
 
-        if (politicalSystem.isPresidential()) {
-            const { cursor, ...gcTermOptions } = guildConfigData.presidentialOptions!;
-            politicalSystem.options.termOptions! = gcTermOptions;
-        } else if (politicalSystem.isParliamentary()) {
-            politicalSystem.options.snapElection = guildConfigData.parliamentaryOptions!.snapElection;
-        } else if (politicalSystem.isDirectDemocracy()) {
-            politicalSystem.options = guildConfigData.ddOptions!;
+        let politicalSystem: PoliticalSystem;
+        switch (politicalSystemType) {
+            case PoliticalSystemType.Presidential:
+                politicalSystem = new Presidential(guildConfigData);
+                break;
+            case PoliticalSystemType.Parliamentary:
+                politicalSystem = new Parliamentary(guildConfigData);
+                break;
+            case PoliticalSystemType.DirectDemocracy:
+                politicalSystem = new DirectDemocracy(guildConfigData);
+                break;
         }
 
         // Create Legislature document
@@ -84,7 +69,7 @@ class PoliticalSystem {
             return;
         }
     
-        // Find documents: HoS, Legislature, Court
+        // Find Chamber Documents
         const legislatureDocument = politicalSystem.legislature;
         const courtDocument = politicalSystem.court;
     
@@ -98,7 +83,74 @@ class PoliticalSystem {
     }
 }
 
+class Presidential extends PoliticalSystem<Senate> {
+    type = PoliticalSystemType.Presidential;
+
+    /**
+     * Can the President veto/override any legislation passed by the Legislature?
+     */
+    /*
+    @prop({ required: true })
+    veto!: boolean;
+     */
+
+    @prop({ required: true, _id: false })
+    termOptions: TermOptions;
+
+    constructor(guildConfigData: GuildConfigData) {
+        super();
+
+        const { cursor, ...gcTermOptions } = guildConfigData.presidentialOptions!;
+        this.termOptions = gcTermOptions;
+    }
+}
+
+class Parliamentary extends PoliticalSystem<Senate> {
+    type = PoliticalSystemType.Parliamentary;
+
+    /**
+     * Number of months before a snap election can be called.
+     * 
+     * If set to 0, snap elections are disabled.
+     */
+    @prop({ required: true })
+    snapElection!: number;
+
+    constructor(guildConfigData: GuildConfigData) {
+        super();
+
+        this.snapElection = guildConfigData.parliamentaryOptions!.snapElection;
+    }
+}
+
+/**
+ * Class representing a Direct Democracy political system.
+ * 
+ * @class
+ * @extends {PoliticalSystem}
+ * @implements {DDOptions}
+ */
+class DirectDemocracy extends PoliticalSystem<Referendum> implements DDOptions {
+    type = PoliticalSystemType.DirectDemocracy;
+
+    @prop({ required: true })
+    appointModerators!: boolean;
+
+    @prop({ required: true })
+    appointJudges!: boolean;
+
+    constructor(guildConfigData: GuildConfigData) {
+        super();
+
+        this.appointModerators = guildConfigData.ddOptions!.appointModerators;
+        this.appointJudges = guildConfigData.ddOptions!.appointJudges;
+    }
+}
+
 const PoliticalSystemModel = getModelForClass(PoliticalSystem);
+getDiscriminatorModelForClass(PoliticalSystemModel, Presidential);
+getDiscriminatorModelForClass(PoliticalSystemModel, Parliamentary);
+getDiscriminatorModelForClass(PoliticalSystemModel, DirectDemocracy);
 
 export default PoliticalSystem;
 export { PoliticalSystemModel };

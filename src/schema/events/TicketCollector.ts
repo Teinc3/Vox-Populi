@@ -15,9 +15,9 @@ import GuildModel from '../main/PoliticalGuild.js';
 import type { DefaultTicketData } from '../../types/wizard.js';
 import { TicketType, PoliticalEventType, AppointmentDetails } from '../../types/events.js';
 
-class TicketCollectorPayload implements MessageCreateOptions {
-    public embeds!: Array<APIEmbed>;
-    public components!: Array<ActionRowData<MessageActionRowComponentData>>;
+export interface TicketCollectorPayload extends MessageCreateOptions {
+    embeds: Array<APIEmbed>;
+    components: Array<ActionRowData<MessageActionRowComponentData>>;
 }
 
 class TicketCollector {

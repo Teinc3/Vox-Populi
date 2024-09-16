@@ -5,7 +5,7 @@ import { TicketCollector } from '../events/TicketCollector.js';
 
 import ChannelPermissions from '../permissions/ChannelPermissions.js';
 import type { DefaultTicketData } from '../../types/wizard.js';
-import { PoliticalChannelType, type LogChannelTypeKeys } from '../../types/events.js';
+import { LogChannelType, type LogChannelTypeKeys } from '../../types/events.js';
 
 /**
  * Represents a Political channel in a guild.
@@ -20,8 +20,8 @@ class PoliticalChannel {
     @prop({ unique: true })
     channelID?: string;
 
-    @prop({ enum: () => PoliticalChannelType })
-    logChannelType?: PoliticalChannelType;
+    @prop({ enum: () => LogChannelType })
+    logChannelType?: LogChannelType;
 
     @prop({ required: true, _id: false })
     channelPermissions!: ChannelPermissions
@@ -37,7 +37,7 @@ class PoliticalChannel {
             this.channelID = options.channelID;
         }
         if (options?.logChannel) {
-            this.logChannelType = PoliticalChannelType[options.logChannel];
+            this.logChannelType = LogChannelType[options.logChannel];
         }
     }  
 

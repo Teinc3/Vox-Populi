@@ -1,10 +1,9 @@
 import type { ButtonStyle, Colors } from "discord.js";
 
 import type { SeatOptions, TermOptions, ThresholdOptions } from "../schema/options/RoleOptions.js";
-import type { DDOptions } from "../schema/options/SystemOptions.js";
 import type { EmergencyOptions } from "../schema/options/MiscOptions.js";
 
-import { PoliticalSystemType } from "./systems.js";
+import { PoliticalSystemType, type DDOptions } from "./systems.js";
 import { PoliticalRoleHierarchy, type BasePermissionsAggregate, type PermissionsOverwriteEnumKeyHolder } from "./permissions.js";
 import { type LogChannelTypeKeys, TicketType } from "./events.js";
 
