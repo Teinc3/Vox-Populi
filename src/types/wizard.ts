@@ -3,9 +3,10 @@ import type { ButtonStyle, Colors } from "discord.js";
 import type { SeatOptions, TermOptions, ThresholdOptions } from "../schema/options/RoleOptions.js";
 import type { EmergencyOptions } from "../schema/options/MiscOptions.js";
 
+import { TicketType } from "./events.js";
+import type { LogChannelTypeKeys } from "./channels.js";
 import { PoliticalSystemType, type DDOptions } from "./systems.js";
 import { PoliticalRoleHierarchy, type BasePermissionsAggregate, type PermissionsOverwriteEnumKeyHolder } from "./permissions.js";
-import { type LogChannelTypeKeys, TicketType } from "./events.js";
 
 interface CursorOption { cursor: number };
 

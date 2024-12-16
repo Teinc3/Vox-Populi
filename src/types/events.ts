@@ -1,5 +1,3 @@
-import { KeysMap } from "./types";
-
 /**
  * Type of political event that can be created
  * 
@@ -128,12 +126,3 @@ export enum AppointmentDetails {
      */
     Resigned
 }
-
-export enum LogChannelType {
-    Server,
-    Chat
-}
-
-type LogChannelTypeKeysMap = KeysMap<typeof LogChannelType>
-
-export type LogChannelTypeKeys = LogChannelTypeKeysMap[keyof LogChannelTypeKeysMap];

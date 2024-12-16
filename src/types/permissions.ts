@@ -1,4 +1,4 @@
-import type { KeysMap } from "./types.js";
+import type { KeysMap } from "./generics.js";
 
 export enum PoliticalRoleHierarchy {
     VoxPopuli,

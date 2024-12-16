@@ -1,49 +1,28 @@
-import { prop, getModelForClass, type Ref, isDocument } from '@typegoose/typegoose';
+import { type Ref, isDocument, getDiscriminatorModelForClass } from '@typegoose/typegoose';
 import { 
-    MessageActionRowComponentData, ActionRowData,
+    MessageActionRowComponentData, ActionRowData, EmbedBuilder,
     ButtonStyle, ChannelType, Colors, ComponentType, TextChannel, MessageType,
-    type APIEmbed, type ButtonInteraction, type Message, type MessageCreateOptions,
-    EmbedBuilder,
+    type APIEmbed, type ButtonInteraction, type Message,
 } from 'discord.js';
 
-import ExtendedClient from '../../discord/ExtendedClient.js';
-import PoliticalChannel, { PoliticalChannelModel } from '../channels/PoliticalChannel.js';
-import EventModel, { EventSchema } from './Event.js';
-
 import GuildModel from '../main/PoliticalGuild.js';
+import EventModel, { EventSchema } from '../events/Event.js';
+import ExtendedClient from '../../discord/ExtendedClient.js';
+import { PoliticalChannelModel } from '../channels/PoliticalChannel.js';
+import BaseCollector, { BaseCollectorModel } from './BaseCollector.js';
 
 import type { DefaultTicketData } from '../../types/wizard.js';
 import { TicketType, PoliticalEventType, AppointmentDetails } from '../../types/events.js';
 
-export interface TicketCollectorPayload extends MessageCreateOptions {
-    embeds: Array<APIEmbed>;
-    components: Array<ActionRowData<MessageActionRowComponentData>>;
-}
+/**
+ * Ticket Collector schema for storing ticket collector objects
+ * 
+ * @class
+ * @extends BaseCollector
+ */
+class TicketCollector extends BaseCollector<DefaultTicketData> {
 
-class TicketCollector {
-    @prop({ required: true, ref: () => 'PoliticalChannel' })
-    public channel!: Ref<PoliticalChannel>;
-
-    // May not exist when the object is first created
-    @prop({ unique: true })
-    public messageID?: string;
-
-    @prop()
-    public serializedPayload!: string;
-
-    @prop({ default: true, required: true })
-    public shouldPin!: boolean;
-
-    constructor(channelRef: Ref<PoliticalChannel>, defaultTicketData: DefaultTicketData) {
-        this.channel = channelRef;
-        this.createPayload(defaultTicketData);
-    }
-
-    static async deleteTicketCollectorDocuments(ticketCollectors: Ref<TicketCollector>[]) {
-        await TicketCollectorModel.deleteMany({ _id: { $in: ticketCollectors } });
-    }
-
-    createPayload(defaultTicketData: DefaultTicketData) {
+    override createPayload(defaultTicketData: DefaultTicketData) {
         const embed: APIEmbed = {
             title: defaultTicketData.title,
             description: defaultTicketData.description,
@@ -61,14 +40,10 @@ class TicketCollector {
             type: ComponentType.ActionRow
         }
 
-        this.serializedPayload = JSON.stringify({
+        return {
             embeds: [embed],
             components: [actionRow]
-        });
-    }
-
-    deserializePayload(): TicketCollectorPayload {
-        return JSON.parse(this.serializedPayload) as TicketCollectorPayload;
+        };
     }
 
     async createTicketCollectorDocument(): Promise<Ref<TicketCollector>> {
@@ -246,7 +221,7 @@ class TicketCollector {
     }
 }
 
-const TicketCollectorModel = getModelForClass(TicketCollector);
+const TicketCollectorModel = getDiscriminatorModelForClass(BaseCollectorModel, TicketCollector);
 
 export default TicketCollectorModel;
 export { TicketCollector };

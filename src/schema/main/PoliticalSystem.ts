@@ -2,9 +2,9 @@ import { prop, getModelForClass, type Ref, modelOptions, getDiscriminatorModelFo
 
 import Chamber, { type Legislature, type Senate, type Referendum, type Court } from "./Chamber.js";
 
+import { TermOptions } from '../options/RoleOptions.js';
 import type { GuildConfigData } from '../../types/wizard.js';
 import { PoliticalSystemType, PoliticalBranchType, type DDOptions } from '../../types/systems.js';
-import { TermOptions } from '../options/RoleOptions.js';
 
 @modelOptions({ schemaOptions: { collection: "politicalsystems" } })
 class PoliticalSystem<LegislatureType extends Legislature = Legislature> {

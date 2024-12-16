@@ -1,7 +1,7 @@
 import { prop, type Ref, getModelForClass, isDocument, modelOptions, getDiscriminatorModelForClass } from '@typegoose/typegoose';
 
-import type PoliticalChannel from '../channels/PoliticalChannel.js';
 import GuildModel from './PoliticalGuild.js';
+import type PoliticalChannel from '../channels/PoliticalChannel.js';
 import { ThresholdOptions, TermOptions, SeatOptions } from '../options/RoleOptions.js';
 
 import type { GuildConfigData } from '../../types/wizard.js';
@@ -12,7 +12,12 @@ import { PoliticalBranchType, LegislativeChamberType, PoliticalSystemType } from
  * 
  * @class Chamber
 */
-@modelOptions({ schemaOptions: { collection: "chambers" } })
+@modelOptions({ 
+    schemaOptions: { 
+        collection: "chambers",
+        //discriminatorKey: "branch",
+    }
+})
 class Chamber {
     @prop({ required: true })
     branch!: PoliticalBranchType;

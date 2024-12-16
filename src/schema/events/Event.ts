@@ -1,7 +1,7 @@
 import { prop, getModelForClass, Severity, isDocument, type DocumentType, post } from '@typegoose/typegoose';
 import { ChannelType, EmbedBuilder } from "discord.js";
 
-import middlewareManager from '../../globals/middlewareManager.js';
+import MiddlewareManager from '../../utils/MiddlewareManager.js';
 import AppointmentOptions from '../options/EventOptions.js';
 import GuildModel from '../main/PoliticalGuild.js';
 
@@ -12,7 +12,7 @@ import { PoliticalEventType } from '../../types/events.js';
  * 
  * @class
  */
-@post<EventSchema>('save', middlewareManager.createEventMiddleware())
+@post<EventSchema>('save', (new MiddlewareManager).createEventMiddleware())
 class EventSchema {
     @prop({ required: true })
     public name!: string;
@@ -63,7 +63,7 @@ class EventSchema {
     // Statics
     public static obtainEventMiddleware() {
         return async (doc: DocumentType<EventSchema>) => {
-            const client = middlewareManager.getClient();
+            const client = (new MiddlewareManager).getClient();
 
             // Find the Server Log channel from the LogChannelHolder
             const guild = await GuildModel.findOne({ guildID: doc.guildID });

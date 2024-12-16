@@ -1,15 +1,16 @@
 import { prop, type Ref, isDocumentArray } from "@typegoose/typegoose";
 
-import PoliticalChannel, { PoliticalChannelModel } from "./PoliticalChannel.js";
+import AbstractChannel from "./AbstractChannel.js";
+import { LogChannelType } from "../../types/channels.js";
+import LogChannel, { LogChannelModel } from "./LogChannel.js";
 import GuildCategory, { GuildCategoryModel } from "./GuildCategory.js";
-import { LogChannelType } from "../../types/events.js";
 
 class LogChannelHolder {
-    @prop({ required: true, ref: () => 'PoliticalChannel' })
-    serverLogs!: Ref<PoliticalChannel>;
+    @prop({ required: true, ref: () => 'LogChannel' })
+    serverLogs!: Ref<LogChannel>;
 
-    @prop({ required: true, ref: () => 'PoliticalChannel' })
-    chatLogs!: Ref<PoliticalChannel>;
+    @prop({ required: true, ref: () => 'LogChannel' })
+    chatLogs!: Ref<LogChannel>;
 
     static async createLogChannelHolderDocument(categoriesRef: Ref<GuildCategory>[]): Promise<LogChannelHolder> {
         // Populate all the categories and within them all channels.
@@ -21,30 +22,25 @@ class LogChannelHolder {
 
         const logChannelHolder = new LogChannelHolder();
 
-        // Populate all the channels and search if .logChannelType exists
-        const channels = categories.flatMap(category => category.channels).filter((channel): channel is Ref<PoliticalChannel> => channel !== undefined);
-
-        let serverLogs: Ref<PoliticalChannel> | undefined = undefined;
-        let chatLogs: Ref<PoliticalChannel> | undefined = undefined;
+        // Populate all the channels
+        const abstractChannels = categories.flatMap(category => category.channels).filter((channel): channel is Ref<AbstractChannel> => channel !== undefined);
         
-        const promises = channels.map(async channel => {
-            const channelDocument = await PoliticalChannelModel.findOne({ _id: channel });
-            if (channelDocument && channelDocument.logChannelType !== undefined) {
-                if (channelDocument.logChannelType === LogChannelType.Server) {
-                    serverLogs = channel;
-                } else if (channelDocument.logChannelType === LogChannelType.Chat) {
-                    chatLogs = channel;
+        const promises = abstractChannels.map(async channel => {
+            const channelDocument = await LogChannelModel.findOne({ _id: channel });
+            if (channelDocument && channelDocument.isLogChannel()) {
+                if (channelDocument.mode === LogChannelType.Server) {
+                    logChannelHolder.serverLogs = channel;
+                } else if (channelDocument.mode === LogChannelType.Chat) {
+                    logChannelHolder.chatLogs = channel;
                 }
             }
         });
         
         await Promise.all(promises);
 
-        if (!serverLogs || !chatLogs) {
+        if (!logChannelHolder.serverLogs || !logChannelHolder.chatLogs) {
             throw new Error('No log channels found');
         }
-        logChannelHolder.serverLogs = serverLogs;
-        logChannelHolder.chatLogs = chatLogs;
 
         return logChannelHolder;
     }

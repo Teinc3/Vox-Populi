@@ -2,10 +2,13 @@ import { prop, getModelForClass, type Ref } from '@typegoose/typegoose';
 import { ChannelType, type CategoryChannel, type Guild } from 'discord.js';
 
 import Chamber from '../main/Chamber.js';
-import PoliticalChannel from './PoliticalChannel.js';
+import AbstractChannel from './AbstractChannel.js';
+import type PoliticalChannel from './PoliticalChannel.js';
 import type PoliticalRoleHolder from '../roles/PoliticalRoleHolder.js';
 import ChannelPermissions, { ChannelPermissionsInterface, type UnfilteredRefRoleArray } from '../permissions/ChannelPermissions.js';
+import { createChannel } from '../../utils/channelCreationHelper.js';
 
+import { AbstractChannelType, ChannelInterface, LogChannelType } from '../../types/channels.js';
 import type { DefaultCategoryData, GuildConfigData } from '../../types/wizard.js';
 import { PoliticalSystemType, PoliticalBranchType } from '../../types/systems.js';
 import { PoliticalRoleHierarchy, type PermissionsOverwriteEnumKeyHolder } from '../../types/permissions.js';
@@ -35,8 +38,8 @@ class GuildCategory {
     @prop({ unique: true })
     categoryID?: string;
 
-    @prop({ ref: () => 'PoliticalChannel' })
-    channels?: Ref<PoliticalChannel>[];
+    @prop({ ref: () => 'AbstractChannel' })
+    channels?: Ref<AbstractChannel>[];
 
     static async createGuildCategories(guild: Guild, roleHolder: PoliticalRoleHolder, guildConfigData: GuildConfigData, reason?: string): Promise<Ref<GuildCategory>[]> {
         const categoryDocuments = new Array<Ref<GuildCategory>>();    
@@ -55,8 +58,8 @@ class GuildCategory {
         return categoryDocuments;
     }
 
-    static async createPoliticalChannels(guild: Guild, roleHolder: PoliticalRoleHolder, categoryChannel: CategoryChannel, guildConfigData: GuildConfigData, categoryChannelData: DefaultCategoryData, reason?: string): Promise<Ref<PoliticalChannel>[]> {
-        const newChannelDocuments = new Array<Ref<PoliticalChannel>>();
+    static async createPoliticalChannels(guild: Guild, roleHolder: PoliticalRoleHolder, categoryChannel: CategoryChannel, guildConfigData: GuildConfigData, categoryChannelData: DefaultCategoryData, reason?: string): Promise<Ref<AbstractChannel>[]> {
+        const newChannelDocuments = new Array<Ref<AbstractChannel>>();
         const isDD = guildConfigData.politicalSystem === PoliticalSystemType.DirectDemocracy; 
         
         for (const defaultChannelData of categoryChannelData.channels) {
@@ -124,20 +127,29 @@ class GuildCategory {
                 // Finally run the filter function to remove undefined values
                 channelPermissions[key as keyof ChannelPermissionsInterface] = ChannelPermissions.filterRefRoleArray(refRoleArray);
             }
-    
+
             // Create the channel
-            const politicalChannel = new PoliticalChannel(defaultChannelData.name, channelPermissions, defaultChannelData.description, { channelID: defaultChannelData.id, logChannel: defaultChannelData.logChannel });
-            const politicalChannelDocument = await politicalChannel.createPoliticalChannelDocument(guild, categoryChannel, { ticketData: defaultChannelData.tickets, reason });
+            const creationOptions: ChannelInterface = {
+                name: defaultChannelData.name,
+                description: defaultChannelData.description,
+                channelPermissions,
+                channelID: defaultChannelData.id
+            };
+            if (defaultChannelData.logChannel) {
+                creationOptions.logChannel = LogChannelType[defaultChannelData.logChannel];
+            }
+            const abstractChannel = createChannel(defaultChannelData.logChannel ? AbstractChannelType.Log : AbstractChannelType.Political, creationOptions);
+            const abstractChannelDocument = await abstractChannel.createAbstractChannelDocument(guild, categoryChannel, { ticketData: defaultChannelData.tickets, reason });
             
-            if (defaultChannelData.chamberTypeIsLegislative !== undefined) {
+            if (defaultChannelData.chamberTypeIsLegislative !== undefined && abstractChannel.isPoliticalChannel()) {
                 if (defaultChannelData.chamberTypeIsLegislative === true) {
-                    await Chamber.linkChamberChannelDocument(guild.id, PoliticalBranchType.Legislative, politicalChannelDocument);
+                    await Chamber.linkChamberChannelDocument(guild.id, PoliticalBranchType.Legislative, abstractChannelDocument as Ref<PoliticalChannel>);
                 } else {
-                    await Chamber.linkChamberChannelDocument(guild.id, PoliticalBranchType.Judicial, politicalChannelDocument);
+                    await Chamber.linkChamberChannelDocument(guild.id, PoliticalBranchType.Judicial, abstractChannelDocument as Ref<PoliticalChannel>);
                 }
             }
     
-            newChannelDocuments.push(politicalChannelDocument);
+            newChannelDocuments.push(abstractChannelDocument);
         }
     
         return newChannelDocuments;
@@ -150,7 +162,7 @@ class GuildCategory {
             return;
         }
     
-        const deleteChannelPromises = (guildCategory.channels ?? []).map(channel => PoliticalChannel.deletePoliticalChannelDocument(guild, channel, deleteObjects, reason));
+        const deleteChannelPromises = (guildCategory.channels ?? []).map(channel => AbstractChannel.deleteAbstractChannelDocument(guild, channel, deleteObjects, reason));
         const deleteCategoryPromise = deleteObjects ? guildCategory.deleteDiscordCategory(guild, reason) : Promise.resolve();
     
         await Promise.all([...deleteChannelPromises, deleteCategoryPromise]);

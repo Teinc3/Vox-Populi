@@ -2,9 +2,9 @@ import { GatewayIntentBits, Events } from 'discord.js';
 
 import ExtendedClient from "./ExtendedClient.js";
 import EventHandler from './EventHandler.js';
-import middlewareManager from '../globals/middlewareManager.js';
+import MiddlewareManager from '../utils/MiddlewareManager.js';
 
-import TicketCollectorModel from '../schema/events/TicketCollector.js';
+import TicketCollectorModel from '../schema/collectors/TicketCollector.js';
 
 class DiscordManager {
     readonly client: ExtendedClient;
@@ -23,7 +23,7 @@ class DiscordManager {
 
     private async setup() {
         try {
-            middlewareManager.setClient(this.client);
+            (new MiddlewareManager).setClient(this.client);
             
             await this.client.setupCommands();
             this.setupGateway();
