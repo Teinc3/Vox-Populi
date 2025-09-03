@@ -1,3 +1,3 @@
 export type KeysMap<T> = {
-    [key in keyof T]: key
+  [key in keyof T]: key
 };

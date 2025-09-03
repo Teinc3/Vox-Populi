@@ -114,7 +114,6 @@ export default defineConfig([
         caughtErrorsIgnorePattern: "^_",
         destructuredArrayIgnorePattern: "^_",
         ignoreRestSiblings: true
-
       }],
       "@typescript-eslint/no-empty-object-type": "off",
       "@typescript-eslint/consistent-type-imports": "error",
@@ -128,12 +127,14 @@ export default defineConfig([
         { 
           selector: ["variable", "parameter", "function", "method"], 
           format: ["camelCase"], 
-          leadingUnderscore: "allow" 
+          leadingUnderscore: "allow",
         },
         { 
           selector: ["variable"], 
           format: ["camelCase", "UPPER_CASE", "PascalCase"], 
-          modifiers: ["const"] 
+          modifiers: ["const"] ,
+          leadingUnderscore: "allow"
+
         },
         { 
           selector: ["property", "parameterProperty", "classicAccessor"], 

@@ -1,5 +1,7 @@
-import type ExtendedClient from "../discord/ExtendedClient.js";
 import { EventSchema } from "../schema/events/Event.js";
+
+import type ExtendedClient from "../discord/ExtendedClient.js";
+
 
 /**
  * Singleton class for managing middleware.
@@ -7,29 +9,29 @@ import { EventSchema } from "../schema/events/Event.js";
  * This can be put in globals if there are more middleware to manage (For now in utils).
  */
 class MiddlewareManager {
-    private static instance: MiddlewareManager;
-    private client!: ExtendedClient;
+  private static instance: MiddlewareManager;
+  private client!: ExtendedClient;
 
-    constructor() {
-        // Make sure singleton
-        if (MiddlewareManager.instance) {
-            return MiddlewareManager.instance;
-        } else {
-            MiddlewareManager.instance = this;
-        }
+  constructor() {
+    // Make sure singleton
+    if (MiddlewareManager.instance) {
+      return MiddlewareManager.instance;
+    } else {
+      MiddlewareManager.instance = this;
     }
+  }
 
-    public setClient(client: ExtendedClient) {
-        this.client = client;
-    }
+  public setClient(client: ExtendedClient) {
+    this.client = client;
+  }
 
-    public getClient() {
-        return this.client;
-    }
+  public getClient() {
+    return this.client;
+  }
 
-    public createEventMiddleware() {
-        return EventSchema.obtainEventMiddleware();
-    }
+  public createEventMiddleware() {
+    return EventSchema.obtainEventMiddleware();
+  }
 }
 
 export default MiddlewareManager;
