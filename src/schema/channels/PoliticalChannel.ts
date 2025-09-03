@@ -4,7 +4,7 @@ import { TextChannel } from 'discord.js';
 import AbstractChannel, { AbstractChannelModel } from './AbstractChannel.js';
 import { TicketCollector } from '../collectors/TicketCollector.js';
 
-import type { DefaultTicketData } from '../../types/wizard.js';
+import type { DefaultInteractionData } from '../../types/collector.js';
 import { AbstractChannelType, ChannelInterface } from '../../types/channels.js';
 
 /**
@@ -27,7 +27,7 @@ class PoliticalChannel extends AbstractChannel {
     }
 
     // Thanks to circular imports now this can't be static, fuck off
-    async createTicketCollector(discordChannel: TextChannel, channelRef: Ref<PoliticalChannel>, ticketData: DefaultTicketData, reason?: string) {
+    async createTicketCollector(discordChannel: TextChannel, channelRef: Ref<PoliticalChannel>, ticketData: DefaultInteractionData, reason?: string) {
         const politicalChannel = await PoliticalChannelModel.findById(channelRef);
         if (!politicalChannel) {
             return;

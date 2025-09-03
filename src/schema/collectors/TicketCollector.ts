@@ -1,8 +1,7 @@
 import { type Ref, isDocument, getDiscriminatorModelForClass } from '@typegoose/typegoose';
 import { 
-    MessageActionRowComponentData, ActionRowData, EmbedBuilder,
-    ButtonStyle, ChannelType, Colors, ComponentType, TextChannel, MessageType,
-    type APIEmbed, type ButtonInteraction, type Message,
+    EmbedBuilder, ChannelType, Colors, TextChannel, MessageType,
+    type ButtonInteraction, type Message,
 } from 'discord.js';
 
 import GuildModel from '../main/PoliticalGuild.js';
@@ -11,8 +10,9 @@ import ExtendedClient from '../../discord/ExtendedClient.js';
 import { PoliticalChannelModel } from '../channels/PoliticalChannel.js';
 import BaseCollector, { BaseCollectorModel } from './BaseCollector.js';
 
-import type { DefaultTicketData } from '../../types/wizard.js';
+import type { DefaultInteractionData } from '../../types/collector.js';
 import { TicketType, PoliticalEventType, AppointmentDetails } from '../../types/events.js';
+import { CollectorType } from '../../types/collector.js';
 
 /**
  * Ticket Collector schema for storing ticket collector objects
@@ -20,31 +20,8 @@ import { TicketType, PoliticalEventType, AppointmentDetails } from '../../types/
  * @class
  * @extends BaseCollector
  */
-class TicketCollector extends BaseCollector<DefaultTicketData> {
-
-    override createPayload(defaultTicketData: DefaultTicketData) {
-        const embed: APIEmbed = {
-            title: defaultTicketData.title,
-            description: defaultTicketData.description,
-            color: Colors[defaultTicketData.color ?? 'Blurple']
-        }
-
-        const actionRow: ActionRowData<MessageActionRowComponentData> = {
-            components: defaultTicketData.options.map(option => ({
-                type: ComponentType.Button,
-                customId: TicketType[option.type],
-                label: option.label,
-                style: ButtonStyle[option.style],
-                emoji: option.emoji
-            })),
-            type: ComponentType.ActionRow
-        }
-
-        return {
-            embeds: [embed],
-            components: [actionRow]
-        };
-    }
+class TicketCollector extends BaseCollector<DefaultInteractionData> {
+    type = CollectorType.Ticket;
 
     async createTicketCollectorDocument(): Promise<Ref<TicketCollector>> {
         return await TicketCollectorModel.create(this);
@@ -221,7 +198,7 @@ class TicketCollector extends BaseCollector<DefaultTicketData> {
     }
 }
 
-const TicketCollectorModel = getDiscriminatorModelForClass(BaseCollectorModel, TicketCollector);
+const TicketCollectorModel = getDiscriminatorModelForClass(BaseCollectorModel, TicketCollector, CollectorType.Ticket);
 
 export default TicketCollectorModel;
 export { TicketCollector };

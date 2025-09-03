@@ -5,7 +5,7 @@ import type LogChannel from "./LogChannel.js";
 import type PoliticalChannel from "./PoliticalChannel.js";
 import type ChannelPermissions from "../permissions/ChannelPermissions.js";
 
-import { DefaultTicketData } from "../../types/wizard.js";
+import { DefaultInteractionData } from "../../types/collector.js";
 import { AbstractChannelType, ChannelInterface } from "../../types/channels.js";
 import { BaseCollectorModel } from "../collectors/BaseCollector.js";
 
@@ -76,7 +76,7 @@ class AbstractChannel implements ChannelInterface {
     }
 
     // For RefRoleArray, we need to filter out undefined values, so use the filter function if the role may be undefined
-    async createAbstractChannelDocument(guild: Guild, categoryChannel: CategoryChannel, options?: { ticketData?: DefaultTicketData, reason?: string }): Promise<Ref<AbstractChannel>> {
+    async createAbstractChannelDocument(guild: Guild, categoryChannel: CategoryChannel, options?: { ticketData?: DefaultInteractionData, reason?: string }): Promise<Ref<AbstractChannel>> {
         const discordChannel = await this.linkDiscordChannel(guild, categoryChannel, options?.reason);
         const channelRef = await AbstractChannelModel.create(this);
 

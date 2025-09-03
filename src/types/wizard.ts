@@ -1,12 +1,10 @@
-import type { ButtonStyle, Colors } from "discord.js";
-
 import type { SeatOptions, TermOptions, ThresholdOptions } from "../schema/options/RoleOptions.js";
 import type { EmergencyOptions } from "../schema/options/MiscOptions.js";
 
-import { TicketType } from "./events.js";
 import type { LogChannelTypeKeys } from "./channels.js";
 import { PoliticalSystemType, type DDOptions } from "./systems.js";
 import { PoliticalRoleHierarchy, type BasePermissionsAggregate, type PermissionsOverwriteEnumKeyHolder } from "./permissions.js";
+import { DefaultInteractionData } from "./collector.js";
 
 interface CursorOption { cursor: number };
 
@@ -72,22 +70,8 @@ interface DefaultChannelData {
         isDD?: boolean;
     };
     chamberTypeIsLegislative?: boolean;
-    tickets?: DefaultTicketData;
+    tickets?: DefaultInteractionData;
     logChannel?: LogChannelTypeKeys;
-}
-
-export interface DefaultTicketData {
-    title: string;
-    description: string;
-    color?: keyof typeof Colors;
-    options: DefaultTicketOptionData[];
-}
-
-export interface DefaultTicketOptionData {
-    type: keyof typeof TicketType;
-    style: Exclude<keyof typeof ButtonStyle, "Link">;
-    label: string;
-    emoji: string;
 }
 
 export type ExtendedDefaultDiscordData<T> = T & {

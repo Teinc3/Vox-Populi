@@ -5,7 +5,7 @@ A democracy-simulating Discord bot in a server.
 When creating a new server, three political systems can be chosen: Presidential, Parliamentary and Direct Democracy.
 These systems are similar except the election process.
 
-See [Political Structure](docs/politicalStructure) for more detailed information.
+See [Political Structure](docs/politicalStructure.md) for more detailed information.
 
 ## Ownership
 The bot should ideally own the server.

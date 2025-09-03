@@ -14,6 +14,8 @@ class MiddlewareManager {
         // Make sure singleton
         if (MiddlewareManager.instance) {
             return MiddlewareManager.instance;
+        } else {
+            MiddlewareManager.instance = this;
         }
     }
 
