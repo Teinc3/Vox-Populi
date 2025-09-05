@@ -38,7 +38,7 @@ async function loadCommands(pCommands: string[]) {
       if ('data' in command && 'execute' in command) {
         pCommands.push(command.data.toJSON());
       } else {
-        console.log(`[WARNING] The ${commandFile} command is missin`
+        console.log(`[WARNING] The ${commandFile} command is missing `
           + 'a required "data" or "execute" property.');
       }
     } catch (error) {
