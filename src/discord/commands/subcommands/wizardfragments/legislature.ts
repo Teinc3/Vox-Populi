@@ -1,9 +1,11 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, Colors, ButtonStyle } from 'discord.js';
 
+import { PoliticalSystemType } from '../../../../types/systems';
 import settings from '../../../../data/settings.json' assert { type: 'json' };
 import wizardDefaults from '../../../../data/defaults/wizard.json' assert { type: 'json' };
 import BaseWizard from './BaseWizard.js';
-import { PoliticalSystemType } from '../../../../types/systems';
+
+import type { InitWizardFunction } from '../init';
 
 
 class LegislatureWizard extends BaseWizard {
@@ -357,18 +359,25 @@ class LegislatureWizard extends BaseWizard {
           break;
         case "senate_threshold_confirm":
           this.initWizard.prevFunctions.push(this.setSenateThresholdOptions);
+          let nextFunc: InitWizardFunction;
+         
           // For Parliamentary, we go to configure Parliamentary Options (since we skipped it
           // first for snap elections which are more relevant after senate is set up)
           // Since DD does not have Senate, and only DD has the option to disable Judges,
           // we can still go to Court Options
-          return await this.initWizard.setNextFunc(
-            this.initWizard.guildConfigData.politicalSystem === PoliticalSystemType.Parliamentary
-              ? this.initWizard.fragments.system.setParliamentaryOptions
-              : this.initWizard.guildConfigData.politicalSystem === PoliticalSystemType.DirectDemocracy
-                && this.initWizard.guildConfigData.ddOptions!.appointJudges
-                ? this.initWizard.fragments.judicial.setCourtGenericOptions
-                : this.initWizard.fragments.discord.linkDiscordRoles
-          );
+          switch (this.initWizard.guildConfigData.politicalSystem) {
+            case PoliticalSystemType.Parliamentary:
+              nextFunc = this.initWizard.fragments.system.setParliamentaryOptions;
+              break;
+            case PoliticalSystemType.DirectDemocracy:
+              if (this.initWizard.guildConfigData.ddOptions!.appointJudges) {
+                nextFunc = this.initWizard.fragments.judicial.setCourtGenericOptions;
+                break;
+              }
+            default:
+              nextFunc = this.initWizard.fragments.discord.linkDiscordRoles;
+          }
+          return await this.initWizard.setNextFunc(nextFunc);
         default:
           return await this.initWizard.escape();
       }

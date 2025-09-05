@@ -26,7 +26,7 @@ export default async function init(interaction: ChatInputCommandInteraction): Pr
   return initWizard.nextFunction;
 }
 
-type InitWizardFunction = () => Promise<void>;
+export type InitWizardFunction = () => Promise<void>;
 
 /**
  * A class containing functions of the initialization wizard
