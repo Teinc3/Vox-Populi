@@ -44,7 +44,7 @@ class DiscordWizard extends BaseWizard {
           isCursorOnCategory: true
         }
       }
-      this.initWizard.guildConfigData.discordOptions.roleOptions .filteredRoles.at(-1)!.id
+      this.initWizard.guildConfigData.discordOptions.roleOptions.filteredRoles.at(-1)!.id
         = this.initWizard.interaction.guildId ?? undefined;
     }
 
@@ -95,7 +95,7 @@ class DiscordWizard extends BaseWizard {
     const embed = new EmbedBuilder()
       .setTitle("Link Discord Roles (1/2)")
       .setDescription(
-        "The following roles will be created. You can either link them to existing roles"
+        "The following roles will be created. You can either link them to existing roles "
           + "or create a new one.\n You can change the names of the roles later through the "
           + "`/config edit` command."
       )
