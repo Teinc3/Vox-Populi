@@ -1,4 +1,7 @@
-import { prop, getModelForClass, type Ref, modelOptions, getDiscriminatorModelForClass } from '@typegoose/typegoose';
+import {
+  prop, getModelForClass, modelOptions, getDiscriminatorModelForClass,
+  type Ref
+} from '@typegoose/typegoose';
 
 import { TermOptions } from '../options/RoleOptions.js';
 import { PoliticalSystemType, PoliticalBranchType, type DDOptions } from '../../types/systems.js';
@@ -32,14 +35,16 @@ class PoliticalSystem<LegislatureType extends Legislature = Legislature> {
   }
 
   /**
-     * Creates a PoliticalSystem document based on the guildConfigData and the politicalRoleHolder.
-     * 
-     * @param guildConfigData 
-     * @param politicalRoleHolder 
-     * @return { Promise<Ref<PoliticalSystem>> } - The reference to the created PoliticalSystem document
-     * 
-     */
-  static async createPoliticalSystemDocument(guildConfigData: GuildConfigData): Promise<Ref<PoliticalSystem>> {
+   * Creates a PoliticalSystem document based on the guildConfigData and the politicalRoleHolder.
+   * 
+   * @param guildConfigData 
+   * @param politicalRoleHolder 
+   * @return { Promise<Ref<PoliticalSystem>> } - The reference to the created
+   *  PoliticalSystem document
+   */
+  static async createPoliticalSystemDocument(
+    guildConfigData: GuildConfigData
+  ): Promise<Ref<PoliticalSystem>> {
     const { politicalSystem: politicalSystemType } = guildConfigData;
 
     let politicalSystem: PoliticalSystem;
@@ -56,8 +61,10 @@ class PoliticalSystem<LegislatureType extends Legislature = Legislature> {
     }
 
     // Create Legislature document
-    politicalSystem.legislature = await Chamber.createChamberDocument(PoliticalBranchType.Legislative, guildConfigData);
-    politicalSystem.court = await Chamber.createChamberDocument(PoliticalBranchType.Judicial, guildConfigData);
+    politicalSystem.legislature
+      = await Chamber.createChamberDocument(PoliticalBranchType.Legislative, guildConfigData);
+    politicalSystem.court
+      = await Chamber.createChamberDocument(PoliticalBranchType.Judicial, guildConfigData);
 
     // Save the political system document and return the reference
     return await PoliticalSystemModel.create(politicalSystem);

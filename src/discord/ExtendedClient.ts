@@ -1,7 +1,13 @@
-import { fileURLToPath, pathToFileURL } from 'url';
+import {
+  fileURLToPath,
+  pathToFileURL
+} from 'url';
 import path, { dirname } from "path";
 import fs from "fs";
-import { Client, Collection, type ClientOptions, type ChatInputCommandInteraction } from "discord.js";
+import {
+  Client, Collection,
+  type ClientOptions, type ChatInputCommandInteraction
+} from "discord.js";
 
 
 interface CustomCommand extends ClientOptions {
@@ -32,7 +38,8 @@ class ExtendedClient extends Client {
         if (command?.data && command?.execute) {
           this.commands.set(command.data.name, command);
         } else {
-          console.log(`[WARNING] The ${commandFile} command is missing a required "data" or "execute" property.`);
+          console.log(`[WARNING] The ${commandFile} command is missing `
+            + ` a required "data" or "execute" property.`);
         }
       } catch (error) {
         console.error(`[ERROR] Failed to load command at ${commandPath}:`, error);

@@ -22,7 +22,11 @@ class VoteCollector extends BaseCollector<DefaultInteractionData> {
   }
 }
 
-const VoteCollectorModel = getDiscriminatorModelForClass(BaseCollectorModel, VoteCollector, CollectorType.Vote);
+const VoteCollectorModel = getDiscriminatorModelForClass(
+  BaseCollectorModel,
+  VoteCollector,
+  CollectorType.Vote
+);
 
 export default VoteCollector;
 export { VoteCollectorModel };

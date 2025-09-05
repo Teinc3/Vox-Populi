@@ -1,6 +1,5 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, Colors, ButtonStyle } from 'discord.js';
 
-import { PoliticalSystemType } from '../../../../types/systems.js';
 import settings from '../../../../data/settings.json' assert { type: 'json' };
 import wizardDefaults from '../../../../data/defaults/wizard.json' assert { type: 'json' };
 import BaseWizard from './BaseWizard.js';
@@ -38,7 +37,9 @@ class LegislatureWizard extends BaseWizard {
       .setFields([
         {
           name: "Term Length",
-          value: termOptions.termLength === 1 ? "1 Month" : termOptions.termLength.toString() + " Months",
+          value: termOptions.termLength === 1
+            ? "1 Month"
+            : termOptions.termLength.toString() + " Months",
           inline: true
         },
         {
@@ -232,7 +233,9 @@ class LegislatureWizard extends BaseWizard {
 
     const embed = new EmbedBuilder()
       .setTitle("Configure Senate Threshold Options (3/3)")
-      .setDescription("These options decide the percentage of votes needed for simple or super majorities.")
+      .setDescription(
+        "These options decide the percentage of votes needed for simple or super majorities."
+      )
       .setFields(fields)
       .setColor(Colors.Blurple)
       .setFooter({ text: "Page " + this.initWizard.page })
@@ -251,7 +254,11 @@ class LegislatureWizard extends BaseWizard {
           .setEmoji("↩️"),
         new ButtonBuilder()
           .setCustomId('senate_threshold_toggle')
-          .setLabel(cursor === 0 ? "Modify Simple Majority Threshold" : "Modify Supermajority Threshold")
+          .setLabel(
+            cursor === 0
+              ? "Modify Simple Majority Threshold"
+              : "Modify Supermajority Threshold"
+          )
           .setStyle(ButtonStyle.Secondary)
           .setEmoji("🔄"),
         new ButtonBuilder()
@@ -268,28 +275,35 @@ class LegislatureWizard extends BaseWizard {
           .setLabel("-10%")
           .setStyle(ButtonStyle.Primary)
           .setEmoji("⏪")
-          .setDisabled(cursor === 0 && thresholdOptions.super <= 10 || cursor === 1 && thresholdOptions.simple <= 10),
+          .setDisabled(cursor === 0 && thresholdOptions.super <= 10
+            || cursor === 1 && thresholdOptions.simple <= 10),
         new ButtonBuilder()
           .setCustomId('senate_threshold_minus_one')
           .setLabel("-1%")
           .setStyle(ButtonStyle.Primary)
           .setEmoji("⬅️")
-          .setDisabled(cursor === 0 && thresholdOptions.super <= 1 || cursor === 1 && thresholdOptions.simple <= 1),
+          .setDisabled(cursor === 0 && thresholdOptions.super <= 1
+            || cursor === 1 && thresholdOptions.simple <= 1),
         new ButtonBuilder()
           .setCustomId('senate_threshold_plus_one')
           .setLabel("+1%")
           .setStyle(ButtonStyle.Primary)
           .setEmoji("➡️")
-          .setDisabled(cursor === 0 && thresholdOptions.super >= 100 || cursor === 1 && thresholdOptions.simple >= 100),
+          .setDisabled(cursor === 0 && thresholdOptions.super >= 100
+            || cursor === 1 && thresholdOptions.simple >= 100),
         new ButtonBuilder()
           .setCustomId('senate_threshold_plus_ten')
           .setLabel("+10%")
           .setStyle(ButtonStyle.Primary)
           .setEmoji("⏩")
-          .setDisabled(cursor === 0 && thresholdOptions.super >= 91 || cursor === 1 && thresholdOptions.simple >= 91),
+          .setDisabled(cursor === 0 && thresholdOptions.super >= 91
+            || cursor === 1 && thresholdOptions.simple >= 91),
       )
 
-    await this.initWizard.interaction.editReply({ embeds: [embed], components: [actionRowUtilities, actionRowThreshold] });
+    await this.initWizard.interaction.editReply({
+      embeds: [embed],
+      components: [actionRowUtilities, actionRowThreshold]
+    });
 
     try {
       const confirmation = await this.initWizard.response!.awaitMessageComponent({
@@ -342,9 +356,15 @@ class LegislatureWizard extends BaseWizard {
           break;
         case "senate_threshold_confirm":
           this.initWizard.prevFunctions.push(this.setSenateThresholdOptions);
-          // For Parliamentary, we go to configure Parliamentary Options (since we skipped it first for snap elections which are more relevant after senate is set up)
-          // Since DD does not have Senate, and only DD has the option to disable Judges, we can still go to Court Options
-          return await this.initWizard.setNextFunc(this.initWizard.guildConfigData.politicalSystem === PoliticalSystemType.Parliamentary ? this.initWizard.fragments.system.setParliamentaryOptions : this.initWizard.fragments.judicial.setCourtGenericOptions);
+          // For Parliamentary, we go to configure Parliamentary Options (since we skipped it
+          // first for snap elections which are more relevant after senate is set up)
+          // Since DD does not have Senate, and only DD has the option to disable Judges,
+          // we can still go to Court Options
+          return await this.initWizard.setNextFunc(
+            this.initWizard.guildConfigData.ddOptions!.appointJudges
+              ? this.initWizard.fragments.judicial.setCourtGenericOptions
+              : this.initWizard.fragments.discord.linkDiscordRoles
+          );
         default:
           return await this.initWizard.escape();
       }
@@ -384,7 +404,8 @@ class LegislatureWizard extends BaseWizard {
 
     const embed = new EmbedBuilder()
       .setTitle("Configure Referendum Thresholds (1/1)")
-      .setDescription("These options decide the percentage of votes needed for simple or super majorities in referendums.")
+      .setDescription("These options decide the percentage of votes needed for simple "
+        + "or super majorities in referendums.")
       .setFields(fields)
       .setColor(Colors.Blurple)
       .setFooter({ text: "Page " + this.initWizard.page })
@@ -399,7 +420,11 @@ class LegislatureWizard extends BaseWizard {
           .setEmoji("↩️"),
         new ButtonBuilder()
           .setCustomId('referendum_toggle')
-          .setLabel(cursor === 0 ? "Modify Simple Majority Threshold" : "Modify Supermajority Threshold")
+          .setLabel(
+            cursor === 0
+              ? "Modify Simple Majority Threshold"
+              : "Modify Supermajority Threshold"
+          )
           .setStyle(ButtonStyle.Secondary)
           .setEmoji("🔄"),
         new ButtonBuilder()
@@ -416,31 +441,41 @@ class LegislatureWizard extends BaseWizard {
           .setLabel("-10%")
           .setStyle(ButtonStyle.Primary)
           .setEmoji("⏪")
-          .setDisabled(cursor === 0 && referendumThresholds.super <= 10 || cursor === 1 && referendumThresholds.simple <= 10),
+          .setDisabled(cursor === 0 && referendumThresholds.super <= 10
+            || cursor === 1 && referendumThresholds.simple <= 10),
         new ButtonBuilder()
           .setCustomId('referendum_minus_one')
           .setLabel("-1%")
           .setStyle(ButtonStyle.Primary)
           .setEmoji("⬅️")
-          .setDisabled(cursor === 0 && referendumThresholds.super <= 1 || cursor === 1 && referendumThresholds.simple <= 1),
+          .setDisabled(cursor === 0 && referendumThresholds.super <= 1
+            || cursor === 1 && referendumThresholds.simple <= 1),
         new ButtonBuilder()
           .setCustomId('referendum_plus_one')
           .setLabel("+1%")
           .setStyle(ButtonStyle.Primary)
           .setEmoji("➡️")
-          .setDisabled(cursor === 0 && referendumThresholds.super >= 100 || cursor === 1 && referendumThresholds.simple >= 100),
+          .setDisabled(cursor === 0 && referendumThresholds.super >= 100
+            || cursor === 1 && referendumThresholds.simple >= 100),
         new ButtonBuilder()
           .setCustomId('referendum_plus_ten')
           .setLabel("+10%")
           .setStyle(ButtonStyle.Primary)
           .setEmoji("⏩")
-          .setDisabled(cursor === 0 && referendumThresholds.super >= 91 || cursor === 1 && referendumThresholds.simple >= 91),
+          .setDisabled(cursor === 0 && referendumThresholds.super >= 91
+            || cursor === 1 && referendumThresholds.simple >= 91),
       )
 
-    await this.initWizard.interaction.editReply({ embeds: [embed], components: [actionRowUtilities, actionRowThreshold] });
+    await this.initWizard.interaction.editReply({
+      embeds: [embed],
+      components: [actionRowUtilities, actionRowThreshold]
+    });
 
     try {
-      const confirmation = await this.initWizard.response!.awaitMessageComponent({ filter: this.initWizard.buttonFilter, time: settings.discord.interactionTimeout });
+      const confirmation = await this.initWizard.response!.awaitMessageComponent({
+        filter: this.initWizard.buttonFilter,
+        time: settings.discord.interactionTimeout
+      });
       await confirmation.deferUpdate();
 
       switch (confirmation.customId) {
@@ -487,7 +522,11 @@ class LegislatureWizard extends BaseWizard {
           break;
         case "referendum_confirm":
           this.initWizard.prevFunctions.push(this.setReferendumOptions);
-          return await this.initWizard.setNextFunc(this.initWizard.guildConfigData.ddOptions!.appointJudges ? this.initWizard.fragments.judicial.setCourtGenericOptions : this.initWizard.fragments.discord.linkDiscordRoles);
+          return await this.initWizard.setNextFunc(
+            this.initWizard.guildConfigData.ddOptions!.appointJudges
+              ? this.initWizard.fragments.judicial.setCourtGenericOptions
+              : this.initWizard.fragments.discord.linkDiscordRoles
+          );
         default:
           return await this.initWizard.escape();
       }

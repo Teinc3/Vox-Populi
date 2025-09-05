@@ -38,7 +38,11 @@ class PoliticalGuild {
   @prop({ _id: false })
   logChannels?: LogChannelHolder;
 
-  constructor(discordGuild: Guild, interaction: ChatInputCommandInteraction, guildConfigData: GuildConfigData) {
+  constructor(
+    discordGuild: Guild,
+    interaction: ChatInputCommandInteraction,
+    guildConfigData: GuildConfigData
+  ) {
     const guildID = discordGuild.id;
     const isBotOwner = discordGuild.ownerId === interaction.client.user.id;
 
@@ -49,14 +53,22 @@ class PoliticalGuild {
     this.emergencyOptions = emergencyOptions;
   }
 
-  static async createGuildDocument(interaction: ChatInputCommandInteraction, guildConfigData: GuildConfigData, reason?: string) {
+  static async createGuildDocument(
+    interaction: ChatInputCommandInteraction,
+    guildConfigData: GuildConfigData,
+    reason?: string
+  ) {
 
     const discordGuild = interaction.guild
     if (!discordGuild || (await GuildModel.findOne({ guildID: discordGuild.id }) !== null)) {
       return false;
     }
         
-    const guildDocument = new PoliticalGuild(discordGuild, interaction, guildConfigData);
+    const guildDocument = new PoliticalGuild(
+      discordGuild,
+      interaction,
+      guildConfigData
+    );
 
     await guildDocument.createSubDocuments(discordGuild, guildConfigData, reason);
 
@@ -64,7 +76,11 @@ class PoliticalGuild {
     return await GuildModel.create(guildDocument);
   }
 
-  static async deleteGuildDocument(guild: Guild, deleteObjects: boolean, reason?: string): Promise<boolean> {
+  static async deleteGuildDocument(
+    guild: Guild,
+    deleteObjects: boolean,
+    reason?: string
+  ): Promise<boolean> {
     const guildID = guild.id;
     const guildDocument = await GuildModel.findOneAndDelete({ guildID });
     if (!guildDocument) {
@@ -77,23 +93,48 @@ class PoliticalGuild {
     const politicalSystem = guildDocument.politicalSystem;
         
     // Delete all categories, roles, and the political system concurrently
-    const categoryPromises = (categories ?? []).map(category => GuildCategory.deleteGuildCategoryDocument(guild, category, deleteObjects, reason));
-    const rolePromise = roleHolderRef ? PoliticalRoleHolder.deletePoliticalRoleHolderDocument(guild, roleHolderRef, deleteObjects, reason) : Promise.resolve();
-    const systemPromise = politicalSystem ? PoliticalSystem.deletePoliticalSystemDocument(politicalSystem) : Promise.resolve();
+    const categoryPromises = (categories ?? []).map(category =>
+      GuildCategory.deleteGuildCategoryDocument(guild, category, deleteObjects, reason)
+    );
+    const rolePromise = roleHolderRef ?
+      PoliticalRoleHolder.deletePoliticalRoleHolderDocument(
+        guild,
+        roleHolderRef,
+        deleteObjects,
+        reason
+      ) :
+      Promise.resolve();
+    const systemPromise = politicalSystem ?
+      PoliticalSystem.deletePoliticalSystemDocument(politicalSystem) :
+      Promise.resolve();
     
     await Promise.all([...categoryPromises, rolePromise, systemPromise]);
     
     return true;
   }
     
-  private async createSubDocuments(discordGuild: Guild, guildConfigData: GuildConfigData, reason?: string) {
-    // Create all political roles then link them to the guild document, and generate the role document refs
-    const roleHolder = await PoliticalRole.createPoliticalRoleDocuments(discordGuild, guildConfigData, reason);
+  private async createSubDocuments(
+    discordGuild: Guild,
+    guildConfigData: GuildConfigData,
+    reason?: string
+  ) {
+    // Create all political roles then link them to the guild document
+    // and generate the role document refs
+    const roleHolder = await PoliticalRole.createPoliticalRoleDocuments(
+      discordGuild,
+      guildConfigData,
+      reason
+    );
     this.roles = await roleHolder.createPoliticalRoleHolderDocument();
     
     // Create special channel categories then link them to the guild document
-    this.categories = await GuildCategory.createGuildCategories(discordGuild, roleHolder, guildConfigData, reason);
-    
+    this.categories = await GuildCategory.createGuildCategories(
+      discordGuild,
+      roleHolder,
+      guildConfigData,
+      reason
+    );
+
     // Create Political System then link them to the guild document
     this.politicalSystem = await PoliticalSystem.createPoliticalSystemDocument(guildConfigData);
 

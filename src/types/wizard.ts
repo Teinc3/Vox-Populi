@@ -1,5 +1,7 @@
 import { type DDOptions } from "./systems.js";
-import { type BasePermissionsAggregate, type PermissionsOverwriteEnumKeyHolder } from "./permissions.js";
+import { 
+  type BasePermissionsAggregate, type PermissionsOverwriteEnumKeyHolder
+} from "./permissions.js";
 
 import type { SeatOptions, TermOptions, ThresholdOptions } from "../schema/options/RoleOptions.js";
 import type EmergencyOptions from "../schema/options/MiscOptions.js";
@@ -27,7 +29,8 @@ export interface GuildConfigData {
   courtOptions?: {
     terms: TermOptions & CursorOption;
     seats: SeatOptions;
-    threshold: ThresholdOptions; // Since only one threshold is needed, no need to store current rotation on cursor
+    // Since only one threshold is needed, no need to store current rotation on cursor
+    threshold: ThresholdOptions;
   };
   emergencyOptions: EmergencyOptions & CursorOption;
   discordOptions: DiscordOptions;
@@ -41,7 +44,8 @@ interface DiscordOptions {
 export type DiscordRoleHolderData = Array<ExtendedDefaultDiscordData<DefaultRoleData>>
 
 type DiscordRoleOptionsData = {
-  baseRoles: DiscordRoleHolderData; // This won't be accessed, just to hold the role data and prevent garbage collection
+  // This won't be accessed, just to hold the role data and prevent garbage collection
+  baseRoles: DiscordRoleHolderData;
   filteredRoles: DiscordRoleHolderData;
 } & CursorOption;
 

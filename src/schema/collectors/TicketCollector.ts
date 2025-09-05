@@ -30,20 +30,29 @@ class TicketCollector extends BaseCollector<DefaultInteractionData> {
   }
 
   /**
-     * Overload 1: discordChannel (TextChannel), reason?
-     * 
-     * @param discordChannel 
-     * @param reason 
-     */
-  async checkLinkDiscordTicketCollector(discordChannel: TextChannel, reason?: string): Promise<boolean>;
+   * Overload 1: discordChannel (TextChannel), reason?
+   * 
+   * @param discordChannel 
+   * @param reason 
+   */
+  async checkLinkDiscordTicketCollector(
+    discordChannel: TextChannel,
+    reason?: string
+  ): Promise<boolean>;
   /**
-     * Overload 2: client (ExtendedClient), reason?
-     * 
-     * @param client 
-     * @param reason 
-     */
-  async checkLinkDiscordTicketCollector(client: ExtendedClient, reason?: string): Promise<boolean>;
-  async checkLinkDiscordTicketCollector(arg1: TextChannel | ExtendedClient, reason?: string): Promise<boolean> {
+   * Overload 2: client (ExtendedClient), reason?
+   * 
+   * @param client 
+   * @param reason 
+   */
+  async checkLinkDiscordTicketCollector(
+    client: ExtendedClient,
+    reason?: string
+  ): Promise<boolean>;
+  async checkLinkDiscordTicketCollector(
+    arg1: TextChannel | ExtendedClient,
+    reason?: string
+  ): Promise<boolean> {
     // find PoliticalChannel
     const channelDocument = await PoliticalChannelModel.findById(this.channel);
     if (!channelDocument?.channelID) {
@@ -52,7 +61,9 @@ class TicketCollector extends BaseCollector<DefaultInteractionData> {
     }
 
     // Fetch the channel, if its the wrong type, we can't do anything.
-    const discordChannel = arg1 instanceof ExtendedClient ? await arg1.channels.fetch(channelDocument.channelID) : arg1;
+    const discordChannel = arg1 instanceof ExtendedClient
+      ? await arg1.channels.fetch(channelDocument.channelID)
+      : arg1;
     if (!(discordChannel && discordChannel.type === ChannelType.GuildText)) {
       return false;
     }
@@ -74,9 +85,12 @@ class TicketCollector extends BaseCollector<DefaultInteractionData> {
     if (!discordMessage) {
       discordMessage = await discordChannel.send(payload)
 
-      // If it's already saved before (hence messageID is present), then we update it in the document.
+      // If it's already saved before (hence messageID is present), then update it in the document.
       if (this.messageID) {
-        await TicketCollectorModel.findOneAndUpdate({ messageID: this.messageID }, { messageID: discordMessage.id });
+        await TicketCollectorModel.findOneAndUpdate(
+          { messageID: this.messageID },
+          { messageID: discordMessage.id }
+        );
       }
       this.messageID = discordMessage.id;
             
@@ -89,7 +103,8 @@ class TicketCollector extends BaseCollector<DefaultInteractionData> {
       setTimeout(() => discordMessage.pin(reason), 1E3);
 
       discordChannel.awaitMessages({
-        filter: (m: Message) => m.type === MessageType.ChannelPinnedMessage && m.reference!.messageId === discordMessage.id,
+        filter: (m: Message) => m.type === MessageType.ChannelPinnedMessage
+          && m.reference!.messageId === discordMessage.id,
         max: 1,
         time: 60E3
       })
@@ -122,7 +137,10 @@ class TicketCollector extends BaseCollector<DefaultInteractionData> {
       }
     } catch (error) {
       console.error(error);
-      await interaction.followUp({ content: 'There was an error while handling this ticket.', ephemeral: true });
+      await interaction.followUp({
+        content: 'There was an error while handling this ticket.',
+        ephemeral: true
+      });
     }
   }
 
@@ -135,7 +153,12 @@ class TicketCollector extends BaseCollector<DefaultInteractionData> {
     }
 
     // Handle Registration: For now we admit all registrations, so completed is true
-    const event = new EventSchema(`<@!${interaction.user.id}>(${interaction.user.username})'s Citizenship Application`, PoliticalEventType.Appointment, interaction.guildId, { completed: true });
+    const event = new EventSchema(
+      `<@!${interaction.user.id}>(${interaction.user.username})'s Citizenship Application`,
+      PoliticalEventType.Appointment,
+      interaction.guildId,
+      { completed: true }
+    );
     if (!event.isAppointment()) {
       return; // Another typeguard
     }
@@ -145,7 +168,7 @@ class TicketCollector extends BaseCollector<DefaultInteractionData> {
     if (!(guildDocument)) {
       return;
     }
-    await guildDocument.populate('roles')
+    await guildDocument.populate('roles');
     if (!isDocument(guildDocument.roles)) {
       return;
     }
@@ -179,7 +202,10 @@ class TicketCollector extends BaseCollector<DefaultInteractionData> {
     }
 
     if (member.roles.cache.some(r => r.id === roleID)) {
-      await interaction.followUp({ content: 'You already have the Citizen Role!', ephemeral: true });
+      await interaction.followUp({
+        content: 'You already have the Citizen Role!',
+        ephemeral: true
+      });
       return;
     }
 
@@ -189,18 +215,33 @@ class TicketCollector extends BaseCollector<DefaultInteractionData> {
 
     const embed = new EmbedBuilder()
       .setTitle('Application Outcome')
-      .setDescription(`Congratulations! Your application for Citizenship has been **accepted**.\n\nYou now have the Citizen Role.`)
+      .setDescription(
+        `Congratulations! Your application for Citizenship has been **accepted**.\n\n` +
+        `You now have the Citizen Role.`
+      )
       .setColor(Colors.Green)
-      .setFooter({ text: `Reason: ${event.options.reason ?? "No reason provided"}` })
+      .setFooter({
+        text: `Vox Populi - Political System`,
+        iconURL: interaction.guild!.iconURL() || undefined
+      })
       .setTimestamp();
 
     // Create a DM Channel
     const dmChannel = await member.createDM();
     dmChannel.send({ embeds: [embed] });
+
+    await interaction.followUp({
+      content: `Your citizenship application has been submitted! Please wait for approval.`,
+      ephemeral: true
+    });
   }
 }
 
-const TicketCollectorModel = getDiscriminatorModelForClass(BaseCollectorModel, TicketCollector, CollectorType.Ticket);
+const TicketCollectorModel = getDiscriminatorModelForClass(
+  BaseCollectorModel,
+  TicketCollector,
+  CollectorType.Ticket
+);
 
 export default TicketCollectorModel;
 export { TicketCollector };

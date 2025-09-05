@@ -1,4 +1,7 @@
-import { ChannelType, type CategoryChannel, type GuildBasedChannel, type TextChannel, type Guild } from "discord.js";
+import {
+  ChannelType,
+  type CategoryChannel, type GuildBasedChannel, type TextChannel, type Guild
+} from "discord.js";
 import { Ref, getModelForClass, modelOptions, prop } from "@typegoose/typegoose";
 
 import { BaseCollectorModel } from "../collectors/BaseCollector.js";
@@ -61,8 +64,15 @@ class AbstractChannel implements ChannelInterface {
     return this.type === AbstractChannelType.Political
   }
 
-  static async deleteAbstractChannelDocument(guild: Guild, channelDocument: Ref<AbstractChannel>, deleteObjects: boolean, reason?: string) {
-    const politicalChannel = await AbstractChannelModel.findOneAndDelete({ _id: channelDocument });
+  static async deleteAbstractChannelDocument(
+    guild: Guild,
+    channelDocument: Ref<AbstractChannel>,
+    deleteObjects: boolean,
+    reason?: string
+  ) {
+    const politicalChannel = await AbstractChannelModel.findOneAndDelete({
+      _id: channelDocument
+    });
     if (!politicalChannel || !politicalChannel.channelID) {
       return;
     }
@@ -76,25 +86,46 @@ class AbstractChannel implements ChannelInterface {
     }
   }
 
-  // For RefRoleArray, we need to filter out undefined values, so use the filter function if the role may be undefined
-  async createAbstractChannelDocument(guild: Guild, categoryChannel: CategoryChannel, options?: { ticketData?: DefaultInteractionData, reason?: string }): Promise<Ref<AbstractChannel>> {
-    const discordChannel = await this.linkDiscordChannel(guild, categoryChannel, options?.reason);
+  // For RefRoleArray, we need to filter out undefined values,
+  // so use the filter function if the role may be undefined
+  async createAbstractChannelDocument(
+    guild: Guild,
+    categoryChannel: CategoryChannel,
+    options?: {
+      ticketData?: DefaultInteractionData,
+      reason?: string
+    }
+  ): Promise<Ref<AbstractChannel>> {
+    const discordChannel = await this.linkDiscordChannel(
+      guild,
+      categoryChannel,
+      options?.reason
+    );
     const channelRef = await AbstractChannelModel.create(this);
 
     if (options?.ticketData && this.isPoliticalChannel()) {
-      await this.createTicketCollector(discordChannel, channelRef as Ref<PoliticalChannel>, options?.ticketData);
+      await this.createTicketCollector(
+        discordChannel, 
+        channelRef as Ref<PoliticalChannel>, 
+        options?.ticketData
+      );
     }
     return channelRef;
   }
 
-  async linkDiscordChannel(guild: Guild, categoryChannel: CategoryChannel, reason?: string): Promise<TextChannel> {
+  async linkDiscordChannel(
+    guild: Guild, 
+    categoryChannel: CategoryChannel, 
+    reason?: string
+  ): Promise<TextChannel> {
     // Fetch cache
     if (guild.channels.cache.size === 0) {
       await guild.channels.fetch();
     }
         
     const { name } = this;
-    const permissionOverwrites = await this.channelPermissions.createChannelPermissionsOverwrite(guild.id);
+    const permissionOverwrites
+      = await this.channelPermissions.createChannelPermissionsOverwrite(guild.id);
     
     let discordChannel: GuildBasedChannel | null | undefined;
     if (this.channelID) {
@@ -107,7 +138,12 @@ class AbstractChannel implements ChannelInterface {
           return await this.linkDiscordChannel(guild, categoryChannel, reason);
         } else {
           // Set Configs parallel to setup
-          discordChannel.edit({ parent: categoryChannel, topic: this.description, permissionOverwrites, reason });
+          discordChannel.edit({
+            parent: categoryChannel,
+            topic: this.description,
+            permissionOverwrites,
+            reason
+          });
           return discordChannel;
         }
       }

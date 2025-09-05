@@ -38,7 +38,8 @@ async function loadCommands(pCommands: string[]) {
       if ('data' in command && 'execute' in command) {
         pCommands.push(command.data.toJSON());
       } else {
-        console.log(`[WARNING] The ${commandFile} command is missing a required "data" or "execute" property.`);
+        console.log(`[WARNING] The ${commandFile} command is missin`
+          + 'a required "data" or "execute" property.');
       }
     } catch (error) {
       console.error(`[ERROR] Failed to load command at ${commandPath}:`, error);
@@ -53,8 +54,13 @@ async function postCommands(pToken: string, pClientID: string, pCommands: string
   // and deploy your commands!
   try {
     // The put method is used to fully refresh all commands in the guild with the current set
-    await rest.put(Routes.applicationCommands(pClientID), { body: pCommands });
-    console.log('Successfully reloaded application (/) commands.')
+    await rest.put(
+      Routes.applicationCommands(pClientID),
+      { body: pCommands }
+    );
+    console.log(
+      `Successfully reloaded ${pCommands.length} application (/) commands.`
+    );
   } catch (error) {
     // And of course, make sure you catch and log any errors!
     console.log('Failed to reload application (/) commands.');

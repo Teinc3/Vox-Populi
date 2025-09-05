@@ -1,7 +1,12 @@
-import { prop, type Ref, getModelForClass, isDocument, modelOptions, getDiscriminatorModelForClass } from '@typegoose/typegoose';
+import {
+  prop, getModelForClass, isDocument, modelOptions, getDiscriminatorModelForClass,
+  type Ref,
+} from '@typegoose/typegoose';
 
 import { ThresholdOptions, TermOptions, SeatOptions } from '../options/RoleOptions.js';
-import { PoliticalBranchType, LegislativeChamberType, PoliticalSystemType } from '../../types/systems.js';
+import {
+  PoliticalBranchType, LegislativeChamberType, PoliticalSystemType
+} from '../../types/systems.js';
 import GuildModel from './PoliticalGuild.js';
 
 import type PoliticalChannel from '../channels/PoliticalChannel.js';
@@ -39,13 +44,17 @@ class Chamber {
   }
 
   /**
-     * This function creates a Chamber document based on the political branch type and the guild configuration data.
-     * 
-     * @param politicalBranchType 
-     * @param guildConfigData 
-     * @returns {Promise<Ref<T>>} - The reference to the created Chamber document
-     */
-  static async createChamberDocument<T extends Chamber>(politicalBranchType: PoliticalBranchType, guildConfigData: GuildConfigData): Promise<Ref<T>> {
+   * This function creates a Chamber document based on the political branch type
+   * and the guild configuration data.
+   * 
+   * @param politicalBranchType 
+   * @param guildConfigData 
+   * @returns {Promise<Ref<T>>} - The reference to the created Chamber document
+   */
+  static async createChamberDocument<T extends Chamber>(
+    politicalBranchType: PoliticalBranchType,
+    guildConfigData: GuildConfigData
+  ): Promise<Ref<T>> {
     let chamber: Chamber;
 
     if (politicalBranchType !== PoliticalBranchType.Legislative) {
@@ -61,7 +70,11 @@ class Chamber {
     return await ChamberModel.create(chamber) as Ref<T>;
   }
 
-  static async linkChamberChannelDocument(guildID: string, politicalBranch: PoliticalBranchType, politicalChannelDocument: Ref<PoliticalChannel>) {
+  static async linkChamberChannelDocument(
+    guildID: string,
+    politicalBranch: PoliticalBranchType,
+    politicalChannelDocument: Ref<PoliticalChannel>
+  ) {
     // Find the guild document and populate the politicalSystem field
     const guildDocument = await GuildModel.findOne({ guildID });
     if (!guildDocument) {
@@ -89,7 +102,10 @@ class Chamber {
     }
     
     // Link the channel
-    await ChamberModel.findOneAndUpdate({ _id: chamber }, { channel: politicalChannelDocument });
+    await ChamberModel.findOneAndUpdate(
+      { _id: chamber },
+      { channel: politicalChannelDocument }
+    );
   }
 
   static async deleteChamberDocument(_id: Ref<Chamber>) {
@@ -191,7 +207,8 @@ class Court extends Chamber {
     this.seatOptions.scalable = false; // Court seats are fixed
 
     // Citizens act as judges
-    if (guildConfigData.politicalSystem === PoliticalSystemType.DirectDemocracy && guildConfigData.ddOptions!.appointJudges === false) {
+    if (guildConfigData.politicalSystem === PoliticalSystemType.DirectDemocracy
+      && guildConfigData.ddOptions!.appointJudges === false) {
       this.seatOptions.value = 0;
       this.thresholds = guildConfigData.referendumThresholds!;
     } else { // Judges
@@ -199,7 +216,8 @@ class Court extends Chamber {
       this.termOptions = courtOptions;
 
       this.thresholds = guildConfigData.courtOptions!.threshold;
-      this.seatOptions!.value = guildConfigData.courtOptions!.seats.value; // Since scalable is false, value is fixed, direct assignment is fine
+      // Since scalable is false, value is fixed, direct assignment is fine
+      this.seatOptions!.value = guildConfigData.courtOptions!.seats.value;
     }
   }
 }

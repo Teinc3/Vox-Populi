@@ -1,4 +1,7 @@
-import { ChannelType, PermissionFlagsBits, SlashCommandBuilder, type ChatInputCommandInteraction } from "discord.js";
+import {
+  ChannelType, PermissionFlagsBits, SlashCommandBuilder,
+  type ChatInputCommandInteraction
+} from "discord.js";
 
 
 const data = new SlashCommandBuilder()
@@ -12,7 +15,10 @@ async function execute(interaction: ChatInputCommandInteraction) {
   const member = await guild.members.fetch(interaction.user.id);
 
   if (!member.permissions.has(PermissionFlagsBits.Administrator)) {
-    await interaction.followUp({ content: "You cannot use this command as you are not a server Administrator.", ephemeral: true });
+    await interaction.followUp({
+      content: "You cannot use this command as you are not a server Administrator.",
+      ephemeral: true
+    });
     return;
   }
 

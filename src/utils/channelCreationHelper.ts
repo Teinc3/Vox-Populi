@@ -13,7 +13,10 @@ import type AbstractChannel from "../schema/channels/AbstractChannel.js";
  * @param channelCreationOptions 
  * @returns 
  */
-export default function createChannel(type: AbstractChannelType, channelCreationOptions: ChannelInterface): AbstractChannel {
+export default function createChannel(
+  type: AbstractChannelType,
+  channelCreationOptions: ChannelInterface
+): AbstractChannel {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   let ChannelClass: typeof AbstractChannel;
   switch (type) {

@@ -44,8 +44,14 @@ class PoliticalRoleHolder implements PoliticalRoleHolderInterface<Ref<PoliticalR
     return await PoliticalRoleHolderModel.create(this);
   }
 
-  static async deletePoliticalRoleHolderDocument(guild: Guild, roleHolderDocumentRef: Ref<PoliticalRoleHolder>, deleteObjects: boolean, reason?: string) {
-    const politicalRoleHolder = await PoliticalRoleHolderModel.findOneAndDelete({ _id: roleHolderDocumentRef });
+  static async deletePoliticalRoleHolderDocument(
+    guild: Guild,
+    roleHolderDocumentRef: Ref<PoliticalRoleHolder>,
+    deleteObjects: boolean,
+    reason?: string
+  ) {
+    const politicalRoleHolder
+      = await PoliticalRoleHolderModel.findOneAndDelete({ _id: roleHolderDocumentRef });
     if (!politicalRoleHolder) {
       return;
     }

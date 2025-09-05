@@ -1,3 +1,4 @@
+import util from "util";
 import { SlashCommandBuilder, type ChatInputCommandInteraction } from "discord.js";
 
 import settings from "../../data/settings.json" assert { type: "json" };
@@ -29,12 +30,17 @@ async function execute(interaction: ChatInputCommandInteraction) {
   const statement = interaction.options.get('statement')!.value as string;
   const ephemeral = interaction.options.get('silent')?.value as boolean || true;
   if (!isOwner) {
-    await interaction.followUp({ content: "You cannot use this command as you are not the Bot Owner.", ephemeral });
+    await interaction.followUp({
+      content: "You cannot use this command as you are not the Bot Owner.",
+      ephemeral
+    });
     return;
   }
   try {
     const result = await eval(`(async () => { ${statement} })();`);
-    await interaction.followUp({ content: `Result: ${result}`, ephemeral });
+    await interaction.editReply(
+      `\`\`\`js\n${util.inspect(result, { depth: 0 }).slice(0, 1990)}\n\`\`\``
+    );
   } catch (error) {
     await interaction.followUp({ content: `Error: ${error}`, ephemeral });
   }

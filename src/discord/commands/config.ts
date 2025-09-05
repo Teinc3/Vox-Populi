@@ -39,7 +39,9 @@ const data = new SlashCommandBuilder()
     subcommand.setDescription('Deletes the server configuration.');
     subcommand.addBooleanOption(option => {
       option.setName('removeobjects');
-      option.setDescription('Should all channels and roles associated with the server configuration be removed?');
+      option.setDescription(
+        'Should all channels and roles associated with the server configuration be removed?'
+      );
       option.setRequired(true);
       return option;
     });
@@ -50,7 +52,10 @@ async function execute(interaction: ChatInputCommandInteraction) {
   const { guild } = interaction;
   if (guild === null) {
     // Should not happen with DM permissions off, but just in case
-    return await interaction.reply({ content: 'This command must be run in a server.', ephemeral: false });
+    return await interaction.reply({
+      content: 'This command must be run in a server.',
+      ephemeral: false
+    });
   }
 
   // Fetch guild and member data
@@ -105,38 +110,52 @@ async function execute(interaction: ChatInputCommandInteraction) {
  * The user must satisfy the following conditions to configure the server:
  * 
  * - Must not be in DM
- * - Guild must not be configured before for subcommand "init", or must be configured otherwise.
+ * - Guild must not be configured before for subcommand "init",
+ *   or must be configured otherwise.
  * - User must have be/done one of the following:
      1. Bot Owner
      2. Server Owner
-     3. Created the server configuration, AND allowed themself to reset server configuration whenever they want
+     3. Created the server configuration, AND allowed themself to reset
+        server configuration whenever they want
      4. In server with ADMINISTRATOR permission
      5. Less than 5 members in server (Does not include Bot)
  * - Bot must have the necessary ADMINISTRATOR permissions
  * 
  * @param interaction The interaction object
  * @param guild The guild object, fetched from the interaction
- * @returns {boolean} Whether the user has the necessary permissions to configure the server
+ * @returns {boolean} Whether the user has the necessary permissions to
+ *   configure the server
  */
-async function checkPermissions(interaction: ChatInputCommandInteraction, guild: Guild): Promise<boolean> {
+async function checkPermissions(
+  interaction: ChatInputCommandInteraction,
+  guild: Guild
+): Promise<boolean> {
   const guildConfiguration = await GuildModel.findOne({ guildID: guild.id });
   const hasConfiguredGuild = guildConfiguration !== null;
 
   if (interaction.options.getSubcommand() === "init" && hasConfiguredGuild) {
-    await interaction.reply({ content: 'This server has already been configured.', ephemeral: false });
+    await interaction.reply({
+      content: 'This server has already been configured.',
+      ephemeral: false
+    });
     return false;
   } else if (interaction.options.getSubcommand() !== "init" && !hasConfiguredGuild) {
-    await interaction.reply({ content: 'This server does not have a proper configuration.', ephemeral: false });
+    await interaction.reply({
+      content: 'This server does not have a proper configuration.',
+      ephemeral: false
+    });
     return false;
   }
 
   const isUserBotOwner = interaction.user.id === settings.discord.botOwnerID;
   const isServerOwner = guild.ownerId === interaction.user.id;
   const allowResetConfig = guildConfiguration?.emergencyOptions.allowResetConfig ?? false;
-  const isAdmin = (interaction.member as GuildMember | null)?.permissions.has(PermissionsBitField.Flags.Administrator) ?? false;
+  const isAdmin = (interaction.member as GuildMember | null)?.permissions
+    .has(PermissionsBitField.Flags.Administrator) ?? false;
   const memberCount = guild.memberCount;
 
-  if (!(isUserBotOwner || isServerOwner || allowResetConfig || isAdmin || memberCount <= settings.discord.maxMemberFreeConfigCount)) {
+  if (!(isUserBotOwner || isServerOwner || allowResetConfig || isAdmin
+    || memberCount <= settings.discord.maxMemberFreeConfigCount)) {
     await interaction.reply({
       content: 'You do not have the necessary permissions to configure this server.',
       ephemeral: true
@@ -146,7 +165,10 @@ async function checkPermissions(interaction: ChatInputCommandInteraction, guild:
 
   // Check if bot is server owner or has ADMINISTRATOR permissions
   const isBotOwner = guild.ownerId === interaction.client.user.id;
-  const isBotAdmin = isBotOwner || (interaction.guild?.members.me?.permissions.has(PermissionsBitField.Flags.Administrator) ?? false);
+  const isBotAdmin = isBotOwner
+    || (interaction.guild?.members.me?.permissions.has(
+      PermissionsBitField.Flags.Administrator
+    ) ?? false);
 
   if (!isBotAdmin) {
     await interaction.reply({

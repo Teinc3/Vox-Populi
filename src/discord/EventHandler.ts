@@ -21,8 +21,11 @@ class EventHandler {
   }
 
   public async checkEvents() {
-    // Query eventschema by with property completed false and dueDate less than current, sort by ascending
-    const events = await EventModel.find({ completed: false, dueDate: { $lt: new Date() } }).sort({ dueDate: 1 });
+    // Query eventschema by with property completed false and dueDate 
+    // less than current, then sort by ascending
+    const events = await EventModel
+      .find({ completed: false, dueDate: { $lt: new Date() } })
+      .sort({ dueDate: 1 });
     for (const _event of events) {
       // Handle event
     }
@@ -30,7 +33,10 @@ class EventHandler {
     // Query TicketCollectors to check if any messages have been modified/deleted/etc.
     const ticketCollectors = await TicketCollectorModel.find();
     for (const ticketCollector of ticketCollectors) {
-      ticketCollector.checkLinkDiscordTicketCollector(this.discordManager.client, 'Restoring Ticket Collector Message');
+      ticketCollector.checkLinkDiscordTicketCollector(
+        this.discordManager.client,
+        'Restoring Ticket Collector Message'
+      );
     }
   }
 }

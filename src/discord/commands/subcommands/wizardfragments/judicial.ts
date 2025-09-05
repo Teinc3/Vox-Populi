@@ -38,7 +38,10 @@ class JudicialWizard extends BaseWizard {
 
     const embed = new EmbedBuilder()
       .setTitle("Configure Court Options (1/2)")
-      .setDescription("These options decide how many seats are available in the Court and the threshold for a verdict to pass.")
+      .setDescription(
+        "These options decide how many seats are available in the Court "
+        + "and the threshold for a verdict to pass."
+      )
       .setFields([
         {
           name: "Number of Judges",
@@ -108,10 +111,16 @@ class JudicialWizard extends BaseWizard {
           .setDisabled(courtOptions.threshold.simple >= 91)
       )
 
-    await this.initWizard.interaction.editReply({ embeds: [embed], components: [actionRowUtilities, actionRowThreshold] });
+    await this.initWizard.interaction.editReply({
+      embeds: [embed],
+      components: [actionRowUtilities, actionRowThreshold]
+    });
 
     try {
-      const confirmation = await this.initWizard.response!.awaitMessageComponent({ filter: this.initWizard.buttonFilter, time: settings.discord.interactionTimeout });
+      const confirmation = await this.initWizard.response!.awaitMessageComponent({
+        filter: this.initWizard.buttonFilter,
+        time: settings.discord.interactionTimeout
+      });
       await confirmation.deferUpdate();
 
       switch (confirmation.customId) {
@@ -158,12 +167,16 @@ class JudicialWizard extends BaseWizard {
     const fields = [
       {
         name: "Term Length",
-        value: courtOptions.terms.termLength === 1 ? "1 Month" : courtOptions.terms.termLength.toString() + " Months",
+        value: courtOptions.terms.termLength === 1
+          ? "1 Month"
+          : courtOptions.terms.termLength.toString() + " Months",
         inline: true
       },
       {
         name: "Term Limits",
-        value: courtOptions.terms.termLimit === 0 ? "No Limits" : courtOptions.terms.termLimit.toString(),
+        value: courtOptions.terms.termLimit === 0
+          ? "No Limits"
+          : courtOptions.terms.termLimit.toString(),
         inline: true
       }
     ]
@@ -192,7 +205,8 @@ class JudicialWizard extends BaseWizard {
           .setLabel(cursor === 0 ? "-1 Month" : "-1 Term")
           .setStyle(ButtonStyle.Primary)
           .setEmoji("⬅️")
-          .setDisabled(cursor === 0 && courtOptions.terms.termLength <= 1 || cursor === 1 && courtOptions.terms.termLimit <= 0),
+          .setDisabled(cursor === 0 && courtOptions.terms.termLength <= 1
+            || cursor === 1 && courtOptions.terms.termLimit <= 0),
         new ButtonBuilder()
           .setCustomId("court_term_positive")
           .setLabel(cursor === 0 ? "+1 Month" : "+1 Term")
@@ -213,7 +227,10 @@ class JudicialWizard extends BaseWizard {
     await this.initWizard.interaction.editReply({ embeds: [embed], components: [actionRow] });
 
     try {
-      const confirmation = await this.initWizard.response!.awaitMessageComponent({ filter: this.initWizard.buttonFilter, time: settings.discord.interactionTimeout });
+      const confirmation = await this.initWizard.response!.awaitMessageComponent({
+        filter: this.initWizard.buttonFilter,
+        time: settings.discord.interactionTimeout
+      });
       await confirmation.deferUpdate();
 
       switch (confirmation.customId) {
@@ -238,7 +255,9 @@ class JudicialWizard extends BaseWizard {
           break;
         case "court_term_confirm":
           this.initWizard.prevFunctions.push(this.setCourtThresholdOptions);
-          return await this.initWizard.setNextFunc(this.initWizard.fragments.discord.linkDiscordRoles);
+          return await this.initWizard.setNextFunc(
+            this.initWizard.fragments.discord.linkDiscordRoles
+          );
         default:
           return await this.initWizard.escape();
       }

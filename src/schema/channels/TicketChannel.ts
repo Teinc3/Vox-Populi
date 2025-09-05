@@ -22,7 +22,11 @@ class TicketChannel extends AbstractChannel {
   }
 }
 
-const TicketChannelModel = getDiscriminatorModelForClass(AbstractChannelModel, TicketChannel, AbstractChannelType.Ticket);
+const TicketChannelModel = getDiscriminatorModelForClass(
+  AbstractChannelModel,
+  TicketChannel,
+  AbstractChannelType.Ticket
+);
 
 export default TicketChannel;
 export { TicketChannelModel };

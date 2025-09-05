@@ -22,7 +22,11 @@ class LogChannel extends AbstractChannel {
   }
 }
 
-const LogChannelModel = getDiscriminatorModelForClass(AbstractChannelModel, LogChannel, AbstractChannelType.Log);
+const LogChannelModel = getDiscriminatorModelForClass(
+  AbstractChannelModel,
+  LogChannel,
+  AbstractChannelType.Log
+);
 
 export default LogChannel;
 export { LogChannelModel };

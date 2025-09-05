@@ -15,7 +15,10 @@ interface PayloadRecipe extends DefaultInteractionData {}
  */
 class TicketOptionsCollector extends BaseCollector<PayloadRecipe> {}
 
-const TicketOptionsCollectorModel = getDiscriminatorModelForClass(BaseCollectorModel, TicketOptionsCollector);
+const TicketOptionsCollectorModel = getDiscriminatorModelForClass(
+  BaseCollectorModel,
+  TicketOptionsCollector
+);
 
 export default TicketOptionsCollector;
 export { TicketOptionsCollectorModel };

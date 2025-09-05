@@ -29,15 +29,22 @@ export default async function init(interaction: ChatInputCommandInteraction): Pr
 type InitWizardFunction = () => Promise<void>;
 
 /**
- * A class containing functions of the initialization wizard for setting up a new server configuration.
+ * A class containing functions of the initialization wizard
+ * for setting up a new server configuration.
  * 
  * @class InitWizard
- * @property {ChatInputCommandInteraction} interaction - The interaction object that triggered the command
- * @property {GuildConfigData} guildConfigData - The data to be stored in the Guild document
- * @property {InteractionResponse} response - The response message sent by the bot. Used to edit the message when changing pages. Undefined if the message has not been sent yet.
- * @property {InitWizardFunction[]} prevFunctions - An array of functions that were previously called, so that the user can go back to the previous page without losing configuration data.
- * @property {InitWizardFunction | boolean} nextFunction - The next function to be called. If set to false, the wizard will end.
- * @property {number} page - The current page number of the wizard, used for the footer of the embed.
+ * @property {ChatInputCommandInteraction} interaction - The interaction
+ *   object that triggered the command
+ * @property {GuildConfigData} guildConfigData - The data to be stored in
+ *   the Guild document
+ * @property {InteractionResponse} response - The response message sent by the bot.
+ *   Used to edit the message when changing pages. Undefined if the message has not been sent yet.
+ * @property {InitWizardFunction[]} prevFunctions - An array of functions that were previously
+ *   called, so that the user can go back to the previous page without losing configuration data.
+ * @property {InitWizardFunction | boolean} nextFunction - The next function to be called.
+ *   If set to false, the wizard will end.
+ * @property {number} page - The current page number of the wizard,
+ *   used for the footer of the embed.
  * 
  */
 export class InitWizard {
@@ -75,7 +82,8 @@ export class InitWizard {
     this.page = 1;
   }
 
-  buttonFilter = (i: MessageComponentInteraction) => i.isButton() && i.user.id === this.interaction.user.id;
+  buttonFilter = (i: MessageComponentInteraction) =>
+    i.isButton() && i.user.id === this.interaction.user.id;
 
   setEmergencyOptions = async (): Promise<void> => {
     if (!this.guildConfigData.emergencyOptions) {
@@ -90,21 +98,29 @@ export class InitWizard {
 
     const embed = new EmbedBuilder()
       .setTitle("Configure Emergency Options (1/1)")
-      .setDescription("These options decides how much power you have in case of a server emergency.")
+      .setDescription(
+        "These options decides how much power you have in case of a server emergency."
+      )
       .addFields([
         {
           name: "Temporary Administrator Status Length",
-          value: this.guildConfigData.emergencyOptions.tempAdminLength === 0 ? "Disabled" : this.guildConfigData.emergencyOptions.tempAdminLength + " Days",
+          value: this.guildConfigData.emergencyOptions.tempAdminLength === 0
+            ? "Disabled"
+            : this.guildConfigData.emergencyOptions.tempAdminLength + " Days",
           inline: true
         },
         {
           name: "Allow Server Configuration Reset",
-          value: this.guildConfigData.emergencyOptions.allowResetConfig ? "Enabled" : "Disabled",
+          value: this.guildConfigData.emergencyOptions.allowResetConfig
+            ? "Enabled"
+            : "Disabled",
           inline: true
         }
       ])
       .setColor(Colors.Yellow)
-      .setFooter({ text: "This is the last page of the config wizard. After confirmation, all settings will be finalized!" })
+      .setFooter({
+        text: "This is the last page of the config wizard. All settings will be finalized!"
+      })
       .toJSON();
 
     const actionRow = new ActionRowBuilder<ButtonBuilder>()
@@ -171,10 +187,12 @@ export class InitWizard {
           this.guildConfigData.emergencyOptions.tempAdminLength++;
           break;
         case "emergency_delete_toggle":
-          this.guildConfigData.emergencyOptions.allowResetConfig = !this.guildConfigData.emergencyOptions.allowResetConfig;
+          this.guildConfigData.emergencyOptions.allowResetConfig
+            = !this.guildConfigData.emergencyOptions.allowResetConfig;
           break;
         case "emergency_next":
-          this.guildConfigData.emergencyOptions.cursor = 1 - this.guildConfigData.emergencyOptions.cursor;
+          this.guildConfigData.emergencyOptions.cursor
+            = 1 - this.guildConfigData.emergencyOptions.cursor;
           break;
         case "emergency_confirm":
           return await this.setNextFunc(this.completeInit);
@@ -193,10 +211,17 @@ export class InitWizard {
       .setDescription("Please wait while the server is being configured...")
       .setColor(Colors.Blurple)
       .toJSON();
-    await this.interaction.editReply({ embeds: [configuringEmbed], components: [] });
+    await this.interaction.editReply({
+      embeds: [configuringEmbed],
+      components: []
+    });
 
     // Update database with new guild object
-    const result = await PoliticalGuild.createGuildDocument(this.interaction, this.guildConfigData, "Server Initialization");
+    const result = await PoliticalGuild.createGuildDocument(
+      this.interaction,
+      this.guildConfigData,
+      "Server Initialization"
+    );
     if (!result) {
       return await this.escape();
     }
@@ -205,7 +230,10 @@ export class InitWizard {
       .setTitle("Server Configuration")
       .setDescription("Server has been successfully configured.")
       .setColor(Colors.Green)
-      .setAuthor({ name: this.interaction.user.tag, iconURL: this.interaction.user.displayAvatarURL() })
+      .setAuthor({
+        name: this.interaction.user.tag,
+        iconURL: this.interaction.user.displayAvatarURL()
+      })
       .setTimestamp()
       .toJSON();
     await this.interaction.editReply({ embeds: [successEmbed], components: [] });
@@ -216,7 +244,11 @@ export class InitWizard {
       return await this.escape(true);
     }
 
-    await result.populate({ path: 'roles.VoxPopuli', model: PoliticalRoleModel, select: 'roleID' });
+    await result.populate({
+      path: 'roles.VoxPopuli',
+      model: PoliticalRoleModel,
+      select: 'roleID'
+    });
     if (!isDocument(result.roles.VoxPopuli)) {
       return await this.escape(true);
     }
@@ -255,7 +287,9 @@ export class InitWizard {
   async timedOut() {
     const embed = new EmbedBuilder()
       .setTitle("Timeout")
-      .setDescription("No response received in 1 minute, automatically cancelling server initialization...")
+      .setDescription(
+        "No response received in 1 minute, automatically cancelling server initialization..."
+      )
       .setColor(Colors.Red)
       .toJSON();
     await this.interaction.editReply({ embeds: [embed], components: [] });

@@ -28,7 +28,12 @@ class PoliticalChannel extends AbstractChannel {
   }
 
   // Thanks to circular imports now this can't be static, fuck off
-  async createTicketCollector(discordChannel: TextChannel, channelRef: Ref<PoliticalChannel>, ticketData: DefaultInteractionData, reason?: string) {
+  async createTicketCollector(
+    discordChannel: TextChannel,
+    channelRef: Ref<PoliticalChannel>,
+    ticketData: DefaultInteractionData,
+    reason?: string
+  ) {
     const politicalChannel = await PoliticalChannelModel.findById(channelRef);
     if (!politicalChannel) {
       return;
@@ -42,7 +47,11 @@ class PoliticalChannel extends AbstractChannel {
   }
 }
 
-const PoliticalChannelModel = getDiscriminatorModelForClass(AbstractChannelModel, PoliticalChannel, AbstractChannelType.Political);
+const PoliticalChannelModel = getDiscriminatorModelForClass(
+  AbstractChannelModel,
+  PoliticalChannel,
+  AbstractChannelType.Political
+);
 
 export default PoliticalChannel;
 export { PoliticalChannelModel };

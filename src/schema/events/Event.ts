@@ -1,5 +1,7 @@
 import { ChannelType, EmbedBuilder } from "discord.js";
-import { prop, getModelForClass, Severity, isDocument, type DocumentType, post } from '@typegoose/typegoose';
+import {
+  prop, getModelForClass, Severity, isDocument, post, type DocumentType,
+} from '@typegoose/typegoose';
 
 import AppointmentOptions from '../options/EventOptions.js';
 import GuildModel from '../main/PoliticalGuild.js';
@@ -35,7 +37,12 @@ class EventSchema {
   @prop({ _id: false, allowMixed: Severity.ALLOW })
   public options?: AppointmentOptions; // Union type w/ other options
 
-  constructor(name: string, type: PoliticalEventType, guildID: string, eventOptions: { dueDate?: Date, completed?: boolean }) {
+  constructor(
+    name: string,
+    type: PoliticalEventType,
+    guildID: string,
+    eventOptions: { dueDate?: Date, completed?: boolean }
+  ) {
     this.name = name;
     this.date = new Date();
     this.type = type;
@@ -73,7 +80,8 @@ class EventSchema {
         
       // Populate guild.logChannels.serverLogs
       await guild.populate('logChannels.serverLogs')
-      if (!isDocument(guild.logChannels.serverLogs) || !guild.logChannels.serverLogs.channelID) {
+      if (!isDocument(guild.logChannels.serverLogs)
+        || !guild.logChannels.serverLogs.channelID) {
         return;
       }
         
@@ -89,12 +97,18 @@ class EventSchema {
         .setDescription(doc.name + "\n")
         .setFields([
           { name: 'Event Type', value: doc.type, inline: true },
-          { name: 'Completion Status', value: doc.completed ? 'Completed' : 'Pending', inline: true },
+          {
+            name: 'Completion Status',
+            value: doc.completed ? 'Completed' : 'Pending',
+            inline: true
+          },
         ])
         .setTimestamp(doc.date);
             
       if (doc.dueDate !== undefined) {
-        embed.addFields([{ name: 'Due Date', value: `<t:${doc.dueDate.toDateString()}:F>`, inline: true }]);
+        embed.addFields([
+          { name: 'Due Date', value: `<t:${doc.dueDate.toDateString()}:F>`, inline: true }
+        ]);
       }
       // Send the Embed
       await channel.send({ embeds: [embed] });

@@ -1,8 +1,14 @@
 import { type ColorResolvable, type Guild, type Role } from 'discord.js';
 import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
 
-import { parsePermissionsAggregate, progressivePermissionsAllocator } from '../../utils/permissionsHelper.js';
-import { PoliticalRoleHierarchy, type BasePermissionsAggregate } from '../../types/permissions.js';
+import {
+  parsePermissionsAggregate,
+  progressivePermissionsAllocator
+} from '../../utils/permissionsHelper.js';
+import {
+  PoliticalRoleHierarchy,
+  type BasePermissionsAggregate
+} from '../../types/permissions.js';
 import PoliticalRoleHolder from './PoliticalRoleHolder.js';
 
 
@@ -26,7 +32,13 @@ class PoliticalRole {
   permissions!: bigint[];
 
   // These are user-customizable options
-  constructor(name: string, color: string, hierarchy: PoliticalRoleHierarchy, basePermissionsAggregate?: BasePermissionsAggregate, id?: string) {
+  constructor(
+    name: string,
+    color: string,
+    hierarchy: PoliticalRoleHierarchy,
+    basePermissionsAggregate?: BasePermissionsAggregate,
+    id?: string
+  ) {
     this.name = name;
     this.roleColor = color;
     this.hierarchy = hierarchy;
@@ -35,24 +47,42 @@ class PoliticalRole {
       this.roleID = id;
     }
 
-    this.permissions = progressivePermissionsAllocator(parsePermissionsAggregate(basePermissionsAggregate));
+    this.permissions = progressivePermissionsAllocator(
+      parsePermissionsAggregate(basePermissionsAggregate)
+    );
   }
 
-  static async createPoliticalRoleDocuments(guild: Guild, guildConfigData: GuildConfigData, reason?: string): Promise<PoliticalRoleHolder> {
+  static async createPoliticalRoleDocuments(
+    guild: Guild,
+    guildConfigData: GuildConfigData,
+    reason?: string
+  ): Promise<PoliticalRoleHolder> {
     const { filteredRoles } = guildConfigData.discordOptions.roleOptions;
     const roleHolder = new PoliticalRoleHolder();
     
     for (const role of filteredRoles) {
-      const politicalRole = new PoliticalRole(role.name, role.color, role.hierarchy, role.basePermissions, role.id);
+      const politicalRole = new PoliticalRole(
+        role.name,
+        role.color,
+        role.hierarchy,
+        role.basePermissions,
+        role.id
+      );
       await politicalRole.linkDiscordRole(guild, reason);
       const politicalRoleRef = await PoliticalRoleModel.create(politicalRole);
-      roleHolder[PoliticalRoleHierarchy[role.hierarchy] as keyof typeof PoliticalRoleHierarchy] = politicalRoleRef;
+      roleHolder[PoliticalRoleHierarchy[role.hierarchy] as keyof typeof PoliticalRoleHierarchy]
+        = politicalRoleRef;
     }
     
     return roleHolder;
   }
 
-  static async deletePoliticalRoleDocument(guild: Guild, politicalRoleDocument: Ref<PoliticalRole>, deleteObjects: boolean, reason?: string) {
+  static async deletePoliticalRoleDocument(
+    guild: Guild,
+    politicalRoleDocument: Ref<PoliticalRole>,
+    deleteObjects: boolean,
+    reason?: string
+  ) {
     // Find role document
     const roleDocument = await PoliticalRoleModel.findOneAndDelete({ _id: politicalRoleDocument });
     if (!roleDocument) {
@@ -69,7 +99,9 @@ class PoliticalRole {
      * Function that links a Discord Role to a PoliticalRole Object.
      * 
      * Scenarios:
-     * - Given a PoliticalRole Object with a roleID, if the role with that ID doesn't exist, it will search for a role with the same name in the server.
+     * - Given a PoliticalRole Object with a roleID,
+     *   if the role with that ID doesn't exist,
+     *   it will search for a role with the same name in the server.
      * - If the role with the same name also doesn't exist, it will then create a new role.
      * - Otherwise, it will update the role's permissions and position.
      */

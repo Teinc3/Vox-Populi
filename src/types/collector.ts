@@ -1,4 +1,6 @@
-import type { APIEmbed, ActionRowData, ButtonStyle, Colors, MessageActionRowComponentData, MessageCreateOptions } from "discord.js";
+import type {
+  APIEmbed, ActionRowData, ButtonStyle, Colors, MessageActionRowComponentData, MessageCreateOptions
+} from "discord.js";
 import type { TicketType } from "./events.js";
 
 

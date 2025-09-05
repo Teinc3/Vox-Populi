@@ -1,10 +1,14 @@
-import { APIEmbed, ActionRowData, ButtonStyle, Colors, ComponentType, MessageActionRowComponentData } from "discord.js";
+import {
+  APIEmbed, ActionRowData, ButtonStyle, Colors, ComponentType, MessageActionRowComponentData
+} from "discord.js";
 import { getModelForClass, modelOptions, prop, type Ref } from "@typegoose/typegoose";
 
 import { TicketType } from "../../types/events.js";
 
 import type AbstractChannel from "../channels/AbstractChannel.js";
-import type { CollectorType, DefaultInteractionData, PayloadCreationFunction, PayloadInterface } from "../../types/collector.js";
+import type {
+  CollectorType, DefaultInteractionData, PayloadCreationFunction, PayloadInterface
+} from "../../types/collector.js";
 
 
 /**

@@ -1,4 +1,4 @@
-import {  
+import {
   ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, Colors,
   type Guild, type ChatInputCommandInteraction, type MessageComponentInteraction,
 } from "discord.js";
@@ -7,12 +7,19 @@ import PoliticalGuild from "../../../schema/main/PoliticalGuild.js";
 import settings from "../../../data/settings.json" assert { type: "json" };
 
 
-export default async function executeDelete(interaction: ChatInputCommandInteraction, guild: Guild): Promise<boolean> {
+export default async function executeDelete(
+  interaction: ChatInputCommandInteraction,
+  guild: Guild
+): Promise<boolean> {
   const deleteObjects = interaction.options.getBoolean('removeobjects', true);
 
   const embed = new EmbedBuilder()
     .setTitle('Server Configuration Deletion')
-    .setDescription(`Are you sure you want to delete the current server configuration? This will delete all data associated with this server from the database.\n\nExisting roles and channels **will ${deleteObjects ? "" : "not "}**be deleted.`)
+    .setDescription(
+      "Are you sure you want to delete the current server configuration? "
+      + "This will delete all data associated with this server from the database.\n\n"
+      + `Existing roles and channels **will ${deleteObjects ? "" : "not "}**be deleted.`
+    )
     .setColor(Colors.Yellow)
     .setFooter({ text: 'This action is irreversible!' });
 
@@ -28,12 +35,20 @@ export default async function executeDelete(interaction: ChatInputCommandInterac
 
   const row = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(confirm, cancel);
-  const response = await interaction.reply({ embeds: [embed], components: [row], ephemeral: false });
+  const response = await interaction.reply({
+    embeds: [embed],
+    components: [row],
+    ephemeral: false
+  });
 
-  const filter = (i: MessageComponentInteraction) => i.isButton() && i.customId === 'delete_confirm' || i.customId === 'delete_cancel';
+  const filter = (i: MessageComponentInteraction) =>
+    i.isButton() && (i.customId === 'delete_confirm' || i.customId === 'delete_cancel');
 
   try {
-    const collected = await response.awaitMessageComponent({ filter, time: settings.discord.interactionTimeout });
+    const collected = await response.awaitMessageComponent({
+      filter,
+      time: settings.discord.interactionTimeout
+    });
 
     // Deferring the follow-up to prevent the interaction from timing out
     await collected.deferUpdate();
@@ -46,7 +61,12 @@ export default async function executeDelete(interaction: ChatInputCommandInterac
 
     if (collected.customId === 'delete_confirm') {
       // Proceed with deletion
-      const result = await PoliticalGuild.deleteGuildDocument(guild, deleteObjects, `Server configuration deletion requested by ${interaction.user.tag} (${interaction.user.id})`);
+      const result = await PoliticalGuild.deleteGuildDocument(
+        guild,
+        deleteObjects,
+        "Server configuration deletion requested by "
+        + `${interaction.user.tag} (${interaction.user.id})`
+      );
       const channelStillExists = interaction.channel?.fetch();
       if (result && channelStillExists) {
         const embed = new EmbedBuilder()

@@ -8,12 +8,25 @@ import {
 
 
 const { 
+  // Emergency
   Administrator,
-  ManageGuild, ManageGuildExpressions, ManageEvents, ViewCreatorMonetizationAnalytics, CreateGuildExpressions, CreateEvents, ManageChannels, SendTTSMessages, MentionEveryone, ManageRoles, ManageWebhooks,
-  KickMembers, BanMembers, PrioritySpeaker, ManageMessages, MuteMembers, DeafenMembers, MoveMembers, ManageNicknames, ManageThreads, ModerateMembers,
-  AddReactions, Stream, EmbedLinks, AttachFiles, UseExternalEmojis, UseVAD, UseApplicationCommands, RequestToSpeak, CreatePublicThreads, CreatePrivateThreads, UseExternalStickers, SendMessagesInThreads, UseEmbeddedActivities, UseSoundboard, UseExternalSounds, SendVoiceMessages, SendPolls, // Set Voice Channel Status, UseExternalApps
+  // Manage
+  ManageGuild, ManageGuildExpressions, ManageEvents,
+  ViewCreatorMonetizationAnalytics, CreateGuildExpressions, CreateEvents,
+  ManageChannels, SendTTSMessages, MentionEveryone, ManageRoles, ManageWebhooks,
+  // Moderate
+  KickMembers, BanMembers, PrioritySpeaker, ManageMessages, MuteMembers,
+  DeafenMembers, MoveMembers, ManageNicknames, ManageThreads, ModerateMembers,
+  // Interact
+  AddReactions, Stream, EmbedLinks, AttachFiles, UseExternalEmojis, UseVAD,
+  UseApplicationCommands, RequestToSpeak, CreatePublicThreads, CreatePrivateThreads,
+  UseExternalStickers, SendMessagesInThreads, UseEmbeddedActivities, UseSoundboard,
+  UseExternalSounds, SendVoiceMessages, SendPolls, UseExternalApps,
+  // Send
   SendMessages, Speak,
-  CreateInstantInvite, ViewAuditLog, ViewGuildInsights, ChangeNickname, ViewChannel, ReadMessageHistory, Connect 
+  // View
+  CreateInstantInvite, ViewAuditLog, ViewGuildInsights, ChangeNickname,
+  ViewChannel, ReadMessageHistory, Connect 
 } = PermissionFlagsBits;
 
 /**
@@ -28,14 +41,23 @@ export const PermissionsCategories: PermissionsHolderInterface<PermissionsCatego
   },
   manage: {
     overwrites: [ManageChannels, SendTTSMessages, MentionEveryone, ManageRoles, ManageWebhooks],
-    static: [ManageGuild, ManageGuildExpressions, ManageEvents, ViewCreatorMonetizationAnalytics, CreateGuildExpressions, CreateEvents]
+    static: [
+      ManageGuild, ManageGuildExpressions, ManageEvents,
+      ViewCreatorMonetizationAnalytics, CreateGuildExpressions, CreateEvents
+    ]
   },
   moderate: {
-    overwrites: [ManageMessages, ManageThreads, MuteMembers, DeafenMembers, MoveMembers, PrioritySpeaker],
+    overwrites: [
+      ManageMessages, ManageThreads, MuteMembers,
+      DeafenMembers, MoveMembers, PrioritySpeaker
+    ],
     static: [KickMembers, BanMembers, ManageNicknames, ModerateMembers]
   },
   interact: {
-    overwrites: [AddReactions, Stream, EmbedLinks, AttachFiles, UseExternalEmojis, UseVAD, UseApplicationCommands, RequestToSpeak, CreatePublicThreads, CreatePrivateThreads, UseExternalStickers, SendMessagesInThreads, UseEmbeddedActivities, UseSoundboard, UseExternalSounds, SendVoiceMessages, SendPolls],
+    overwrites: [AddReactions, Stream, EmbedLinks, AttachFiles, UseExternalEmojis, UseVAD,
+      UseApplicationCommands, RequestToSpeak, CreatePublicThreads, CreatePrivateThreads,
+      UseExternalStickers, SendMessagesInThreads, UseEmbeddedActivities, UseSoundboard,
+      UseExternalSounds, SendVoiceMessages, SendPolls, UseExternalApps],
     static: []
   },
   send: {
@@ -56,7 +78,9 @@ export const discordPermissionOverwritesReference: PermissionsOverwriteHolder<bi
   manage: PermissionsCategories.manage.overwrites
 };
 
-export function parsePermissionsAggregate(permissions?: BasePermissionsAggregate): PermissionsLevelAggregate {
+export function parsePermissionsAggregate(
+  permissions?: BasePermissionsAggregate
+): PermissionsLevelAggregate {
   if (!permissions) {
     return {};
   }
@@ -72,14 +96,16 @@ export function parsePermissionsAggregate(permissions?: BasePermissionsAggregate
 }
 
 /**
- * Automatically assigns all permissions from the highest permission level the role has to the lowest
+ * Automatically assigns all permissions from the highest level the role has to the lowest
  * 
  * @param permissionsLevelAggregate The range of permissions levels the role has
  * @returns An array of permissions
  * 
  * @static
  */
-export function progressivePermissionsAllocator(permissionsLevelAggregate: PermissionsLevelAggregate): bigint[] {
+export function progressivePermissionsAllocator(
+  permissionsLevelAggregate: PermissionsLevelAggregate
+): bigint[] {
   const permissions: bigint[] = [];
   const categoriesArray = Object.values(PermissionsCategories);
   const { start, end } = permissionsLevelAggregate;

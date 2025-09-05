@@ -9,7 +9,9 @@ import EventHandler from './EventHandler.js';
 class DiscordManager {
   readonly client: ExtendedClient;
   private readonly eventHandler: EventHandler;
-  private static readonly intents: GatewayIntentBits = GatewayIntentBits.MessageContent | GatewayIntentBits.GuildMembers | GatewayIntentBits.Guilds | GatewayIntentBits.GuildMessages
+  private static readonly intents: GatewayIntentBits
+    = GatewayIntentBits.MessageContent | GatewayIntentBits.GuildMembers
+      | GatewayIntentBits.Guilds | GatewayIntentBits.GuildMessages;
   private readonly token: string;
 
   constructor(token: string) {
@@ -37,8 +39,10 @@ class DiscordManager {
 
   private setupGateway() {
     this.client.on('ready', async () => {
-      if (!this.client.user) return;
-      console.log(`Logged in to Discord as ${this.client.user.tag}`);
+      if (!this.client.user) {
+        return;
+      }
+      console.log(`Logged in to ${this.client.user.tag}`);
     });
 
     this.client.on(Events.InteractionCreate, async interaction => {
@@ -46,7 +50,10 @@ class DiscordManager {
         const command = this.client.commands.get(interaction.commandName);
         if (!command) {
           console.error(`Command ${interaction.commandName} was called but cannot be loaded.`);
-          await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+          await interaction.reply({
+            content: 'There was an error while executing this command!',
+            ephemeral: true
+          });
           return;
         }
     
@@ -55,16 +62,25 @@ class DiscordManager {
         } catch (error) {
           console.error(error);
           if (interaction.replied || interaction.deferred) {
-            await interaction.followUp({ content: 'There was an error while executing this command!', ephemeral: true });
+            await interaction.followUp({
+              content: 'There was an error while executing this command!',
+              ephemeral: true
+            });
           } else {
-            await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+            await interaction.reply({
+              content: 'There was an error while executing this command!',
+              ephemeral: true
+            });
           }
         }
       } else if (interaction.isButton()) {
         try {
           // Is this from a ticketCollector?
-          const ticketCollectorDocument = await TicketCollectorModel.findOne({ messageID: interaction.message.id });
-          if (!ticketCollectorDocument) return;
+          const ticketCollectorDocument = await TicketCollectorModel
+            .findOne({ messageID: interaction.message.id });
+          if (!ticketCollectorDocument) {
+            return;
+          }
 
           // Yes! Handle the ticket
           await interaction.deferUpdate();
@@ -72,9 +88,15 @@ class DiscordManager {
         } catch (error) {
           console.error(error);
           if (interaction.replied || interaction.deferred) {
-            await interaction.followUp({ content: 'There was an error while executing this Button!', ephemeral: true });
+            await interaction.followUp({
+              content: 'An error occured when handling this interaction!',
+              ephemeral: true
+            });
           } else {
-            await interaction.reply({ content: 'There was an error while executing this Button!', ephemeral: true });
+            await interaction.reply({
+              content: 'An error occured when handling this interaction!',
+              ephemeral: true
+            });
           }
         }
       }
