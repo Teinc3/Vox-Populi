@@ -18,6 +18,7 @@ class DiscordManager {
     this.token = token;
 
     this.client = new ExtendedClient({ intents: DiscordManager.intents });
+    this.client.setToken(token);
     this.eventHandler = new EventHandler(this);
 
     this.setup().then();
