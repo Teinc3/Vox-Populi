@@ -3,6 +3,7 @@ import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, Colors, ButtonStyle } fr
 import settings from '../../../../data/settings.json' assert { type: 'json' };
 import wizardDefaults from '../../../../data/defaults/wizard.json' assert { type: 'json' };
 import BaseWizard from './BaseWizard.js';
+import { PoliticalSystemType } from '../../../../types/systems';
 
 
 class LegislatureWizard extends BaseWizard {
@@ -361,9 +362,12 @@ class LegislatureWizard extends BaseWizard {
           // Since DD does not have Senate, and only DD has the option to disable Judges,
           // we can still go to Court Options
           return await this.initWizard.setNextFunc(
-            this.initWizard.guildConfigData.ddOptions!.appointJudges
-              ? this.initWizard.fragments.judicial.setCourtGenericOptions
-              : this.initWizard.fragments.discord.linkDiscordRoles
+            this.initWizard.guildConfigData.politicalSystem === PoliticalSystemType.Parliamentary
+              ? this.initWizard.fragments.system.setParliamentaryOptions
+              : this.initWizard.guildConfigData.politicalSystem === PoliticalSystemType.DirectDemocracy
+                && this.initWizard.guildConfigData.ddOptions!.appointJudges
+                ? this.initWizard.fragments.judicial.setCourtGenericOptions
+                : this.initWizard.fragments.discord.linkDiscordRoles
           );
         default:
           return await this.initWizard.escape();

@@ -21,9 +21,9 @@ async function execute(interaction: ChatInputCommandInteraction) {
   const guild = await interaction.client.guilds.create({
     name: interaction.options.get('name')!.value as string
   });
-  if (interaction.member === null) {
+  if (interaction.guild === null) {
     return await interaction.followUp({
-      content: 'Error: Could not fetch member data.',
+      content: 'Error: Could not fetch guild.',
       ephemeral: false
     });
   }
