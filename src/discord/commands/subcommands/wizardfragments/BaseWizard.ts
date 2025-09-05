@@ -1,11 +1,12 @@
-import { InitWizard } from "../init.js";
+import type { InitWizard } from "../init.js";
+
 
 class BaseWizard {
-    initWizard: InitWizard;
+  initWizard: InitWizard;
 
-    constructor(initWizard: InitWizard) {
-        this.initWizard = initWizard;
-    }
+  constructor(initWizard: InitWizard) {
+    this.initWizard = initWizard;
+  }
 }
 
 export default BaseWizard;
