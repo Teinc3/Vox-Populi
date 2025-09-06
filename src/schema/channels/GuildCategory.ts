@@ -155,8 +155,8 @@ class GuildCategory {
                 refRoleArray.push(roleHolder.Citizen);
               }
               break;
-            case PoliticalRoleHierarchy.Undocumented:
-              refRoleArray.push(roleHolder.Undocumented);
+            case PoliticalRoleHierarchy.Resident:
+              refRoleArray.push(roleHolder.Resident);
               break;
           }
         }

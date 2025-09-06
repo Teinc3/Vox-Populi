@@ -10,7 +10,7 @@ export enum PoliticalRoleHierarchy {
   Senator,
   Judge,
   Citizen,
-  Undocumented
+  Resident
 }
 
 type HierarchyKeysMap = KeysMap<typeof PoliticalRoleHierarchy>;
@@ -26,7 +26,7 @@ type HierarchyKeysMap = KeysMap<typeof PoliticalRoleHierarchy>;
 type BaseRoles = {
   required: HierarchyKeysMap["VoxPopuli"]
     | HierarchyKeysMap["Citizen"]
-    | HierarchyKeysMap["Undocumented"];
+    | HierarchyKeysMap["Resident"];
   optional: HierarchyKeysMap["President"]
     | HierarchyKeysMap["PrimeMinister"]
     | HierarchyKeysMap["HeadModerator"]

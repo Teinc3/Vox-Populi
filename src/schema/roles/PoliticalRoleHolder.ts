@@ -38,7 +38,7 @@ class PoliticalRoleHolder implements PoliticalRoleHolderInterface<Ref<PoliticalR
   Citizen!: Ref<PoliticalRole>;
 
   @prop({ required: true, ref: () => 'PoliticalRole' })
-  Undocumented!: Ref<PoliticalRole>;
+  Resident!: Ref<PoliticalRole>;
 
   async createPoliticalRoleHolderDocument(): Promise<Ref<PoliticalRoleHolder>> {
     return await PoliticalRoleHolderModel.create(this);
