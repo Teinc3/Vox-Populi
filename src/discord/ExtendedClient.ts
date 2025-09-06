@@ -18,15 +18,10 @@ interface CustomCommand extends ClientOptions {
 
 class ExtendedClient extends Client {
   commands: Collection<string, CustomCommand>;
-  private botToken?: string;
 
   constructor(options: ClientOptions) {
     super(options);
     this.commands = new Collection();
-  }
-
-  public setToken(token: string) {
-    this.botToken = token;
   }
 
   public async setupCommands() {
@@ -50,10 +45,10 @@ class ExtendedClient extends Client {
       }
     }
 
-    console.log(`Loaded ${this.commands.size} commands.`);
+    console.log(`Loaded ${this.commands.size} commands on the bot.`);
 
     // Deploy commands to Discord
-    if (this.botToken) {
+    if (this.token) {
       await this.deployCommands(commandsArray);
     } else {
       console.warn('[WARNING] No token provided, skipping command deployment to Discord.');
@@ -61,25 +56,23 @@ class ExtendedClient extends Client {
   }
 
   private async deployCommands(commands: string[]) {
-    if (!this.botToken) {
+    if (!this.token) {
       console.error('[ERROR] Cannot deploy commands: no token provided');
       return;
     }
 
     const clientID: string = settings.discord.clientID;
-    const rest = new REST().setToken(this.botToken);
+    const rest = new REST().setToken(this.token);
 
     try {
-      console.log(`Started refreshing ${commands.length} application (/) commands.`);
-
       await rest.put(
         Routes.applicationCommands(clientID),
         { body: commands }
       );
 
-      console.log(`Successfully reloaded ${commands.length} application (/) commands.`);
+      console.log(`Successfully pushed ${commands.length} application (/) commands to discord.`);
     } catch (error) {
-      console.error('[ERROR] Failed to reload application (/) commands:', error);
+      console.error('[ERROR] Failed to push application (/) commands to discord:', error);
     }
   }
 }

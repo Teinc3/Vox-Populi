@@ -12,13 +12,10 @@ class DiscordManager {
   private static readonly intents: GatewayIntentBits
     = GatewayIntentBits.MessageContent | GatewayIntentBits.GuildMembers
       | GatewayIntentBits.Guilds | GatewayIntentBits.GuildMessages;
-  private readonly token: string;
 
   constructor(token: string) {
-    this.token = token;
-
     this.client = new ExtendedClient({ intents: DiscordManager.intents });
-    this.client.setToken(token);
+    this.client.token = token; // Set directly
     this.eventHandler = new EventHandler(this);
 
     this.setup().then();
@@ -28,7 +25,7 @@ class DiscordManager {
     try {
       middlewareManager.setClient(this.client);
             
-      await this.client.setupCommands();
+      this.client.setupCommands().then(); // We don't wait for commands to be registered by discord
       this.setupGateway();
       this.eventHandler.init();
 
@@ -39,8 +36,9 @@ class DiscordManager {
   }
 
   private setupGateway() {
-    this.client.on('clientReady', async () => {
+    this.client.once(Events.ClientReady, async () => {
       if (!this.client.user) {
+        console.warn('[WARN] Client user is not defined after clientReady event.');
         return;
       }
       console.log(`Logged in to ${this.client.user.tag}`);
@@ -106,7 +104,7 @@ class DiscordManager {
   }
 
   public async login() {
-    await this.client.login(this.token);
+    await this.client.login();
   }
 }
 
