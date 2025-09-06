@@ -1,6 +1,6 @@
 import { GatewayIntentBits, Events } from 'discord.js';
 
-import MiddlewareManager from '../utils/MiddlewareManager.js';
+import middlewareManager from '../utils/MiddlewareManager.js';
 import TicketCollectorModel from '../schema/collectors/TicketCollector.js';
 import ExtendedClient from "./ExtendedClient.js";
 import EventHandler from './EventHandler.js';
@@ -25,7 +25,7 @@ class DiscordManager {
 
   private async setup() {
     try {
-      (new MiddlewareManager).setClient(this.client);
+      middlewareManager.setClient(this.client);
             
       await this.client.setupCommands();
       this.setupGateway();
@@ -38,7 +38,7 @@ class DiscordManager {
   }
 
   private setupGateway() {
-    this.client.on('ready', async () => {
+    this.client.on('clientReady', async () => {
       if (!this.client.user) {
         return;
       }

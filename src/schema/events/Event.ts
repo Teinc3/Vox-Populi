@@ -5,7 +5,7 @@ import {
 
 import AppointmentOptions from '../options/EventOptions.js';
 import GuildModel from '../main/PoliticalGuild.js';
-import MiddlewareManager from '../../utils/MiddlewareManager.js';
+import middlewareManager from '../../utils/MiddlewareManager.js';
 import { PoliticalEventType } from '../../types/events.js';
 
 
@@ -14,7 +14,7 @@ import { PoliticalEventType } from '../../types/events.js';
  * 
  * @class
  */
-@post<EventSchema>('save', (new MiddlewareManager).createEventMiddleware())
+@post<EventSchema>('save', EventSchema.obtainEventMiddleware())
 class EventSchema {
   @prop({ required: true })
   public name!: string;
@@ -70,7 +70,7 @@ class EventSchema {
   // Statics
   public static obtainEventMiddleware() {
     return async (doc: DocumentType<EventSchema>) => {
-      const client = (new MiddlewareManager).getClient();
+      const client = middlewareManager.getClient();
 
       // Find the Server Log channel from the LogChannelHolder
       const guild = await GuildModel.findOne({ guildID: doc.guildID });
