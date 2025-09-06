@@ -94,7 +94,7 @@ export enum AppointmentDetails {
     * Promoted: When a user is promoted to a role by a higher role.
     * 
     * Examples:
-    * - *Moderator*: **Undocumented -> Citizen**
+    * - *Moderator*: **Resident -> Citizen**
     * - *President*: **Citizen -> Judge**
     */
   Promoted,
@@ -111,7 +111,7 @@ export enum AppointmentDetails {
     * 
     * Examples:
     * - *President*: **HeadModerator -> Moderator**
-    * - *Moderator*: **Citizen -> Undocumented**
+    * - *Moderator*: **Citizen -> Resident**
     */
   Demoted,
   /**

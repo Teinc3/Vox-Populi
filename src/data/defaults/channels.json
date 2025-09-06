@@ -189,7 +189,7 @@
         "name": "registration",
         "description": "Channel to apply for citizenship and voting rights.",
         "permissionOverwrites": {
-          "view": ["President", "PrimeMinister", "HeadModerator", "Moderator", "Undocumented", "Citizen"],
+          "view": ["President", "PrimeMinister", "HeadModerator", "Moderator", "Resident", "Citizen"],
           "send": ["VoxPopuli"],
           "interact": [], 
           "moderate": [],
