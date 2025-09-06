@@ -16,6 +16,6 @@ if (!token) {
 mongoose.connect(settings.mongo.uri)
   .then(() => console.log('Connected to MongoDB!'))
   .catch(console.error);
-const discordManager = new DiscordManager(process.env.TOKEN!);
+const discordManager = new DiscordManager(token);
 
 discordManager.login().then();
