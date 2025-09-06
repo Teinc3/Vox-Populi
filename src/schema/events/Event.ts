@@ -1,21 +1,22 @@
 import { ChannelType, EmbedBuilder } from "discord.js";
 import {
-  prop, getModelForClass, Severity, isDocument, post, type DocumentType,
+  prop, getModelForClass, isDocument, post, modelOptions, type DocumentType,
 } from '@typegoose/typegoose';
 
-import AppointmentOptions from '../options/EventOptions.ts';
+import BaseEventOptions from '../options/EventOptions.ts';
 import GuildModel from '../main/PoliticalGuild.ts';
 import middlewareManager from '../../utils/MiddlewareManager.ts';
 import { PoliticalEventType } from '../../types/events.ts';
 
 
 /**
- * Event schema for storing events
+ * Base Event schema for storing events
  * 
  * @class
  */
+@modelOptions({ schemaOptions: { discriminatorKey: 'type' } })
 @post<EventSchema>('save', EventSchema.obtainEventMiddleware())
-class EventSchema {
+class EventSchema<GenericEventOptions extends BaseEventOptions = BaseEventOptions> {
   @prop({ required: true })
   public name!: string;
     
@@ -34,42 +35,31 @@ class EventSchema {
   @prop({ required: true })
   public guildID!: string;
 
-  @prop({ _id: false, allowMixed: Severity.ALLOW })
-  public options?: AppointmentOptions; // Union type w/ other options
+  @prop({ _id: false })
+  public options!: GenericEventOptions;
 
   constructor(
     name: string,
     type: PoliticalEventType,
     guildID: string,
+    options: GenericEventOptions,
     eventOptions: { dueDate?: Date, completed?: boolean }
   ) {
     this.name = name;
     this.date = new Date();
     this.type = type;
     this.guildID = guildID;
+    this.options = options;
 
     this.completed = eventOptions.completed ?? false;
     if (eventOptions.dueDate) {
       this.dueDate = eventOptions.dueDate;
     }
-
-    switch (type) {
-      case PoliticalEventType.Appointment:
-        this.options = new AppointmentOptions();
-        break;
-      default:
-        break;
-    }
-  }
-
-  // Type guards
-  public isAppointment(): this is { options: AppointmentOptions } {
-    return this.type === PoliticalEventType.Appointment;
   }
 
   // Statics
   public static obtainEventMiddleware() {
-    return async (doc: DocumentType<EventSchema>) => {
+    return async (doc: DocumentType<EventSchema<BaseEventOptions>>) => {
       const client = middlewareManager.getClient();
 
       // Find the Server Log channel from the LogChannelHolder

@@ -1,5 +1,6 @@
 import { prop } from '@typegoose/typegoose';
 
+
 export default class EmergencyOptions {
   /**
      * Number of hours a temporary admin will have admin permissions for.
