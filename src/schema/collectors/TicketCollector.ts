@@ -4,16 +4,16 @@ import {
 } from 'discord.js';
 import { type Ref, isDocument, getDiscriminatorModelForClass } from '@typegoose/typegoose';
 
-import GuildModel from '../main/PoliticalGuild.js';
-import EventModel, { EventSchema } from '../events/Event.js';
-import { PoliticalChannelModel } from '../channels/PoliticalChannel.js';
-import { TicketType, PoliticalEventType, AppointmentDetails } from '../../types/events.js';
-import { CollectorType } from '../../types/collector.js';
-import ExtendedClient from '../../discord/ExtendedClient.js';
-import BaseCollector, { BaseCollectorModel } from './BaseCollector.js';
+import GuildModel from '../main/PoliticalGuild.ts';
+import EventModel, { EventSchema } from '../events/Event.ts';
+import { PoliticalChannelModel } from '../channels/PoliticalChannel.ts';
+import { TicketType, PoliticalEventType, AppointmentDetails } from '../../types/events.ts';
+import { CollectorType } from '../../types/collector.ts';
+import ExtendedClient from '../../discord/ExtendedClient.ts';
+import BaseCollector, { BaseCollectorModel } from './BaseCollector.ts';
 
 import type { TextChannel } from 'discord.js';
-import type { DefaultInteractionData } from '../../types/collector.js';
+import type { DefaultInteractionData } from '../../types/collector.ts';
 
 
 /**

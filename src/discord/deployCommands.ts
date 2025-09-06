@@ -4,7 +4,7 @@ import fs from "fs";
 import { config } from "dotenv";
 import { REST, Routes } from "discord.js";
 
-import settings from "../data/settings.json" assert { type: 'json' };
+import settings from "../data/settings.json" with { type: 'json' };
 
 
 // eslint-disable-next-line @typescript-eslint/naming-convention

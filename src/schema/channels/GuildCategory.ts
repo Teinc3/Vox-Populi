@@ -4,22 +4,22 @@ import { prop, getModelForClass, type Ref } from '@typegoose/typegoose';
 import ChannelPermissions, {
   ChannelPermissionsInterface,
   type UnfilteredRefRoleArray
-} from '../permissions/ChannelPermissions.js';
-import Chamber from '../main/Chamber.js';
-import createChannel from '../../utils/channelCreationHelper.js';
-import { PoliticalSystemType, PoliticalBranchType } from '../../types/systems.js';
+} from '../permissions/ChannelPermissions.ts';
+import Chamber from '../main/Chamber.ts';
+import createChannel from '../../utils/channelCreationHelper.ts';
+import { PoliticalSystemType, PoliticalBranchType } from '../../types/systems.ts';
 import {
   PoliticalRoleHierarchy,
   type PermissionsOverwriteEnumKeyHolder
-} from '../../types/permissions.js';
+} from '../../types/permissions.ts';
 import {
   AbstractChannelType, ChannelInterface, LogChannelType
-} from '../../types/channels.js';
-import AbstractChannel from './AbstractChannel.js';
+} from '../../types/channels.ts';
+import AbstractChannel from './AbstractChannel.ts';
 
-import type PoliticalRoleHolder from '../roles/PoliticalRoleHolder.js';
-import type { DefaultCategoryData, GuildConfigData } from '../../types/wizard.js';
-import type PoliticalChannel from './PoliticalChannel.js';
+import type PoliticalRoleHolder from '../roles/PoliticalRoleHolder.ts';
+import type { DefaultCategoryData, GuildConfigData } from '../../types/wizard.ts';
+import type PoliticalChannel from './PoliticalChannel.ts';
 
 
 /**

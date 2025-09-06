@@ -1,7 +1,7 @@
 import util from "util";
 import { SlashCommandBuilder, type ChatInputCommandInteraction } from "discord.js";
 
-import settings from "../../data/settings.json" assert { type: "json" };
+import settings from "../../data/settings.json" with { type: "json" };
 
 
 const data = new SlashCommandBuilder()

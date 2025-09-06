@@ -1,9 +1,9 @@
 import { ButtonBuilder, EmbedBuilder, ActionRowBuilder, Colors, ButtonStyle } from 'discord.js';
 
 
-import settings from '../../../../data/settings.json' assert { type: 'json' };
-import wizardDefaults from '../../../../data/defaults/wizard.json' assert { type: 'json' };
-import BaseWizard from './BaseWizard.js';
+import settings from '../../../../data/settings.json' with { type: 'json' };
+import wizardDefaults from '../../../../data/defaults/wizard.json' with { type: 'json' };
+import BaseWizard from './BaseWizard.ts';
 
 
 class JudicialWizard extends BaseWizard {

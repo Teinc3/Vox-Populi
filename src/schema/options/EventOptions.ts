@@ -1,7 +1,7 @@
 import { prop, type Ref } from '@typegoose/typegoose';
 
-import PoliticalRole from '../roles/PoliticalRole.js';
-import { AppointmentDetails } from '../../types/events.js';
+import PoliticalRole from '../roles/PoliticalRole.ts';
+import { AppointmentDetails } from '../../types/events.ts';
 
 class AppointmentOptions {
   /**
