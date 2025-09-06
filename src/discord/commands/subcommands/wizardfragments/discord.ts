@@ -6,9 +6,9 @@ import {
 
 import { PoliticalSystemType } from '../../../../types/systems.js';
 import { PoliticalRoleHierarchy } from '../../../../types/permissions.js';
-import settings from '../../../../data/settings.json' assert { type: 'json' };
-import roleDefaults from '../../../../data/defaults/roles.json' assert { type: 'json' };
-import categoryDefaults from '../../../../data/defaults/channels.json' assert { type: "json" };
+import settings from '../../../../data/settings.json' with { type: 'json' };
+import roleDefaults from '../../../../data/defaults/roles.json' with { type: 'json' };
+import categoryDefaults from '../../../../data/defaults/channels.json' with { type: "json" };
 import BaseWizard from './BaseWizard.js';
 
 import type {

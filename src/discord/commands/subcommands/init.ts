@@ -7,8 +7,8 @@ import { isDocument } from '@typegoose/typegoose';
 
 import { PoliticalRoleModel } from '../../../schema/roles/PoliticalRole.js';
 import PoliticalGuild from '../../../schema/main/PoliticalGuild.js';
-import settings from '../../../data/settings.json' assert { type: 'json' };
-import wizardDefaults from '../../../data/defaults/wizard.json' assert { type: 'json' };
+import settings from '../../../data/settings.json' with { type: 'json' };
+import wizardDefaults from '../../../data/defaults/wizard.json' with { type: 'json' };
 import SystemWizard from './wizardfragments/system.js';
 import LegislatureWizard from './wizardfragments/legislature.js';
 import JudicialWizard from './wizardfragments/judicial.js';

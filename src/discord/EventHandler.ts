@@ -1,6 +1,6 @@
 import EventModel from '../schema/events/Event.js';
 import TicketCollectorModel from '../schema/collectors/TicketCollector.js';
-import settings from '../data/settings.json' assert { type: "json" };
+import settings from '../data/settings.json' with { type: "json" };
 
 import type DiscordManager from './DiscordManager.js';
 
