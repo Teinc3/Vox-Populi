@@ -4,7 +4,7 @@ import {
 } from "discord.js";
 
 import GuildModel from "../../schema/main/PoliticalGuild.js";
-import settings from "../../data/settings.json" assert { type: 'json' };
+import settings from "../../data/settings.json" with { type: 'json' };
 import init from "./subcommands/init.js";
 import executeDelete from "./subcommands/delete.js";
 

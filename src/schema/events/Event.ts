@@ -3,10 +3,10 @@ import {
   prop, getModelForClass, Severity, isDocument, post, type DocumentType,
 } from '@typegoose/typegoose';
 
-import AppointmentOptions from '../options/EventOptions.js';
-import GuildModel from '../main/PoliticalGuild.js';
-import MiddlewareManager from '../../utils/MiddlewareManager.js';
-import { PoliticalEventType } from '../../types/events.js';
+import AppointmentOptions from '../options/EventOptions.ts';
+import GuildModel from '../main/PoliticalGuild.ts';
+import middlewareManager from '../../utils/MiddlewareManager.ts';
+import { PoliticalEventType } from '../../types/events.ts';
 
 
 /**
@@ -14,7 +14,7 @@ import { PoliticalEventType } from '../../types/events.js';
  * 
  * @class
  */
-@post<EventSchema>('save', (new MiddlewareManager).createEventMiddleware())
+@post<EventSchema>('save', EventSchema.obtainEventMiddleware())
 class EventSchema {
   @prop({ required: true })
   public name!: string;
@@ -70,7 +70,7 @@ class EventSchema {
   // Statics
   public static obtainEventMiddleware() {
     return async (doc: DocumentType<EventSchema>) => {
-      const client = (new MiddlewareManager).getClient();
+      const client = middlewareManager.getClient();
 
       // Find the Server Log channel from the LogChannelHolder
       const guild = await GuildModel.findOne({ guildID: doc.guildID });

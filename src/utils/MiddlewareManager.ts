@@ -1,5 +1,3 @@
-import { EventSchema } from "../schema/events/Event.js";
-
 import type ExtendedClient from "../discord/ExtendedClient.js";
 
 
@@ -9,17 +7,7 @@ import type ExtendedClient from "../discord/ExtendedClient.js";
  * This can be put in globals if there are more middleware to manage (For now in utils).
  */
 class MiddlewareManager {
-  private static instance: MiddlewareManager;
   private client!: ExtendedClient;
-
-  constructor() {
-    // Make sure singleton
-    if (MiddlewareManager.instance) {
-      return MiddlewareManager.instance;
-    } else {
-      MiddlewareManager.instance = this;
-    }
-  }
 
   public setClient(client: ExtendedClient) {
     this.client = client;
@@ -28,10 +16,8 @@ class MiddlewareManager {
   public getClient() {
     return this.client;
   }
-
-  public createEventMiddleware() {
-    return EventSchema.obtainEventMiddleware();
-  }
 }
 
-export default MiddlewareManager;
+const middlewareManager = new MiddlewareManager();
+
+export { MiddlewareManager, middlewareManager as default };

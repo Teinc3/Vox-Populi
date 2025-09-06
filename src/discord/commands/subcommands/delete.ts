@@ -4,7 +4,7 @@ import {
 } from "discord.js";
 
 import PoliticalGuild from "../../../schema/main/PoliticalGuild.js";
-import settings from "../../../data/settings.json" assert { type: "json" };
+import settings from "../../../data/settings.json" with { type: "json" };
 
 
 export default async function executeDelete(
