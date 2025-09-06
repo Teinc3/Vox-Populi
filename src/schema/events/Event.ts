@@ -3,10 +3,10 @@ import {
   prop, getModelForClass, Severity, isDocument, post, type DocumentType,
 } from '@typegoose/typegoose';
 
-import AppointmentOptions from '../options/EventOptions.js';
-import GuildModel from '../main/PoliticalGuild.js';
-import middlewareManager from '../../utils/MiddlewareManager.js';
-import { PoliticalEventType } from '../../types/events.js';
+import AppointmentOptions from '../options/EventOptions.ts';
+import GuildModel from '../main/PoliticalGuild.ts';
+import middlewareManager from '../../utils/MiddlewareManager.ts';
+import { PoliticalEventType } from '../../types/events.ts';
 
 
 /**

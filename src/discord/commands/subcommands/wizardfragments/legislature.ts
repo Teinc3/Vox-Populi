@@ -1,9 +1,9 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, Colors, ButtonStyle } from 'discord.js';
 
-import { PoliticalSystemType } from '../../../../types/systems';
+import { PoliticalSystemType } from '../../../../types/systems.ts';
 import settings from '../../../../data/settings.json' with { type: 'json' };
 import wizardDefaults from '../../../../data/defaults/wizard.json' with { type: 'json' };
-import BaseWizard from './BaseWizard.js';
+import BaseWizard from './BaseWizard.ts';
 
 import type { InitWizardFunction } from '../init';
 

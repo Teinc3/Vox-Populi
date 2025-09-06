@@ -14,11 +14,6 @@ interface CustomCommand extends ClientOptions {
   execute: <T>(interaction: ChatInputCommandInteraction) => Promise<T>;
 }
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const __filename = fileURLToPath(import.meta.url);
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const __dirname = dirname(__filename);
-
 class ExtendedClient extends Client {
   commands: Collection<string, CustomCommand>;
 
@@ -28,8 +23,8 @@ class ExtendedClient extends Client {
   }
 
   public async setupCommands() {
-    const commandDir = path.join(__dirname, 'commands');
-    const commandFiles = fs.readdirSync(commandDir).filter(file => file.endsWith('.js'));
+    const commandDir = path.join(dirname(fileURLToPath(import.meta.url)), 'commands');
+    const commandFiles = fs.readdirSync(commandDir).filter(file => file.endsWith('.ts'));
 
     for (const commandFile of commandFiles) {
       const commandPath = path.join(commandDir, commandFile);

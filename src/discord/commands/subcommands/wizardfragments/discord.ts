@@ -4,17 +4,17 @@ import {
   type MessageComponentInteraction, type APIEmbedField
 } from 'discord.js';
 
-import { PoliticalSystemType } from '../../../../types/systems.js';
-import { PoliticalRoleHierarchy } from '../../../../types/permissions.js';
+import { PoliticalSystemType } from '../../../../types/systems.ts';
+import { PoliticalRoleHierarchy } from '../../../../types/permissions.ts';
 import settings from '../../../../data/settings.json' with { type: 'json' };
 import roleDefaults from '../../../../data/defaults/roles.json' with { type: 'json' };
 import categoryDefaults from '../../../../data/defaults/channels.json' with { type: "json" };
-import BaseWizard from './BaseWizard.js';
+import BaseWizard from './BaseWizard.ts';
 
 import type {
   DefaultRoleData, DiscordRoleHolderData,
   ExtendedDefaultDiscordData, NewCategoryChannelData
-} from '../../../../types/wizard.js';
+} from '../../../../types/wizard.ts';
 
 
 class DiscordWizard extends BaseWizard {

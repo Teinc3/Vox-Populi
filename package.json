@@ -3,10 +3,7 @@
   "module": "src/index.ts",
   "type": "module",
   "scripts": {
-    "dev": "node --loader ts-node/esm src/index.ts",
-    "start": "node ./build/index.js",
-    "build": "tsc --build --verbose",
-    "deployCommands": "node ./build/discord/deployCommands.js",
+    "start": "node --loader ts-node/esm src/index.ts",
     "prepare": "husky",
     "lint": "eslint ."
   },

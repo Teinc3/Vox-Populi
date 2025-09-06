@@ -5,17 +5,17 @@ import {
 } from 'discord.js';
 import { isDocument } from '@typegoose/typegoose';
 
-import { PoliticalRoleModel } from '../../../schema/roles/PoliticalRole.js';
-import PoliticalGuild from '../../../schema/main/PoliticalGuild.js';
+import { PoliticalRoleModel } from '../../../schema/roles/PoliticalRole.ts';
+import PoliticalGuild from '../../../schema/main/PoliticalGuild.ts';
 import settings from '../../../data/settings.json' with { type: 'json' };
 import wizardDefaults from '../../../data/defaults/wizard.json' with { type: 'json' };
-import SystemWizard from './wizardfragments/system.js';
-import LegislatureWizard from './wizardfragments/legislature.js';
-import JudicialWizard from './wizardfragments/judicial.js';
-import DiscordWizard from './wizardfragments/discord.js';
+import SystemWizard from './wizardfragments/system.ts';
+import LegislatureWizard from './wizardfragments/legislature.ts';
+import JudicialWizard from './wizardfragments/judicial.ts';
+import DiscordWizard from './wizardfragments/discord.ts';
 
 
-import type { GuildConfigData } from '../../../types/wizard.js';
+import type { GuildConfigData } from '../../../types/wizard.ts';
 
 
 export default async function init(interaction: ChatInputCommandInteraction): Promise<boolean> {

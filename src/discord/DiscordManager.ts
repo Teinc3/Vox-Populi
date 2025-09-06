@@ -1,9 +1,9 @@
 import { GatewayIntentBits, Events } from 'discord.js';
 
-import middlewareManager from '../utils/MiddlewareManager.js';
-import TicketCollectorModel from '../schema/collectors/TicketCollector.js';
+import middlewareManager from '../utils/MiddlewareManager.ts';
+import TicketCollectorModel from '../schema/collectors/TicketCollector.ts';
 import ExtendedClient from "./ExtendedClient.js";
-import EventHandler from './EventHandler.js';
+import EventHandler from './EventHandler.ts';
 
 
 class DiscordManager {

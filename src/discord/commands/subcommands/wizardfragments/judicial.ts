@@ -3,7 +3,7 @@ import { ButtonBuilder, EmbedBuilder, ActionRowBuilder, Colors, ButtonStyle } fr
 
 import settings from '../../../../data/settings.json' with { type: 'json' };
 import wizardDefaults from '../../../../data/defaults/wizard.json' with { type: 'json' };
-import BaseWizard from './BaseWizard.js';
+import BaseWizard from './BaseWizard.ts';
 
 
 class JudicialWizard extends BaseWizard {

@@ -3,14 +3,14 @@ import {
   type Ref,
 } from '@typegoose/typegoose';
 
-import { ThresholdOptions, TermOptions, SeatOptions } from '../options/RoleOptions.js';
+import { ThresholdOptions, TermOptions, SeatOptions } from '../options/RoleOptions.ts';
 import {
   PoliticalBranchType, LegislativeChamberType, PoliticalSystemType
-} from '../../types/systems.js';
-import GuildModel from './PoliticalGuild.js';
+} from '../../types/systems.ts';
+import GuildModel from './PoliticalGuild.ts';
 
-import type PoliticalChannel from '../channels/PoliticalChannel.js';
-import type { GuildConfigData } from '../../types/wizard.js';
+import type PoliticalChannel from '../channels/PoliticalChannel.ts';
+import type { GuildConfigData } from '../../types/wizard.ts';
 
 
 /**

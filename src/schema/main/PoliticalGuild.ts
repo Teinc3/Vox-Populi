@@ -1,16 +1,16 @@
 import { getModelForClass, prop, type Ref } from '@typegoose/typegoose';
 
 
-import PoliticalRoleHolder from '../roles/PoliticalRoleHolder.js';
-import PoliticalRole from '../roles/PoliticalRole.js';
-import LogChannelHolder from '../channels/LogChannelHolder.js';
-import GuildCategory from '../channels/GuildCategory.js';
-import PoliticalSystem from './PoliticalSystem.js';
+import PoliticalRoleHolder from '../roles/PoliticalRoleHolder.ts';
+import PoliticalRole from '../roles/PoliticalRole.ts';
+import LogChannelHolder from '../channels/LogChannelHolder.ts';
+import GuildCategory from '../channels/GuildCategory.ts';
+import PoliticalSystem from './PoliticalSystem.ts';
 
 import type { ChatInputCommandInteraction, Guild } from 'discord.js';
-import type EmergencyOptions from '../options/MiscOptions.js';
-import type { EventSchema } from '../events/Event.js';
-import type { GuildConfigData } from '../../types/wizard.js';
+import type EmergencyOptions from '../options/MiscOptions.ts';
+import type { EventSchema } from '../events/Event.ts';
+import type { GuildConfigData } from '../../types/wizard.ts';
 
 
 class PoliticalGuild {

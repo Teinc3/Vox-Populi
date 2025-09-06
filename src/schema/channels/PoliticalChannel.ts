@@ -1,11 +1,11 @@
 import { TextChannel } from 'discord.js';
 import { prop, type Ref, getDiscriminatorModelForClass } from '@typegoose/typegoose';
 
-import { TicketCollector } from '../collectors/TicketCollector.js';
-import { AbstractChannelType, ChannelInterface } from '../../types/channels.js';
-import AbstractChannel, { AbstractChannelModel } from './AbstractChannel.js';
+import { TicketCollector } from '../collectors/TicketCollector.ts';
+import { AbstractChannelType, ChannelInterface } from '../../types/channels.ts';
+import AbstractChannel, { AbstractChannelModel } from './AbstractChannel.ts';
 
-import type { DefaultInteractionData } from '../../types/collector.js';
+import type { DefaultInteractionData } from '../../types/collector.ts';
 
 
 /**

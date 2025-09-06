@@ -4,10 +4,10 @@ import {
   type APIButtonComponentWithCustomId
 } from 'discord.js';
 
-import { PoliticalSystemType } from '../../../../types/systems.js';
+import { PoliticalSystemType } from '../../../../types/systems.ts';
 import settings from '../../../../data/settings.json' with { type: 'json' };
 import wizardDefaults from '../../../../data/defaults/wizard.json' with { type: 'json' };
-import BaseWizard from './BaseWizard.js';
+import BaseWizard from './BaseWizard.ts';
 
 
 class SystemWizard extends BaseWizard {

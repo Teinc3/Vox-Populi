@@ -3,11 +3,11 @@ import {
   type Ref
 } from '@typegoose/typegoose';
 
-import { TermOptions } from '../options/RoleOptions.js';
-import { PoliticalSystemType, PoliticalBranchType, type DDOptions } from '../../types/systems.js';
+import { TermOptions } from '../options/RoleOptions.ts';
+import { PoliticalSystemType, PoliticalBranchType, type DDOptions } from '../../types/systems.ts';
 import Chamber, { type Legislature, type Senate, type Referendum, type Court } from "./Chamber.js";
 
-import type { GuildConfigData } from '../../types/wizard.js';
+import type { GuildConfigData } from '../../types/wizard.ts';
 
 
 @modelOptions({ schemaOptions: { collection: "politicalsystems" } })

@@ -4,15 +4,15 @@ import { prop, type Ref, getModelForClass } from '@typegoose/typegoose';
 import {
   parsePermissionsAggregate,
   progressivePermissionsAllocator
-} from '../../utils/permissionsHelper.js';
+} from '../../utils/permissionsHelper.ts';
 import {
   PoliticalRoleHierarchy,
   type BasePermissionsAggregate
-} from '../../types/permissions.js';
-import PoliticalRoleHolder from './PoliticalRoleHolder.js';
+} from '../../types/permissions.ts';
+import PoliticalRoleHolder from './PoliticalRoleHolder.ts';
 
 
-import type { GuildConfigData } from '../../types/wizard.js';
+import type { GuildConfigData } from '../../types/wizard.ts';
 
 
 class PoliticalRole {
