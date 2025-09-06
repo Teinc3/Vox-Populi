@@ -21,7 +21,7 @@ import type { GuildConfigData } from '../../types/wizard.ts';
 @modelOptions({ 
   schemaOptions: { 
     collection: "chambers",
-    //discriminatorKey: "branch",
+    discriminatorKey: "branch",
   }
 })
 class Chamber {

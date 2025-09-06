@@ -1,8 +1,7 @@
 import { getDiscriminatorModelForClass } from "@typegoose/typegoose";
 
+import { CollectorType, type DefaultInteractionData } from "../../types/collector.js";
 import BaseCollector, { BaseCollectorModel } from "./BaseCollector.js";
-
-import type { DefaultInteractionData } from "../../types/collector.js";
 
 
 interface PayloadRecipe extends DefaultInteractionData {}
@@ -13,11 +12,14 @@ interface PayloadRecipe extends DefaultInteractionData {}
  * @class
  * @extends BaseCollector 
  */
-class TicketOptionsCollector extends BaseCollector<PayloadRecipe> {}
+class TicketOptionsCollector extends BaseCollector<PayloadRecipe> {
+  type = CollectorType.TicketOptions;
+}
 
 const TicketOptionsCollectorModel = getDiscriminatorModelForClass(
   BaseCollectorModel,
-  TicketOptionsCollector
+  TicketOptionsCollector,
+  CollectorType.TicketOptions
 );
 
 export default TicketOptionsCollector;

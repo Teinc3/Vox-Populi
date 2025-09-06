@@ -15,7 +15,8 @@ export interface PayloadCreationFunction<PayloadRecipe> {
 
 export enum CollectorType {
   Vote = "Vote",
-  Ticket = "Ticket"
+  Ticket = "Ticket",
+  TicketOptions = "TicketOptions"
 }
 
 export interface DefaultInteractionData {
