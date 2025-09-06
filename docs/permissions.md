@@ -82,7 +82,7 @@ The following list shows base permissions for each role:
 - President/Prime Minister: Manage, Moderate
 - Head Moderator/Moderator: Moderate
 - Citizen: Interact
-- @everyone (Undocumented): Send, View
+- @everyone (Resident): Send, View
 
 Note that all officials must have the Citizen role, and therefore, access to all base permissions below them.
 

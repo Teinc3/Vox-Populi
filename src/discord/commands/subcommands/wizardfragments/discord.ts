@@ -165,7 +165,7 @@ class DiscordWizard extends BaseWizard {
         case "link_role_prev":
           roleOptions.cursor--;
           if (roleOptions.cursor < 0) {
-            // We also skip being able to cursor Undocumented role
+            // We also skip being able to cursor Resident role
             roleOptions.cursor = filteredRoles.length - 2;
           }
           break;
